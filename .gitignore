@@ -27,7 +27,6 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 Analysis-Hamre-Agent-lobster.Rproj
-#Ningaloo Data
-Ning2020
-# Jons Data
-Data
+
+.gitignore
+
