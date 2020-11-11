@@ -28,5 +28,5 @@ vignettes/*.pdf
 .Renviron
 Analysis-Hamre-Agent-lobster.Rproj
 
-/gitignore2
+/gitignore
 
