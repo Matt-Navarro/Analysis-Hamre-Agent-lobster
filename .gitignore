@@ -29,12 +29,11 @@ vignettes/*.pdf
 Analysis-Hamre-Agent-lobster.Rproj
 
 /gitignore
-##Add thing to the gitignore folder to make them hiding, if you are ignore something else remember its a slash not a dot
-
-/Ch1-Review/revIgnor
+##Add thing to the gitignore folder to make them hiding, if you are ignoring something else remember its a slash not a dot
+/Ch1-Review/revIgnore
 /Ch2-RUM/rumIgnore
 /Ch2-RUMold/rumIgnor
-/Ch3-PopModel/popIgnor
-Ch4-Bioeconomic/bioIgnor
-/Ch5-Simulations/simIgnor
+/Ch3-PopModel/popIgnore
+/Ch4-Bioeconomic/bioIgnore
+/Ch5-Simulations/simIgnore
 
