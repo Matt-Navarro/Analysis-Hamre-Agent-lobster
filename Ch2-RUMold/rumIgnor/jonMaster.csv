@@ -1,0 +1,408 @@
+ID,Date,Interviewer,Transect,Access,BoatAccess,Meta.x,Meta.y,ActivityDate,FishingType,BaitType,TimeInEx,TimeOutEx,MedTimeEx,DecMedTimeEx,MaxDepthEx,KeptUndam,ReleasedUndam,TotalUndam,DP,TotalHooked,PerDP,ProDP
+1,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (drifting),Artificial plastic lure,12:00,17:00,14:30,14.5,10,NA,NA,5,5,10,50,0.5
+2,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Trolling,Artificial plastic lure,10:30,13:30,12:00,12,5,NA,NA,2,0,2,0,0
+3,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Trolling,Artificial plastic lure,11:30,14:30,13:00,13,5,NA,NA,2,2,4,50,0.5
+4,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (drifting),Squid,12:00,15:15,13:37,13.62,15,NA,NA,5,5,10,50,0.5
+5,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (drifting),Squid,09:00,15:00,12:00,12,20,NA,NA,5,0,5,0,0
+6,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (drifting),Squid,12:30,15:00,13:45,13.75,10,NA,NA,5,0,5,0,0
+7,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Trolling,Artificial plastic lure,08:00,15:30,11:45,11.75,5,NA,NA,5,0,5,0,0
+8,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Trolling,Artificial plastic lure,11:00,16:00,13:30,13.5,5,NA,NA,5,0,5,0,0
+9,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (drifting),Squid,12:00,15:00,13:30,13.5,50,NA,NA,4,2,6,33.33333333,0.333333333
+10,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Trolling,Artificial plastic lure,13:00,16:15,14:37,14.62,5,NA,NA,1,1,2,50,0.5
+11,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (drifting),Mackerel,09:00,16:00,12:30,12.5,150,NA,NA,5,0,5,0,0
+12,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (anchored),Squid,,,,NA,15,NA,NA,5,0,5,0,0
+13,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Bottom-bashing (anchored),Mulie,11:30,17:30,14:30,14.5,20,NA,NA,25,1,26,3.846153846,0.038461538
+14,21/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,21/07/2015,Trolling,Artificial plastic lure,13:00,18:00,15:30,15.5,5,NA,NA,2,1,3,33.33333333,0.333333333
+15,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (anchored),Squid,15:00,17:00,16:00,16,15,NA,NA,3,2,5,40,0.4
+16,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,09:00,12:30,10:45,10.75,10,NA,NA,21,8,29,27.5862069,0.275862069
+17,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,11:00,14:30,12:45,12.75,15,NA,NA,50,15,65,23.07692308,0.230769231
+18,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,10:00,14:00,12:00,12,10,NA,NA,10,0,10,0,0
+19,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,10:30,15:00,12:45,12.75,15,NA,NA,22,7,29,24.13793103,0.24137931
+20,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,10:00,15:00,12:30,12.5,50,NA,NA,5,2,7,28.57142857,0.285714286
+21,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Artificial plastic lure,08:00,16:30,12:15,12.25,10,NA,NA,8,2,10,20,0.2
+22,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Trolling,Artificial plastic lure,08:00,17:00,12:30,12.5,5,NA,NA,1,0,1,0,0
+23,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,04:00,16:30,10:15,10.25,300,NA,NA,100,30,130,23.07692308,0.230769231
+24,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Squid,15:00,17:00,16:00,16,25,NA,NA,5,2,7,28.57142857,0.285714286
+25,22/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,22/07/2015,Bottom-bashing (drifting),Mullet,11:00,16:00,13:30,13.5,50,NA,NA,10,0,10,0,0
+26,23/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/07/2015,Bottom-bashing (anchored),Squid,10:45,12:15,11:30,11.5,10,NA,NA,3,0,3,0,0
+27,23/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/07/2015,Bottom-bashing (drifting),Squid,10:00,15:00,12:30,12.5,60,NA,NA,10,0,10,0,0
+28,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Bottom-bashing (drifting),Squid,10:30,16:00,13:15,13.25,NA,NA,NA,20,0,20,0,0
+29,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Bottom-bashing (drifting),Mulie,09:30,13:15,11:22,11.37,25,NA,NA,8,20,28,71.42857143,0.714285714
+30,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Trolling,Artificial plastic lure,09:30,13:30,11:30,11.5,5,NA,NA,3,0,3,0,0
+31,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Trolling,Artificial plastic lure,10:00,14:00,12:00,12,5,NA,NA,12,2,14,14.28571429,0.142857143
+32,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Bottom-bashing (drifting),Squid,09:00,14:00,11:30,11.5,70,NA,NA,19,4,23,17.39130435,0.173913043
+33,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Bottom-bashing (drifting),Squid,11:00,15:15,13:07,13.12,70,NA,NA,0,3,3,100,1
+34,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Bottom-bashing (drifting),Mullet,08:30,15:00,11:45,11.75,95,NA,NA,40,0,40,0,0
+35,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Trolling,Artificial plastic lure,13:00,16:15,14:37,14.62,5,NA,NA,3,0,3,0,0
+36,24/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,24/07/2015,Bottom-bashing (drifting),Squid,10:00,17:15,13:37,13.62,80,NA,NA,4,0,4,0,0
+37,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Squid,10:00,15:00,12:30,12.5,10,NA,NA,32,0,32,0,0
+38,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Trolling,Artificial plastic lure,09:45,12:30,11:07,11.12,5,NA,NA,2,0,2,0,0
+39,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Squid,09:00,13:15,11:07,11.12,70,NA,NA,7,1,8,12.5,0.125
+40,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Trolling,Garfish,08:00,15:30,11:45,11.75,5,NA,NA,4,0,4,0,0
+41,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Mackerel,08:00,15:30,11:45,11.75,150,NA,NA,50,3,53,5.660377358,0.056603774
+42,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Trolling,Artificial plastic lure,11:30,16:00,13:45,13.75,5,NA,NA,10,0,10,0,0
+43,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Garfish,11:00,16:00,13:30,13.5,5,NA,NA,12,0,12,0,0
+44,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Trolling,Artificial plastic lure,13:00,15:00,14:00,14,5,NA,NA,1,0,1,0,0
+45,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Squid,08:00,16:30,12:15,12.25,110,NA,NA,25,3,28,10.71428571,0.107142857
+46,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Squid,09:00,16:30,12:45,12.75,85,NA,NA,15,3,18,16.66666667,0.166666667
+47,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Trolling,Artificial plastic lure,09:30,15:00,12:15,12.25,5,NA,NA,0,1,1,100,1
+48,25/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,25/07/2015,Bottom-bashing (drifting),Mackerel,,,,NA,40,NA,NA,50,2,52,3.846153846,0.038461538
+49,26/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,26/07/2015,Bottom-bashing (anchored),Prawns,11:45,13:15,12:30,12.5,10,NA,NA,3,3,6,50,0.5
+50,26/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,26/07/2015,Bottom-bashing (anchored),Prawns,11:00,15:30,13:15,13.25,15,NA,NA,25,1,26,3.846153846,0.038461538
+51,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,11:00,14:15,12:37,12.62,5,NA,NA,57,0,57,0,0
+52,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),,10:00,14:30,12:15,12.25,10,NA,NA,3,0,3,0,0
+53,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (anchored),Mackerel,08:45,11:45,10:15,10.25,5,NA,NA,25,0,25,0,0
+54,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,08:30,12:30,10:30,10.5,20,NA,NA,20,0,20,0,0
+55,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Trolling,Artificial plastic lure,09:00,13:45,11:22,11.37,5,NA,NA,5,0,5,0,0
+56,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,09:15,13:00,11:07,11.12,100,NA,NA,20,0,20,0,0
+57,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,10:30,13:30,12:00,12,20,NA,NA,40,1,41,2.43902439,0.024390244
+58,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,10:00,13:30,11:45,11.75,300,NA,NA,3,0,3,0,0
+59,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (anchored),Mulie,11:00,14:30,12:45,12.75,20,NA,NA,8,0,8,0,0
+60,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,10:00,14:30,12:15,12.25,15,NA,NA,20,0,20,0,0
+61,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,10:30,15:00,12:45,12.75,20,NA,NA,25,0,25,0,0
+62,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,11:00,14:45,12:52,12.87,20,NA,NA,45,5,50,10,0.1
+63,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (anchored),Prawns,09:00,15:30,12:15,12.25,NA,NA,NA,9,0,9,0,0
+64,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,09:30,15:00,12:15,12.25,70,NA,NA,20,3,23,13.04347826,0.130434783
+65,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Bottom-bashing (drifting),Squid,10:45,15:30,13:07,13.12,20,NA,NA,20,1,21,4.761904762,0.047619048
+66,28/07/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,28/07/2015,Trolling,Artificial plastic lure,09:00,16:00,12:30,12.5,5,NA,NA,8,0,8,0,0
+67,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,08:15,11:30,09:52,9.87,90,NA,NA,10,1,11,9.090909091,0.090909091
+68,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,05:45,10:30,08:07,8.12,70,NA,NA,6,1,7,14.28571429,0.142857143
+69,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,08:30,12:00,10:15,10.25,5,NA,NA,8,0,8,0,0
+70,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:00,11:30,10:15,10.25,100,NA,NA,17,6,23,26.08695652,0.260869565
+71,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,08:00,12:00,10:00,10,40,NA,NA,20,0,20,0,0
+72,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (anchored),Squid,08:00,13:00,10:30,10.5,20,NA,NA,15,2,17,11.76470588,0.117647059
+73,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,08:30,13:45,11:07,11.12,130,NA,NA,20,3,23,13.04347826,0.130434783
+74,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:00,14:15,11:37,11.62,75,NA,NA,20,3,23,13.04347826,0.130434783
+75,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mackerel,10:00,14:00,12:00,12,130,NA,NA,22,2,24,8.333333333,0.083333333
+76,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:30,14:15,11:52,11.87,60,NA,NA,30,2,32,6.25,0.0625
+77,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (anchored),Mulie,07:30,15:00,11:15,11.25,15,NA,NA,40,0,40,0,0
+78,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mullet,09:30,14:30,12:00,12,300,NA,NA,20,0,20,0,0
+79,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:00,14:00,11:30,11.5,400,NA,NA,12,0,12,0,0
+80,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mulie,11:30,15:45,13:37,13.62,70,NA,NA,2,0,2,0,0
+81,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mullet,08:00,14:00,11:00,11,250,NA,NA,13,0,13,0,0
+82,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mackerel,09:45,15:30,12:37,12.62,90,NA,NA,13,1,14,7.142857143,0.071428571
+83,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,10:30,16:00,13:15,13.25,250,NA,NA,20,5,25,20,0.2
+84,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,06:30,14:30,10:30,10.5,350,NA,NA,9,0,9,0,0
+85,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:45,15:30,12:37,12.62,60,NA,NA,10,0,10,0,0
+86,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:00,15:30,12:15,12.25,75,NA,NA,23,0,23,0,0
+87,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:00,15:00,12:00,12,20,NA,NA,8,1,9,11.11111111,0.111111111
+88,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mulie,10:30,16:00,13:15,13.25,90,NA,NA,5,0,5,0,0
+89,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Mackerel,10:00,16:15,13:07,13.12,70,NA,NA,15,0,15,0,0
+90,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:30,16:30,13:00,13,65,NA,NA,20,20,40,50,0.5
+91,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,12:30,16:30,14:30,14.5,20,NA,NA,7,0,7,0,0
+92,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,10:30,16:30,13:30,13.5,350,NA,NA,7,0,7,0,0
+93,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,10:00,16:00,13:00,13,110,NA,NA,15,0,15,0,0
+94,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,09:00,17:00,13:00,13,40,NA,NA,15,0,15,0,0
+95,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Bottom-bashing (drifting),Squid,07:30,17:00,12:15,12.25,70,NA,NA,2,0,2,0,0
+96,29/07/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,29/07/2015,Trolling,Artificial plastic lure,14:00,17:30,15:45,15.75,5,NA,NA,10,0,10,0,0
+97,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,5,NA,NA,12,0,12,0,0
+98,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,08:00,11:45,09:52,9.87,5,NA,NA,9,0,9,0,0
+99,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (anchored),Mulie,08:30,12:30,10:30,10.5,5,NA,NA,17,0,17,0,0
+100,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,10,NA,NA,29,0,29,0,0
+101,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,08:30,11:30,10:00,10,20,NA,NA,6,0,6,0,0
+102,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,20,NA,NA,8,3,11,27.27272727,0.272727273
+103,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,07:00,12:30,09:45,9.75,5,NA,NA,4,1,5,20,0.2
+104,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,09:00,12:30,10:45,10,5,NA,NA,8,1,9,11.11111111,0.111111111
+105,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,130,NA,NA,6,1,7,14.28571429,0.142857143
+106,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,40,NA,NA,11,0,11,0,0
+107,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,09:00,13:30,11:15,11.25,50,NA,NA,1,3,4,75,0.75
+108,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,07:00,12:00,09:30,9.5,160,NA,NA,14,8,22,36.36363636,0.363636364
+109,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,07:00,13:30,10:15,10.25,5,NA,NA,4,3,7,42.85714286,0.428571429
+110,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,08:00,13:30,10:45,10.75,300,NA,NA,15,10,25,40,0.4
+111,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,08:30,13:00,10:45,10.75,275,NA,NA,15,5,20,25,0.25
+112,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Mullet,07:30,13:15,10:22,10.37,120,NA,NA,19,9,28,32.14285714,0.321428571
+113,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Mulie,10:15,14:30,12:22,12.37,10,NA,NA,60,0,60,0,0
+114,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,100,NA,NA,14,6,20,30,0.3
+115,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,110,NA,NA,8,1,9,11.11111111,0.111111111
+116,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,,,,NA,100,NA,NA,4,4,8,50,0.5
+117,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,07:30,14:30,11:00,11,5,NA,NA,3,0,3,0,0
+118,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,09:00,13:00,11:00,11,5,NA,NA,1,0,1,0,0
+119,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Mulie,08:30,15:15,11:52,11.87,30,NA,NA,25,5,30,16.66666667,0.166666667
+120,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Bottom-bashing (drifting),Squid,09:00,16:30,12:45,12.75,100,NA,NA,20,4,24,16.66666667,0.166666667
+121,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,11:00,16:15,13:37,13.62,5,NA,NA,3,0,3,0,0
+122,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,06:30,15:00,10:45,10.75,5,NA,NA,1,0,1,0,0
+123,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,4,1,5,20,0.2
+124,30/07/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,30/07/2015,Trolling,Artificial plastic lure,06:00,17:45,11:52,11.87,5,NA,NA,6,0,6,0,0
+125,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Squid,08:15,10:30,09:22,9.37,15,NA,NA,32,12,44,27.27272727,0.272727273
+126,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Prawns,09:30,11:30,10:30,10.5,20,NA,NA,25,1,26,3.846153846,0.038461538
+127,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Prawns,,,,NA,10,NA,NA,5,5,10,50,0.5
+128,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Squid,08:30,12:00,10:15,10.25,20,NA,NA,18,0,18,0,0
+129,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Squid,09:00,12:30,10:45,10.75,65,NA,NA,7,1,8,12.5,0.125
+130,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Squid,,,,NA,20,NA,NA,58,0,58,0,0
+131,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Bottom-bashing (drifting),Mullet,11:00,14:15,12:37,12.62,110,NA,NA,12,0,12,0,0
+132,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Trolling,Artificial plastic lure,11:00,11:30,11:15,11.25,5,NA,NA,1,0,1,0,0
+133,31/07/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,31/07/2015,Trolling,Artificial plastic lure,10:30,15:45,13:07,13.12,5,NA,NA,2,0,2,0,0
+134,02/08/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/08/2015,Bottom-bashing (anchored),Mullet,12:00,14:15,13:07,13.12,5,NA,NA,6,0,6,0,0
+135,02/08/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/08/2015,Bottom-bashing (drifting),Squid,10:00,12:45,11:22,11.37,20,NA,NA,10,1,11,9.090909091,0.090909091
+136,02/08/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/08/2015,Trolling,Artificial plastic lure,12:00,12:30,12:15,12.25,5,NA,NA,2,0,2,0,0
+137,02/08/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/08/2015,Trolling,Artificial plastic lure,07:30,16:30,12:00,12,5,NA,NA,5,0,5,0,0
+138,02/08/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/08/2015,Bottom-bashing (drifting),Squid,12:30,16:45,14:37,14.62,10,NA,NA,30,0,30,0,0
+139,02/08/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/08/2015,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,5,0,5,0,0
+140,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Bottom-bashing (anchored),Mackerel,11:00,15:00,13:00,13,5,NA,NA,2,0,2,0,0
+141,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Bottom-bashing (anchored),Squid,08:30,16:15,12:22,12.37,15,NA,NA,30,4,34,11.76470588,0.117647059
+142,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Trolling,Artificial plastic lure,07:00,09:45,08:22,8.37,5,NA,NA,3,0,3,0,0
+143,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Bottom-bashing (drifting),Squid,06:30,15:00,10:45,10.75,40,NA,NA,15,1,16,6.25,0.0625
+144,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Bottom-bashing (anchored),Mackerel,14:00,15:00,14:30,14.5,15,NA,NA,7,0,7,0,0
+145,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Bottom-bashing (drifting),Squid,11:00,15:00,13:00,13,20,NA,NA,30,20,50,40,0.4
+146,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Bottom-bashing (drifting),Squid,08:00,15:45,11:52,11.87,100,NA,NA,10,1,11,9.090909091,0.090909091
+147,23/09/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/09/2015,Trolling,Artificial plastic lure,09:00,12:00,10:30,10.5,5,NA,NA,12,0,12,0,0
+148,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (drifting),Prawns,08:30,15:00,11:45,11.75,50,NA,NA,0,7,7,100,1
+149,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (anchored),Mulie,12:00,17:15,14:37,14.62,5,NA,NA,3,2,5,40,0.4
+150,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,06:30,10:45,08:37,8.62,5,NA,NA,4,1,5,20,0.2
+151,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (drifting),Squid,07:00,13:30,10:15,10.25,35,NA,NA,17,10,27,37.03703704,0.37037037
+152,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (drifting),Squid,08:00,13:45,10:52,10.87,100,NA,NA,20,0,20,0,0
+153,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,07:30,14:15,10:52,10.87,5,NA,NA,1,0,1,0,0
+154,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (anchored),Squid,09:00,15:45,12:22,12.37,25,NA,NA,2,0,2,0,0
+155,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (anchored),Mulie,11:30,15:30,13:30,13.5,20,NA,NA,6,4,10,40,0.4
+156,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,08:00,17:00,12:30,12.5,5,NA,NA,5,0,5,0,0
+157,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Bottom-bashing (drifting),Squid,10:00,15:00,12:30,12.5,250,NA,NA,5,2,7,28.57142857,0.285714286
+158,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,12:00,14:00,13:00,13,5,NA,NA,3,0,3,0,0
+159,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,13:00,18:00,15:30,15.5,5,NA,NA,0,1,1,100,1
+160,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,09:30,14:00,11:45,11.75,5,NA,NA,4,3,7,42.85714286,0.428571429
+161,24/09/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,24/09/2015,Trolling,Artificial plastic lure,06:00,16:15,11:07,11.12,5,NA,NA,3,0,3,0,0
+162,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (anchored),Squid,09:00,11:15,10:07,10.12,10,NA,NA,30,0,30,0,0
+163,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Squid,09:30,11:30,10:30,10.5,15,NA,NA,12,3,15,20,0.2
+164,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Trolling,Artificial plastic lure,10:00,12:00,11:00,11,5,NA,NA,1,0,1,0,0
+165,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (anchored),Mulie,11:30,13:00,12:15,12.25,15,NA,NA,3,0,3,0,0
+166,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Squid,09:30,13:45,11:37,11.62,20,NA,NA,5,0,5,0,0
+167,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Squid,08:30,14:15,11:22,11.37,80,NA,NA,18,2,20,10,0.1
+168,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Mulie,10:00,14:15,12:07,12.12,20,NA,NA,15,5,20,25,0.25
+169,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (anchored),Squid,06:30,14:45,10:37,10.62,130,NA,NA,15,6,21,28.57142857,0.285714286
+170,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Squid,11:00,14:30,12:45,12.75,20,NA,NA,8,10,18,55.55555556,0.555555556
+171,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Squid,08:30,13:30,11:00,11,80,NA,NA,15,2,17,11.76470588,0.117647059
+172,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Bottom-bashing (drifting),Mullet,06:00,15:30,10:45,10.75,300,NA,NA,9,2,11,18.18181818,0.181818182
+173,25/09/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,25/09/2015,Trolling,Artificial plastic lure,14:00,16:00,15:00,15,5,NA,NA,2,1,3,33.33333333,0.333333333
+174,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (drifting),Prawns,11:00,15:30,13:15,13.25,20,NA,NA,6,0,6,0,0
+175,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Trolling,Artificial plastic lure,09:00,16:00,12:30,12.5,5,NA,NA,13,0,13,0,0
+176,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (anchored),Squid,07:30,10:00,08:45,8.75,15,NA,NA,10,1,11,9.090909091,0.090909091
+177,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Trolling,Artificial plastic lure,10:30,12:00,11:15,11.25,5,NA,NA,1,0,1,0,0
+178,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (drifting),Mulie,12:30,13:45,13:07,13.12,20,NA,NA,2,2,4,50,0.5
+179,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Trolling,Artificial plastic lure,12:00,12:30,12:15,12.25,5,NA,NA,2,0,2,0,0
+180,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Trolling,Artificial plastic lure,09:00,14:30,11:45,11.75,5,NA,NA,8,0,8,0,0
+181,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (anchored),Squid,11:00,14:30,12:45,12.75,15,NA,NA,20,0,20,0,0
+182,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (anchored),Mullet,10:30,15:00,12:45,12.75,15,NA,NA,15,0,15,0,0
+183,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (drifting),Garfish,12:00,16:00,14:00,14,10,NA,NA,4,0,4,0,0
+184,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (drifting),Squid,14:00,16:00,15:00,15,20,NA,NA,5,0,5,0,0
+185,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (drifting),Squid,11:30,16:45,14:07,14.12,15,NA,NA,14,0,14,0,0
+186,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Trolling,Artificial plastic lure,11:00,14:00,12:30,12.5,5,NA,NA,7,0,7,0,0
+187,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (drifting),Prawns,10:00,13:45,11:52,11.87,30,NA,NA,9,0,9,0,0
+188,02/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,02/10/2015,Bottom-bashing (anchored),Squid,08:30,14:00,11:15,11.25,20,NA,NA,30,8,38,21.05263158,0.210526316
+189,03/10/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,03/10/2015,Trolling,Artificial plastic lure,09:30,12:30,11:00,11,5,NA,NA,3,0,3,0,0
+190,03/10/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,03/10/2015,Trolling,Artificial plastic lure,11:00,15:30,13:15,13.25,5,NA,NA,1,0,1,0,0
+191,03/10/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,03/10/2015,Bottom-bashing (drifting),Mackerel,11:30,16:00,13:45,13.75,60,NA,NA,4,0,4,0,0
+192,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (anchored),Mulie,09:00,14:45,11:52,11.87,10,NA,NA,32,3,35,8.571428571,0.085714286
+193,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (drifting),Mulie,11:00,13:00,12:00,12,5,NA,NA,1,0,1,0,0
+194,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (drifting),Mulie,06:30,11:30,09:00,9,10,NA,NA,5,0,5,0,0
+195,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (drifting),Squid,08:30,12:00,10:15,10.25,30,NA,NA,2,1,3,33.33333333,0.333333333
+196,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (drifting),Squid,10:00,12:00,11:00,11,5,NA,NA,8,0,8,0,0
+197,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (drifting),Mulie,08:00,11:45,09:52,9.87,30,NA,NA,15,5,20,25,0.25
+198,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (anchored),Squid,08:30,13:00,10:45,10.75,10,NA,NA,10,0,10,0,0
+199,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (drifting),Mulie,11:30,13:30,12:30,12.5,10,NA,NA,20,0,20,0,0
+200,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (anchored),Squid,12:30,14:30,13:30,13.5,10,NA,NA,2,0,2,0,0
+201,04/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,04/10/2015,Bottom-bashing (anchored),Mulie,08:00,15:30,11:45,11.75,35,NA,NA,28,30,58,51.72413793,0.517241379
+202,05/10/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,05/10/2015,Trolling,Artificial plastic lure,09:45,10:45,10:15,10.25,5,NA,NA,2,0,2,0,0
+203,05/10/2015,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,05/10/2015,Bottom-bashing (anchored),Squid,10:30,13:00,11:45,11.75,30,NA,NA,10,1,11,9.090909091,0.090909091
+204,06/10/2015,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,06/10/2015,Bottom-bashing (anchored),Squid,08:15,11:30,09:52,9.87,10,NA,NA,30,0,30,0,0
+205,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (anchored),,07:30,12:00,09:45,9.75,10,NA,NA,6,1,7,14.28571429,0.142857143
+206,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (anchored),Squid,10:00,15:00,12:30,12.5,20,NA,NA,11,2,13,15.38461538,0.153846154
+207,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (anchored),,09:30,11:00,10:15,10.25,10,NA,NA,8,0,8,0,0
+208,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Squid,12:00,14:30,13:15,13.25,35,NA,NA,20,0,20,0,0
+209,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Squid,11:15,13:45,12:30,12.5,20,NA,NA,12,0,12,0,0
+210,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Squid,07:30,13:45,10:37,10.62,140,NA,NA,40,50,90,55.55555556,0.555555556
+211,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Squid,09:00,16:00,12:30,12.5,50,NA,NA,6,5,11,45.45454545,0.454545455
+212,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Squid,09:00,15:45,12:22,12.37,30,NA,NA,23,4,27,14.81481481,0.148148148
+213,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Squid,11:30,16:00,13:45,13.75,100,NA,NA,10,0,10,0,0
+214,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (drifting),Mullet,10:15,15:45,13:00,13,30,NA,NA,23,3,26,11.53846154,0.115384615
+215,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Trolling,Mulie,11:00,16:30,13:45,13.75,5,NA,NA,2,0,2,0,0
+216,07/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/10/2015,Bottom-bashing (anchored),Squid,11:00,16:15,13:37,13.62,20,NA,NA,9,2,11,18.18181818,0.181818182
+217,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (drifting),Mackerel,09:30,11:30,10:30,10.5,10,NA,NA,4,0,4,0,0
+218,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (anchored),Pilchard,09:00,11:00,10:00,10,20,NA,NA,23,0,23,0,0
+219,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (anchored),Squid,08:00,11:00,09:30,9.5,70,NA,NA,6,0,6,0,0
+220,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (drifting),Prawns,09:00,10:15,09:37,9.62,15,NA,NA,1,0,1,0,0
+221,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (anchored),Squid,09:30,11:30,10:30,10.5,20,NA,NA,5,0,5,0,0
+222,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (anchored),Squid,09:00,14:00,11:30,11.5,15,NA,NA,18,0,18,0,0
+223,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Trolling,Artificial plastic lure,11:00,15:00,13:00,13,5,NA,NA,7,4,11,36.36363636,0.363636364
+224,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Trolling,Artificial plastic lure,10:00,11:00,10:30,10.5,5,NA,NA,3,1,4,25,0.25
+225,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (drifting),Squid,,,,NA,25,NA,NA,26,0,26,0,0
+226,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (drifting),Squid,12:00,15:00,13:30,13.5,140,NA,NA,27,0,27,0,0
+227,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (drifting),Squid,09:30,12:30,11:00,11,60,NA,NA,16,0,16,0,0
+228,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (anchored),Squid,,,,NA,20,NA,NA,5,6,11,54.54545455,0.545454545
+229,10/10/2015,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,10/10/2015,Bottom-bashing (drifting),Squid,09:00,16:15,12:37,12.62,100,NA,NA,15,2,17,11.76470588,0.117647059
+230,11/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,11/10/2015,Bottom-bashing (anchored),Squid,08:30,13:15,10:52,10.87,20,NA,NA,32,0,32,0,0
+231,11/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,11/10/2015,Bottom-bashing (drifting),Artificial plastic lure,06:00,13:15,09:37,9.62,15,NA,NA,30,2,32,6.25,0.0625
+232,11/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,11/10/2015,Bottom-bashing (drifting),Squid,13:30,14:30,14:00,14,50,NA,NA,8,4,12,33.33333333,0.333333333
+233,11/10/2015,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,11/10/2015,Bottom-bashing (drifting),Squid,08:00,10:00,09:00,9,10,NA,NA,7,0,7,0,0
+234,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (anchored),Mulie,11:30,12:30,12:00,12,10,NA,NA,3,0,3,0,0
+235,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Squid,10:30,12:30,11:30,11.5,30,NA,NA,12,0,12,0,0
+236,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Squid,11:30,13:30,12:30,12.5,100,NA,NA,0,1,1,100,1
+237,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Mulie,09:00,13:30,11:15,11.25,10,NA,NA,12,0,12,0,0
+238,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Squid,08:30,11:30,10:00,10,45,NA,NA,40,1,41,2.43902439,0.024390244
+239,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Trolling,Artificial plastic lure,11:30,13:30,12:30,12.5,5,NA,NA,2,0,2,0,0
+240,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Trolling,Artificial plastic lure,12:00,15:30,13:45,13.75,5,NA,NA,2,0,2,0,0
+241,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Mullet,12:30,15:30,14:00,14,20,NA,NA,12,0,12,0,0
+242,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Squid,09:00,16:00,12:30,12.5,60,NA,NA,15,15,30,50,0.5
+243,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Bottom-bashing (drifting),Squid,12:00,16:00,14:00,14,100,NA,NA,5,6,11,54.54545455,0.545454545
+244,06/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,06/04/2016,Trolling,Artificial plastic lure,08:30,16:30,12:30,12.5,5,NA,NA,15,0,15,0,0
+245,07/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/04/2016,Bottom-bashing (drifting),Squid,09:30,12:30,11:00,11,25,NA,NA,25,0,25,0,0
+246,07/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,07/04/2016,Bottom-bashing (drifting),Mulie,08:30,13:00,10:45,10.75,80,NA,NA,20,2,22,9.090909091,0.090909091
+247,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (anchored),Prawns,09:30,14:15,11:52,11.87,20,NA,NA,3,0,3,0,0
+248,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (anchored),Squid,09:30,15:30,12:30,12.5,15,NA,NA,10,0,10,0,0
+249,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (drifting),Squid,10:30,14:30,12:30,12.5,15,NA,NA,2,0,2,0,0
+250,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (drifting),Prawns,11:00,14:45,12:52,12.87,5,NA,NA,20,0,20,0,0
+251,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (drifting),Squid,08:30,14:30,11:30,11.5,15,NA,NA,10,4,14,28.57142857,0.285714286
+252,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (anchored),Mullet,09:30,13:00,11:15,11.25,10,NA,NA,15,1,16,6.25,0.0625
+253,08/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,08/04/2016,Bottom-bashing (drifting),Mulie,05:00,14:30,09:45,9.75,75,NA,NA,25,3,28,10.71428571,0.107142857
+254,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,08:30,12:00,10:15,10.25,10,NA,NA,15,0,15,0,0
+255,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (anchored),Squid,08:00,12:00,10:00,10,5,NA,NA,10,0,10,0,0
+256,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,09:00,11:45,10:22,10.37,100,NA,NA,4,0,4,0,0
+257,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (anchored),Squid,07:15,11:00,09:07,9.12,30,NA,NA,4,0,4,0,0
+258,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,09:00,13:00,11:00,11,100,NA,NA,4,0,4,0,0
+259,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,07:45,13:30,10:37,10.62,225,NA,NA,10,8,18,44.44444444,0.444444444
+260,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Mullet,09:00,13:30,11:15,11.25,90,NA,NA,7,3,10,30,0.3
+261,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,08:00,15:00,11:30,11.5,120,NA,NA,1,1,2,50,0.5
+262,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,08:30,15:00,11:45,11.75,120,NA,NA,10,4,14,28.57142857,0.285714286
+263,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,06:00,14:45,10:22,10.37,300,NA,NA,10,0,10,0,0
+264,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,07:00,15:30,11:15,11.25,350,NA,NA,0,6,6,100,1
+265,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),Squid,08:30,14:30,11:30,11.5,110,NA,NA,15,4,19,21.05263158,0.210526316
+266,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Trolling,Artificial plastic lure,12:00,13:30,12:45,12.75,5,NA,NA,4,0,4,0,0
+267,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Trolling,Artificial plastic lure,12:00,13:30,12:45,12.75,5,NA,NA,1,0,1,0,0
+268,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Trolling,Artificial plastic lure,07:15,10:45,09:00,9,5,NA,NA,0,1,1,100,1
+269,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Trolling,Artificial plastic lure,06:00,14:30,10:15,10.25,5,NA,NA,1,0,1,0,0
+270,09/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,09/04/2016,Bottom-bashing (drifting),,08:30,14:30,11:30,11.5,110,NA,NA,12,2,14,14.28571429,0.142857143
+271,10/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,10/04/2016,Bottom-bashing (drifting),Mullet,12:00,14:00,13:00,13,5,NA,NA,3,1,4,25,0.25
+272,10/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,10/04/2016,Bottom-bashing (drifting),Squid,09:30,16:15,12:52,12.87,20,NA,NA,11,0,11,0,0
+273,10/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,10/04/2016,Bottom-bashing (drifting),Squid,14:00,15:30,14:45,14.75,25,NA,NA,6,0,6,0,0
+274,10/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,10/04/2016,Bottom-bashing (drifting),Artificial plastic lure,16:00,17:30,16:45,16.75,15,NA,NA,51,0,51,0,0
+275,10/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,10/04/2016,Trolling,Artificial plastic lure,08:15,15:45,12:00,12,5,NA,NA,5,0,5,0,0
+276,11/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,11/04/2016,Trolling,Artificial plastic lure,07:00,10:00,08:30,8.5,5,NA,NA,4,0,4,0,0
+277,11/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,11/04/2016,Bottom-bashing (drifting),Squid,09:30,13:00,11:15,11.25,10,NA,NA,7,0,7,0,0
+278,11/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,11/04/2016,Trolling,Artificial plastic lure,07:00,12:15,09:37,9.62,5,NA,NA,1,0,1,0,0
+279,11/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,11/04/2016,Bottom-bashing (drifting),Jig,11:30,12:45,12:07,12.12,10,NA,NA,5,0,5,0,0
+280,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (anchored),Squid,09:00,14:30,11:45,11.75,5,NA,NA,10,0,10,0,0
+281,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,08:30,15:30,12:00,12,30,NA,NA,8,0,8,0,0
+282,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,11:00,17:00,14:00,14,30,NA,NA,6,0,6,0,0
+283,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Trolling,Artificial plastic lure,09:30,12:00,10:45,10.75,5,NA,NA,2,0,2,0,0
+284,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,10:00,12:15,11:07,11.12,70,NA,NA,3,0,3,0,0
+285,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (anchored),Squid,09:00,11:45,10:22,10.37,10,NA,NA,4,0,4,0,0
+286,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Trolling,Artificial plastic lure,10:00,13:15,11:37,11.62,5,NA,NA,1,0,1,0,0
+287,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Artificial plastic lure,07:30,14:00,10:45,10.75,30,NA,NA,8,0,8,0,0
+288,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,08:30,14:30,11:30,11.5,100,NA,NA,12,0,12,0,0
+289,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,12:30,15:00,13:45,13.75,70,NA,NA,10,3,13,23.07692308,0.230769231
+290,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,12:00,15:15,13:37,13.62,10,NA,NA,30,0,30,0,0
+291,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Mulie,09:00,11:00,10:00,10,70,NA,NA,2,2,4,50,0.5
+292,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,1,0,1,0,0
+293,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Mulie,12:00,16:00,14:00,14,10,NA,NA,15,0,15,0,0
+294,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,10:30,15:30,13:00,13,35,NA,NA,5,0,5,0,0
+295,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,10:30,16:00,13:15,13.25,25,NA,NA,15,0,15,0,0
+296,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Mullet,08:30,,08:30,8.5,70,NA,NA,19,2,21,9.523809524,0.095238095
+297,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,2,0,2,0,0
+298,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (anchored),Squid,10:00,14:00,12:00,12,10,NA,NA,3,0,3,0,0
+299,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,,,,NA,NA,NA,NA,6,0,6,0,0
+300,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),,10:30,,10:30,10.5,60,NA,NA,9,0,9,0,0
+301,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,09:00,16:30,12:45,12.75,70,NA,NA,30,0,30,0,0
+302,12/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,12/04/2016,Bottom-bashing (drifting),Squid,14:30,,14:30,14.5,40,NA,NA,1,0,1,0,0
+303,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (drifting),Mulie,07:45,11:30,09:37,9.62,40,NA,NA,8,3,11,27.27272727,0.272727273
+304,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,2,0,2,0,0
+305,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (drifting),Mulie,08:00,12:00,10:00,10,20,NA,NA,2,0,2,0,0
+306,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,8,0,8,0,0
+307,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (anchored),Mulie,10:30,16:00,13:15,13.25,85,NA,NA,10,6,16,37.5,0.375
+308,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,0,1,1,100,1
+309,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,2,0,2,0,0
+310,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (drifting),Squid,09:00,16:30,12:45,12.75,80,NA,NA,30,6,36,16.66666667,0.166666667
+311,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (drifting),Squid,10:00,13:00,11:30,11.5,30,NA,NA,4,0,4,0,0
+312,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (drifting),Squid,11:00,15:30,13:15,13.25,20,NA,NA,33,2,35,5.714285714,0.057142857
+313,13/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,13/04/2016,Bottom-bashing (drifting),Squid,10:30,16:00,13:15,13.25,85,NA,NA,7,5,12,41.66666667,0.416666667
+314,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,11:30,16:15,13:52,13.87,30,NA,NA,3,0,3,0,0
+315,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,07:30,10:45,09:07,9.12,20,NA,NA,8,0,8,0,0
+316,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Mulie,09:00,13:00,11:00,11,50,NA,NA,5,0,5,0,0
+317,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (anchored),Squid,08:00,12:30,10:15,10.25,35,NA,NA,2,0,2,0,0
+318,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,09:45,14:30,12:07,12.12,100,NA,NA,6,2,8,25,0.25
+319,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,2,0,2,0,0
+320,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,07:30,15:15,11:22,11.37,35,NA,NA,6,2,8,25,0.25
+321,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,0,1,1,100,1
+322,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,11:30,15:15,13:22,13.37,20,NA,NA,2,0,2,0,0
+323,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,09:00,15:30,12:15,12.25,5,NA,NA,6,0,6,0,0
+324,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,09:00,12:00,10:30,10.5,5,NA,NA,4,0,4,0,0
+325,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,12:30,15:00,13:45,13.75,400,NA,NA,1,0,1,0,0
+326,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,1,0,1,0,0
+327,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,09:30,16:30,13:00,13,30,NA,NA,13,0,13,0,0
+328,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,10:00,16:30,13:15,13.25,140,NA,NA,20,0,20,0,0
+329,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,10:30,17:00,13:45,13.75,100,NA,NA,10,3,13,23.07692308,0.230769231
+330,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,,,,NA,5,NA,NA,2,0,2,0,0
+331,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,12:00,14:30,13:15,13.25,15,NA,NA,1,0,1,0,0
+332,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,12:00,17:00,14:30,14.5,5,NA,NA,1,1,2,50,0.5
+333,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,16:00,17:00,16:30,16.5,5,NA,NA,2,0,2,0,0
+334,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,12:00,18:00,15:00,15,5,NA,NA,4,0,4,0,0
+335,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Trolling,Artificial plastic lure,06:00,17:30,11:45,11.75,5,NA,NA,4,0,4,0,0
+336,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,11:00,15:30,13:15,13.25,80,NA,NA,6,0,6,0,0
+337,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,13:00,16:00,14:30,14.5,40,NA,NA,12,5,17,29.41176471,0.294117647
+338,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,09:30,16:00,12:45,12.75,50,NA,NA,65,4,69,5.797101449,0.057971014
+339,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,12:00,16:00,14:00,14,60,NA,NA,2,0,2,0,0
+340,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),Squid,11:00,17:15,14:07,14.12,80,NA,NA,36,0,36,0,0
+341,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (anchored),Squid,12:00,18:00,15:00,15,5,NA,NA,15,0,15,0,0
+342,14/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,14/04/2016,Bottom-bashing (drifting),,15:00,18:00,16:30,16.5,110,NA,NA,4,4,8,50,0.5
+343,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (anchored),Squid,06:15,14:30,10:22,10.37,10,NA,NA,15,2,17,11.76470588,0.117647059
+344,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (drifting),Squid,09:00,12:00,10:30,10.5,70,NA,NA,9,1,10,10,0.1
+345,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (drifting),Squid,12:00,14:30,13:15,13.25,100,NA,NA,8,0,8,0,0
+346,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (drifting),Squid,12:00,13:00,12:30,12.5,25,NA,NA,0,1,1,100,1
+347,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (drifting),Squid,12:30,15:30,14:00,14,45,NA,NA,3,0,3,0,0
+348,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (drifting),Mullet,11:00,15:00,13:00,13,110,NA,NA,7,3,10,30,0.3
+349,15/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,15/04/2016,Bottom-bashing (drifting),Squid,13:00,16:30,14:45,14.75,75,NA,NA,4,2,6,33.33333333,0.333333333
+350,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Mulie,12:00,13:30,12:45,12.75,5,NA,NA,1,0,1,0,0
+351,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),,09:30,11:45,10:37,10.62,45,NA,NA,4,0,4,0,0
+352,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,08:00,13:00,10:30,10.5,40,NA,NA,3,2,5,40,0.4
+353,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,08:00,12:45,10:22,10.37,60,NA,NA,20,1,21,4.761904762,0.047619048
+354,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Trolling,Artificial plastic lure,11:30,13:30,12:30,12.5,5,NA,NA,2,0,2,0,0
+355,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,09:00,15:00,12:00,12,65,NA,NA,9,0,9,0,0
+356,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Trolling,Artificial plastic lure,07:30,12:00,09:45,9.75,5,NA,NA,1,0,1,0,0
+357,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Mulie,10:30,12:30,11:30,11.5,45,NA,NA,2,0,2,0,0
+358,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,08:00,10:00,09:00,9,10,NA,NA,20,0,20,0,0
+359,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,08:30,16:00,12:15,12.25,150,NA,NA,21,0,21,0,0
+360,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),,08:30,11:30,10:00,10,70,NA,NA,7,0,7,0,0
+361,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),,12:00,15:15,13:37,13.62,40,NA,NA,6,2,8,25,0.25
+362,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,09:00,16:00,12:30,12.5,150,NA,NA,12,0,12,0,0
+363,17/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,17/04/2016,Bottom-bashing (drifting),Squid,10:45,16:00,13:22,13.37,70,NA,NA,7,0,7,0,0
+364,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (anchored),Squid,11:00,15:15,13:07,13.12,15,NA,NA,6,0,6,0,0
+365,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Trolling,Artificial plastic lure,11:00,12:15,11:37,11.62,5,NA,NA,1,0,1,0,0
+366,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (drifting),Squid,10:00,13:15,11:37,11.62,30,NA,NA,11,0,11,0,0
+367,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (drifting),Squid,07:00,13:15,10:07,10.12,100,NA,NA,11,3,14,21.42857143,0.214285714
+368,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (drifting),Squid,11:00,14:30,12:45,12.75,40,NA,NA,7,15,22,68.18181818,0.681818182
+369,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (drifting),Squid,09:00,16:15,12:37,12.62,60,NA,NA,19,12,31,38.70967742,0.387096774
+370,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (anchored),Mulie,14:30,17:15,15:52,15.87,15,NA,NA,6,0,6,0,0
+371,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (drifting),Squid,13:30,15:30,14:30,14.5,15,NA,NA,7,0,7,0,0
+372,18/04/2016,Jon,Bundegi,BunBR,Yes,114.174006,-21.831222,18/04/2016,Bottom-bashing (drifting),,08:00,13:30,10:45,10.75,100,NA,NA,15,0,15,0,0
+373,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (anchored),Garfish,07:00,12:30,09:45,9.75,30,NA,NA,2,4,6,66.66666667,0.666666667
+374,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),Mulie,09:00,11:30,10:15,10.25,30,NA,NA,6,5,11,45.45454545,0.454545455
+375,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Trolling,Artificial plastic lure,08:00,13:30,10:45,10.75,5,NA,NA,1,0,1,0,0
+376,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Trolling,Artificial plastic lure,09:30,12:30,11:00,11,5,NA,NA,2,0,2,0,0
+377,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),Squid,09:30,11:30,10:30,10.5,50,NA,NA,2,3,5,60,0.6
+378,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Trolling,Artificial plastic lure,09:30,13:45,11:37,11.62,5,NA,NA,1,0,1,0,0
+379,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),Artificial plastic lure,10:00,15:00,12:30,12.5,10,NA,NA,50,0,50,0,0
+380,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),Squid,08:45,14:45,11:45,11.75,60,NA,NA,5,0,5,0,0
+381,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),Squid,13:00,15:30,14:15,14.25,110,NA,NA,5,1,6,16.66666667,0.166666667
+382,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Trolling,Artificial plastic lure,10:30,12:00,11:15,11.25,5,NA,NA,2,0,2,0,0
+383,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (anchored),Squid,08:00,10:45,09:22,9.37,35,NA,NA,30,1,31,3.225806452,0.032258065
+384,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),,12:00,16:00,14:00,14,70,NA,NA,3,0,3,0,0
+385,19/04/2016,Jon,Tantabiddi,TantBR,Yes,113.977627,-21.912187,19/04/2016,Bottom-bashing (drifting),,14:00,15:30,14:45,14.75,30,NA,NA,3,0,3,0,0
+386,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (drifting),Squid,13:00,15:00,14:00,14,20,NA,NA,5,0,5,0,0
+387,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (anchored),Mulie,15:30,16:45,16:07,16.12,20,NA,NA,7,2,9,22.22222222,0.222222222
+388,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (drifting),Squid,14:00,17:00,15:30,15.5,15,NA,NA,6,0,6,0,0
+389,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (drifting),Squid,15:00,17:15,16:07,16.12,30,NA,NA,13,8,21,38.0952381,0.380952381
+390,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (drifting),Squid,07:00,11:00,09:00,9,15,NA,NA,4,0,4,0,0
+391,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (drifting),Squid,11:00,16:30,13:45,13.75,180,NA,NA,12,8,20,40,0.4
+392,20/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,20/04/2016,Bottom-bashing (anchored),Mulie,12:00,17:00,14:30,14.5,10,NA,NA,3,0,3,0,0
+393,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Squid,09:00,11:00,10:00,10,60,NA,NA,12,0,12,0,0
+394,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Trolling,Artificial plastic lure,11:00,13:00,12:00,12,5,NA,NA,1,0,1,0,0
+395,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Trolling,Artificial plastic lure,07:00,08:30,07:45,7.75,5,NA,NA,1,0,1,0,0
+396,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (anchored),Squid,12:00,14:00,13:00,13,15,NA,NA,2,0,2,0,0
+397,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Squid,08:30,11:45,10:07,10.12,60,NA,NA,3,0,3,0,0
+398,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Squid,12:00,15:00,13:30,13.5,75,NA,NA,4,0,4,0,0
+399,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Mackerel,12:30,15:45,14:07,14.12,20,NA,NA,8,0,8,0,0
+400,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Trolling,Artificial plastic lure,11:45,12:30,12:07,12.12,5,NA,NA,2,0,2,0,0
+401,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),,10:00,13:30,11:45,11.75,80,NA,NA,2,0,2,0,0
+402,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Squid,12:45,15:30,14:07,14.12,30,NA,NA,18,2,20,10,0.1
+403,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Mulie,11:00,16:30,13:45,13.75,60,NA,NA,8,1,9,11.11111111,0.111111111
+404,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Squid,12:30,16:30,14:30,14.5,100,NA,NA,12,0,12,0,0
+405,22/04/2016,Jon,CoralBay ,CBBR,Yes,113.766285,-23.155068,22/04/2016,Bottom-bashing (drifting),Squid,11:00,16:00,13:30,13.5,100,NA,NA,22,2,24,8.333333333,0.083333333
+406,23/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/04/2016,Bottom-bashing (anchored),Mulie,10:15,12:15,11:15,11.25,25,NA,NA,12,6,18,33.33333333,0.333333333
+407,23/04/2016,Jon,Exmouth,ExBR,Yes,114.139452,-21.955837,23/04/2016,Bottom-bashing (drifting),Squid,08:00,14:00,11:00,11,100,NA,NA,6,0,6,0,0

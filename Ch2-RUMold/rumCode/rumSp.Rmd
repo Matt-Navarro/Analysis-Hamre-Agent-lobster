@@ -1,0 +1,36 @@
+
+```{r librarys}
+library(ezknitr)
+library(knitr)
+library(sp)
+library(rdgal) # not avalaiable for this R verison
+library(raster)
+library(sf)
+library(ggplot2)
+```
+
+
+```{r setglobal, cache = FALSE, include = FALSE}
+w.dir <- "G:/My Drive/PhD_Nicole Hamre/spAnalysis"
+s.dir <- paste(w.dir, "shp", sep='/')
+r.dir <- paste(w.dir, "raster", sep='/')
+m.dir <- paste(w.dir, "maps", sep='/')
+# name of map <- paste(G:/My Drive/PhD_Nicole Hamre/spAnalysis/m.dir.png)
+
+opts_chunk$set(fig.align = "center", dev = 'png', fig.width = 11, fig.height = 8.5)
+```
+
+```{r readOGR}
+wa <- readOGR(paste(s.dir, "waCoast.shp",sep='/')) ## reading shp file
+plot(gb) # plotting shp file
+crs1 <- proj4string(gb) # check CRS 
+
+
+```
+
+
+
+# Resources
+[Rspatial](https://rspatial.org/raster/analysis/1-introduction.html)
+[Spatail data science](https://keen-swartz-3146c4.netlify.app/)
+[Raster data manipulation](https://rspatial.org/raster/spatial/8-rastermanip.html)

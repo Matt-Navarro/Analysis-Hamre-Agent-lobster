@@ -1,0 +1,45 @@
+---
+title: "Chapter 1: RUMs"
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    self_contained: false
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    number_section: true
+---
+
+```{r setglobal, echo= FALSE}
+knitr::opts_chunk$set(fig.align = "center",
+                      fig.width = 7, 
+                      fig.height = 5, 
+                      dev = "png",
+                      cache = TRUE)
+
+```
+
+```{r librarys, echo = FALSE}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r functions, echo=FALSE}
+
+```
+
+```{r child = c('rumWrangle.Rmd')}
+
+```
+
+```{r child = c('rumAnalysis.Rmd')}
+
+```
+
+```{r child = c('rumSp.Rmd')}
+
+```
+
+

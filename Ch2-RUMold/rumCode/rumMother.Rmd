@@ -1,0 +1,60 @@
+---
+title: "RUM Analysis"
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook:
+    df_print: paged
+    theme: cosmo
+    toc: yes
+    toc_float: yes  
+  html_document:
+    df_print: paged
+    theme: cosmo
+    toc: yes
+  word_document:
+    number_section: yes
+    toc: yes
+---
+
+```{r libraryload, include = FALSE}
+library(ezknitr)
+library(here)
+library(fs)
+library(knitr)
+```
+
+
+```{r setglobal, include = FALSE}
+
+getwd()
+
+```
+
+```{r plotCars}
+plot(cars)
+```
+
+
+`..` means the parent directory or directory above the current one
+`.` means the current directory
+A leading `/' at the beginning of a path tells the computer to start at the root directory - should be the **absolute path**.
+
+
+Attempt 
+
+ezknit(file = "./Ch2-RUM/rumCode/rumMother.Rmd", out_dir = "./Ch2-RUM/rumOut/rumReport", fig_dir = "rumPlot",chunk_opts = list(fig.align = "center", dev = 'png', fig.width = 11, fig.height = 8.5)) 
+getwd()
+fs::dir_tree()
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("./Ch2-RUM"))
+knitr::opts_knit$get("root.dir")
+
+attempt
+knitr::opts_knit$set(root.dir = normalizePath("./Ch2-RUM"))
+knitr::opts_knit$get("root.dir") 
+
+ezknit(file = "Ch2-RUM/rumCode/rumMother.Rmd", out_dir = "./rumOut", fig_dir = "./rumOut/rumPlot", chunk_opts = list(fig.align = "center", dev = 'png', fig.width = 11, fig.height = 8.5))
+
+
+

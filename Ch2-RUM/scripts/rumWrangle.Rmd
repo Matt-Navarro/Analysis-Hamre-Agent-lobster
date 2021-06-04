@@ -1,0 +1,148 @@
+```{r libraries, include = FALSE}
+library(tidyverse)
+```
+
+# Data Wrangling {.tabset} 
+## Testing Tab with To do list 
+Next time you have to -> 
+
+*Make a section on housekeeping rules, this should include naming conventions, links to where I can get help, file structure and all the rest of it.
+
+•Test how you source functions and library (if you put them all on the mother, does that mean that you cant run them in your child docs?)
+
+•test how the Rmd file upload to GItHub and consider how ypu will share and collaborate with Tim and Matt.
+
+•Write a ReadMe with housekeeping rules
+
+*can you cross reference bwteen Rmd docs??
+
+*Once your happy with it you will have to share this with Tim PhD student folder
+
+# Merging Meta 
+After downloading the data from arcCollector, you end up thre individual .csv for each survey layer, meta.csv, use.csv, avidity.csv. Merge the three sets of data, linking them by their GlobalID and GUID. This is a two step process;
+
+1. Merge meta.csv and Use.csv to make MetaUse(ddyy).csv eg. MetaUse0920.csv for the fieldtrip that began in 09/20
+2. Merge MetaUse(ddyy).csv and Avidity.csv to make Ning0920
+
+```{r Merge}
+is.data.frame(meta) # checking object is df -> TRUE
+is.data.frame(use) # checking object is df -> TRUE
+is.data.frame(avidity) # checking object is df -> TRUE
+
+MetaUse0920 <- merge(meta, use, by.x = "GlobalID", 
+                by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge Meta.csv (x) and Use.csv (y) dfs by GlobalID and GUID column
+Ning0920 <- merge(MetaUse0920, avidity, by.x = "GlobalID.y", 
+                   by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge MetaUse0920.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
+
+write.csv(Ning0920, 'Ch2-RUM/rumIgnore/Ning0920.csv') # save merged df as .csv, Path specificed for rumIgnore folder.
+```
+
+
+Cleaning to do:
+
+* Delete (but not actually) columns; GlobalID.y, GlobalID.x, ObjectID.x, ObjectID.y (unessesary when there is an ID column), CreationDate.x and .y, EditDate.x and .y (unessesary when you have Time and Date column), DaysOnShore_Other (full of NAs)
+
+* Column Date, date and time need to be split into individual columns, check formatting and class, and add 8h onto time column to get wa time not GMT - change names to SurveyDate and SurveyTime
+
+* Access points: rename anything with spaces to have no spaces, chang tourquise bay 1 and 2 into one factor
+
+* TotDaysInArea: change no factro to NA (mistake)
+
+* DaysOnBoat and DaysOnShore: Change 'All' to be equal to TotDaysInArea
+
+* Change x.x to survey.x, and y.x to survey.y
+
+* Go through comments in MetaComments and adjust necessary values
+
+* Delete survey type or make it say extractive or non-extractive 
+
+* Run through comments and adjust vaues 
+
+* Tend to comments in EXTRACTIVE
+
+* Separate recalldate into Activity date and Activity time (delete afterwards)
+
+* Tend to ifother fihing type comments and once complete merge with meta commenst to make Comments column
+
+* What time did you/lines in water - change name and standardise format and make time variable - apply the same to lines out
+
+* Standardise format of MAxDepth
+
+* Tend to if other (# fish undamaded)
+
+* # released undamaged - change name and tend to if other 
+
+* # depredeated - cshnge name and tedn to if other
+
+* Ask matt how to deal with soecies column
+
+* Tend to if other 
+
+
+
+```{r Clean, eval = FALSE}
+
+names(Ning0920) ## Checking names of variables
+
+
+
+Ning0920_v2 <- Ning0920 %>% # making new object, %>% means that every dplyr command will be applied to new object
+  rename(ID = X1, # format: rename(newname = currentname)
+         SurveyLong = x.x, 
+         SurveyLat = y.x, 
+         ActivityDateEX = `If RECALL, date`, # all NA values will need to be equal to survey date
+         FishingType = `What type of fishing did you do at this site?`, 
+         BaitLure = `Did you use a bait or lure?`,
+         StartEx = `What time did you (if spearfishing)/ your lines get in the water?`,
+         EndEx = `What time did you (if spearfishing)/your lines get out the water??`,
+         MaxDepth = `Max depth of hook at this site?`,
+         KeptUndam = `# fish you kept undamaged at this site?`,
+         RelUndam = `# released undamaged at this site?`,
+         DP = `# depredated`,
+         Species = `What species did you catch?`,
+         WhyLeaveEX = `Why did you leave this site?`,
+         ActivityDateNEX = `If RECALL, date_1`,
+         Activity = `What activity did you do?`,
+         StartNEX = `What time did you start the activity?`,
+         EndNEX = `What time did you end the activity?`,
+         MaxDiveDepth = `If DIVING, max depth`,
+         WhyThisSite = `Why did you choose this site?`,
+         WhyLeaveNEX = `Why did you leave this site?_1`,
+         UseLong = x.y,
+         UseLat = y.y,
+         NumTimeEXLast12m = `# times fished from boat in last 12 months?`,
+         NumTimeNEXLast12m = `# times doing NEX last 12 months??`,
+         YrsFishing = `# years fishing?`,
+         YrsNEX = `# years doing NEX?`,
+         DiveCert = `Are you a diver? If so, what is your certification?`,
+         NumDives = `If DIVING, # dives?`,
+         YrBorn = `What year were you born?`,
+         Postcode = `Home postcode`,
+         Accom = `If VISITOR, where are you staying?`,
+         Sex = `Male or Female`,
+         Party = `Describe party`,
+         BoatLength = `Boat length`,
+         BoatType = `Boat Type`,
+         BoatName = `Boat name or number`)
+ 
+Ning0920_v2
+```
+
+
+```{r irisData}
+iris
+```
+
+
+```{r irisPlot, fig.cap= "Iris Matrix"}
+plot(iris)
+```
+
+```{r irisModel}
+
+lm(Species~Petal.Length, data=iris)
+
+```
+
+see figure \@ref(fig:irisPlot)
+
