@@ -1,3 +1,0 @@
-# Spatial Visualisation{.tabset} 
-
-Here you will do all things spatial associated with your data. 
