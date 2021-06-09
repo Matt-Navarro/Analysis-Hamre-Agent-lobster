@@ -38,8 +38,6 @@ library(dplyr)
 
 ```
 
-```{r child = c('rumSp.Rmd')}
 
-```
 
 

@@ -30,5 +30,5 @@ Analysis-Hamre-Agent-lobster.Rproj
 
 /gitignore
 ##Add thing to the gitignore folder to make them hiding, if you are ignoring something else remember its a slash not a dot
-
+/Ch2-RUM/rumIgnore1
 

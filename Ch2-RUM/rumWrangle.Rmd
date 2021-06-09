@@ -1,27 +1,14 @@
+
 ```{r libraries, include = FALSE}
 library(tidyverse)
 ```
 
 # Data Wrangling {.tabset} 
-## Testing Tab with To do list 
-Next time you have to -> 
-
-*Make a section on housekeeping rules, this should include naming conventions, links to where I can get help, file structure and all the rest of it.
-
-•Test how you source functions and library (if you put them all on the mother, does that mean that you cant run them in your child docs?)
-
-•test how the Rmd file upload to GItHub and consider how ypu will share and collaborate with Tim and Matt.
-
-•Write a ReadMe with housekeeping rules
-
-*can you cross reference bwteen Rmd docs??
-
-*Once your happy with it you will have to share this with Tim PhD student folder
 
 # Merging Meta 
-After downloading the data from arcCollector, you end up thre individual .csv for each survey layer, meta.csv, use.csv, avidity.csv. Merge the three sets of data, linking them by their GlobalID and GUID. This is a two step process;
+After downloading the data from arcCollector, you end up three individual .csv for each survey layer, meta.csv, use.csv, avidity.csv. Merge the three sets of data, linking them by their GlobalID and GUID. This is a two step process;
 
-1. Merge meta.csv and Use.csv to make MetaUse(ddyy).csv eg. MetaUse0920.csv for the fieldtrip that began in 09/20
+1. Merge meta.csv and Use.csv to make MetaUse(ddyy).csv eg. MetaUse0920.csv for the field trip that began in 09/20
 2. Merge MetaUse(ddyy).csv and Avidity.csv to make Ning0920
 
 ```{r Merge}
@@ -78,8 +65,6 @@ Cleaning to do:
 
 * Tend to if other 
 
-
-
 ```{r Clean, eval = FALSE}
 
 names(Ning0920) ## Checking names of variables
@@ -128,21 +113,4 @@ Ning0920_v2 <- Ning0920 %>% # making new object, %>% means that every dplyr comm
 Ning0920_v2
 ```
 
-
-```{r irisData}
-iris
-```
-
-
-```{r irisPlot, fig.cap= "Iris Matrix"}
-plot(iris)
-```
-
-```{r irisModel}
-
-lm(Species~Petal.Length, data=iris)
-
-```
-
-see figure \@ref(fig:irisPlot)
 
