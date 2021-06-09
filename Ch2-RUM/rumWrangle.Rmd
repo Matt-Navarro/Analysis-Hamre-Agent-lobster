@@ -3,120 +3,134 @@
 library(tidyverse)
 ```
 
-
-```{r readData, include = FALSE}
-
-meta <- read.csv("/rumIgnore/Data-042021/meta_21.csv")
-```
-
 # Data Wrangling {.tabset} 
 
-# Merging Meta 
-After downloading the data from arcCollector, you end up three individual .csv for each survey layer, meta.csv, use.csv, avidity.csv. Merge the three sets of data, linking them by their GlobalID and GUID. This is a two step process;
+# Merging Data 
+After downloading the data from arcCollector, you end up three individual .csv docs for each survey layer; meta_21.csv, use_21.csv, avidity_21.csv (this includes data from 2020 field trip to). Merge the three sets of data, linking them by their GlobalID and GUID. 
 
-1. Merge meta.csv and Use.csv to make MetaUse(ddyy).csv eg. MetaUse0920.csv for the field trip that began in 09/20
-2. Merge MetaUse(ddyy).csv and Avidity.csv to make Ning0920
+1. Read in documents
+2. Merge meta.csv and use.csv to make MetaUse.csv 
+3. Merge MetaUse.csv and avidity.csv to make Ning0421
 
-```{r Merge}
+```{r  readData and Merge}
+meta <- read.csv("rumIgnore/Data-042021/meta_21.csv")
+use <- read.csv("rumIgnore/Data-042021/use_21.csv")
+avidity <- read.csv("rumIgnore/Data-042021/avidity_21.csv")
+
 is.data.frame(meta) # checking object is df -> TRUE
 is.data.frame(use) # checking object is df -> TRUE
 is.data.frame(avidity) # checking object is df -> TRUE
 
-MetaUse0920 <- merge(meta, use, by.x = "GlobalID", 
+MetaUse<- merge(meta, use, by.x = "GlobalID", 
                 by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge Meta.csv (x) and Use.csv (y) dfs by GlobalID and GUID column
-Ning0920 <- merge(MetaUse0920, avidity, by.x = "GlobalID.y", 
-                   by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge MetaUse0920.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
+Ning0421 <- merge(MetaUse, avidity, by.x = "GlobalID.y", 
+                   by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge MetaUse0421.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
 
-write.csv(Ning0920, 'Ch2-RUM/rumIgnore/Ning0920.csv') # save merged df as .csv, Path specificed for rumIgnore folder.
+write.csv(Ning0421, 'rumIgnore/Ning0421.csv') # save merged df as .csv, Path specified for rumIgnore folder.
 ```
 
+```{r clean, eval = FALSE}
 
-Cleaning to do:
-
-* Delete (but not actually) columns; GlobalID.y, GlobalID.x, ObjectID.x, ObjectID.y (unessesary when there is an ID column), CreationDate.x and .y, EditDate.x and .y (unessesary when you have Time and Date column), DaysOnShore_Other (full of NAs)
-
-* Column Date, date and time need to be split into individual columns, check formatting and class, and add 8h onto time column to get wa time not GMT - change names to SurveyDate and SurveyTime
-
-* Access points: rename anything with spaces to have no spaces, chang tourquise bay 1 and 2 into one factor
-
-* TotDaysInArea: change no factro to NA (mistake)
-
-* DaysOnBoat and DaysOnShore: Change 'All' to be equal to TotDaysInArea
-
-* Change x.x to survey.x, and y.x to survey.y
-
-* Go through comments in MetaComments and adjust necessary values
-
-* Delete survey type or make it say extractive or non-extractive 
-
-* Run through comments and adjust vaues 
-
-* Tend to comments in EXTRACTIVE
-
-* Separate recalldate into Activity date and Activity time (delete afterwards)
-
-* Tend to ifother fihing type comments and once complete merge with meta commenst to make Comments column
-
-* What time did you/lines in water - change name and standardise format and make time variable - apply the same to lines out
-
-* Standardise format of MAxDepth
-
-* Tend to if other (# fish undamaded)
-
-* # released undamaged - change name and tend to if other 
-
-* # depredeated - cshnge name and tedn to if other
-
-* Ask matt how to deal with soecies column
-
-* Tend to if other 
-
-```{r Clean, eval = FALSE}
-
-names(Ning0920) ## Checking names of variables
+tbl_df(Ning0421) # converting to tibble 
+glimpse(Ning0421) # kind of like str for tibble 
+view(Ning0421)
 
 
+Ning0421_v2 <- Ning0421 %>%
+  select(-c(GlobalID.y, GlobalID.x, GlobalID.y.y, Guid, OBJECTID.x, OBJECTID.y, OBJECTID,
+            Creator.x, Creator.y, Creator, EditDate.x, EditDate.y, EditDate, Editor.x, Editor.y,
+            Editor, CreationDate.y, CreationDate)) %>% 
+  
+# The above variables have been deselected because they are unnecessary, ID vars will be replaced with a new ID col, Creator and Editor is always Harrison, only date variable I need is date which was inputted by interviewer and CreationDate.x incase it has been missed
+  
+  select(-c(Boat_ramp_location, Interviewer_name, Day_type,Competition_noncompetition, 
+            Number_boats_interviewed_that_day,What_time_did_lines_enter_the_water, 
+            What_time_did_lines_leave_the_water, What_fishing_method_was_used, 
+            What_type_of_bait_or_lure_was_used, Was_berleying_used, 
+            What_was_the_maximum_depth_of_hooks, What_was_the_minimum_depth_of_hooks,
+            Why_did_you_choose_to_fish_at_that_site, 
+            How_many_fish_did_you_catch_including_those_kept_and_those_returned,
+            What_species_of_fish_did_you_catch, Did_you_experience_shark_bite_offs,
+            If_yes_how_many_fish_did_you_lose, 
+            Were_these_fish_lost_completely_or_was_part_of_the_fish_.e.g.head._retrieved,
+            Boat_name_or_number, Boat_length, Time_of_interview, 
+            Full_completion_or_partial_or_refusal, If_partial_or_refusal_why,
+            Comments, Have_you_been_interviewed_about_shark_bite_offs_before,
+            How_many_times_have_you_fished_from_this_boat_ramp_before,
+            How_many_days_have_you_fished_from_a_boat_this_year,
+            How_many_years_have_you_been_fishing_for,
+            Home_postcode, What_is_your_income_before_tax, How_many_sharks_were_hooked,
+            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today)) %>% # These are Jons Qs
+  
+  # format: rename(newname = currentname)
+  rename(Interviewer = "REQUIRED..Interviewer",
+         Transect = "REQUIRED..Boat.ramp.transect.name",
+         Screen1 = "SCREEN..18.", 
+         Screen2 = "SCREEN..have.we.interviewed.you.in.the.last.2.weeks.", 
+         Agreement = "REQUIRED..Agreement.to.Participate",
+         nDaysInArea = "How.many.days.are.you.in.the.area.",
+         nDaysInArea_other = "If.OTHER....days.in.area",
+         BoatAccess = "Do.you.have.access.to.a.private.boat.while.your.here.",
+         nBoatDays = "If.YES....days.you.intend.to.spend.on.boat.",
+         nBoatDays_other = "If.OTHER....days.on.private.boat.",
+         nShoreDays = "X..days.you.intend.to.be.engaged.in.shore.based.activities.",
+         nShoreDays_other = "If.OTHER....days.on.shore.",
+         nTimesLast12m = "X..separate.times.in.area.in.last.12.months.",
+         nTimesLast12m_other = "If.OTHER....times.in.last.12.months",
+         nTimes19 = "X..separate.times.in.area.in.2019.",
+         nTimes19_other = "If.OTHER....times.in.area.in.2019",
+         Covid = "Would.you.be.elsewhere.if.it.weren.t.for.travel.restrictions.",
+         SurveyLong = "x.x",
+         SurveyLat = "y.x",
+         EXTRACTIVE = "EXTRACTIVE.SURVEY",
+         exRecall = "If.RECALL..date",
+         FishingType = "What.type.of.fishing.did.you.do.at.this.site.",
+         FishingType_other = "If.OTHER..fishing.type",
+         BaitLure = "Did.you.use.a.bait.or.lure.",
+         exStart = "What.time.did.you..if.spearfishing...your.lines.get.in.the.water.",
+         exStop = "What.time.did.you..if.spearfishing..your.lines.get.out.the.water..",
+         MaxHookDepth = "Max.depth.of.hook.at.this.site.",
+         KeptUndam = "X..fish.you.kept.undamaged.at.this.site.",
+         KeptUdam_other = "If.OTHER....kept.undamaged",
+         RelUndam = "X..released.undamaged.at.this.site.",
+         RelUndam_other = "If.OTHER....released.undamaged",
+         nDP = "X..depredated",
+         nDP_other = "If.OTHER....depredated",
+         Species = "What.species.did.you.catch.",
+         exWhyLeave = "Why.did.you.leave.this.site.",
+         exWhyLeave_other = "If.OTHER..why.did.you.leave.this.site.",
+         NONEXTRACTIVE = "NON_EXTRACTIVE.SURVEY",
+         nexRecall = "If.RECALL..date.1",
+         Activity = "What.activity.did.you.do.",
+         Activity_other = "If.OTHER..activity",
+         nexStart = "What.time.did.you.start.the.activity.",
+         nexStop = "What.time.did.you.end.the.activity.",
+         DiveMaxDepth = "If.DIVING..max.depth.",
+         WhyChoose = "Why.did.you.choose.this.site.",
+         WhyChoose_other = "If.OTHER..why.this.site",
+         nexWhyLeave = "Why.did.you.leave.this.site..1",
+         nexWhyLeave_other = "If.OTHER..why.did.you.leave.this.site..1",
+         UseLong = "x.y",
+         UseLat = "y.y",
+         exnTimes12m = "X..times.fished.from.boat.in.last.12.months.",
+         nexnTimes12m = "X..times.doing.NEX.last.12.months..",
+         exYrs = "X..years.fishing.",
+         nexYrs = "X..years.doing.NEX.",
+         DiveCert = "Are.you.a.diver..If.so..what.is.your.certification.",
+         nDives = "If.DIVING....dives.",
+         YrBorn = "What.year.were.you.born.",
+         Postcode = "Home.postcode",
+         Accom = "If.VISITOR..where.are.you.staying.",
+         Accom_other = "If.OTHER..where.are.you.staying",
+         Sex = "Male.or.Female",
+         Party = "Describe.party",
+         BoatLength = "Boat.length",
+         BoatType = "Boat.Type",
+         BoatID = "Boat.name.or.number"
+         )
 
-Ning0920_v2 <- Ning0920 %>% # making new object, %>% means that every dplyr command will be applied to new object
-  rename(ID = X1, # format: rename(newname = currentname)
-         SurveyLong = x.x, 
-         SurveyLat = y.x, 
-         ActivityDateEX = `If RECALL, date`, # all NA values will need to be equal to survey date
-         FishingType = `What type of fishing did you do at this site?`, 
-         BaitLure = `Did you use a bait or lure?`,
-         StartEx = `What time did you (if spearfishing)/ your lines get in the water?`,
-         EndEx = `What time did you (if spearfishing)/your lines get out the water??`,
-         MaxDepth = `Max depth of hook at this site?`,
-         KeptUndam = `# fish you kept undamaged at this site?`,
-         RelUndam = `# released undamaged at this site?`,
-         DP = `# depredated`,
-         Species = `What species did you catch?`,
-         WhyLeaveEX = `Why did you leave this site?`,
-         ActivityDateNEX = `If RECALL, date_1`,
-         Activity = `What activity did you do?`,
-         StartNEX = `What time did you start the activity?`,
-         EndNEX = `What time did you end the activity?`,
-         MaxDiveDepth = `If DIVING, max depth`,
-         WhyThisSite = `Why did you choose this site?`,
-         WhyLeaveNEX = `Why did you leave this site?_1`,
-         UseLong = x.y,
-         UseLat = y.y,
-         NumTimeEXLast12m = `# times fished from boat in last 12 months?`,
-         NumTimeNEXLast12m = `# times doing NEX last 12 months??`,
-         YrsFishing = `# years fishing?`,
-         YrsNEX = `# years doing NEX?`,
-         DiveCert = `Are you a diver? If so, what is your certification?`,
-         NumDives = `If DIVING, # dives?`,
-         YrBorn = `What year were you born?`,
-         Postcode = `Home postcode`,
-         Accom = `If VISITOR, where are you staying?`,
-         Sex = `Male or Female`,
-         Party = `Describe party`,
-         BoatLength = `Boat length`,
-         BoatType = `Boat Type`,
-         BoatName = `Boat name or number`)
- 
-Ning0920_v2
+names(Ning0421_v2)
+
 ```
 
 

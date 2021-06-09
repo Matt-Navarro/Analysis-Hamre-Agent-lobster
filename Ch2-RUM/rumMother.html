@@ -14,6 +14,7 @@
 
 <title>Chapter 1: RUMs</title>
 
+<script src="rumMother_files/header-attrs-2.8/header-attrs.js"></script>
 <script src="rumMother_files/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="rumMother_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -227,12 +228,12 @@ div.tocify {
 
 <!-- setup 3col/9col grid for toc_float and main content  -->
 <div class="row">
-<div class="col-sm-12 col-md-4 col-lg-3">
+<div class="col-xs-12 col-sm-4 col-md-3">
 <div id="TOC" class="tocify">
 </div>
 </div>
 
-<div class="toc-content col-sm-12 col-md-8 col-lg-9">
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -243,114 +244,150 @@ div.tocify {
 
 <h1 class="title toc-ignore">Chapter 1: RUMs</h1>
 <h4 class="author">Nicole Hamre</h4>
-<h4 class="date">04 March, 2021</h4>
+<h4 class="date">09 June, 2021</h4>
 
 </div>
 
 
-<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>## ✓ ggplot2 3.3.2     ✓ purrr   0.3.3
-## ✓ tibble  3.0.0     ✓ dplyr   0.8.5
-## ✓ tidyr   1.0.2     ✓ stringr 1.4.0
-## ✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
-<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<div id="data-wrangling" class="section level1 tabset">
+<div id="data-wrangling" class="section level1 tabset" number="1">
 <h1><span class="header-section-number">1</span> Data Wrangling</h1>
-<p>This will be the .Rmd where I do all my data wrangling this will include merging the meta data, cleaning the data then appending that data to the master data sheet.</p>
-<p>The first example will be wrangling your Ningaloo 2020 data and Jons data and adding them together. After this you can move on to the rumAnalysis.Rmd where you will conduct all your data analysis.</p>
-<div id="merging-metadata" class="section level2">
-<h2><span class="header-section-number">1.1</span> Merging metadata</h2>
-<p>Testing Tab</p>
 </div>
-<div id="cleaning-data" class="section level2">
-<h2><span class="header-section-number">1.2</span> Cleaning data</h2>
-<p>Testing tab
-## Testing Tab with To do list
-Next time you have to -&gt;</p>
-<p>*Make a section on housekeeping rules, this should include naming conventions, links to where I can get help, file structure and all the rest of it.</p>
-<p>•Test how you source functions and library (if you put them all on the mother, does that mean that you cant run them in your child docs?)</p>
-<p>•test how the Rmd file upload to GItHub and consider how ypu will share and collaborate with Tim and Matt.</p>
-<p>•Write a ReadMe with housekeeping rules</p>
-<p>*can you cross reference bwteen Rmd docs??</p>
-<p>*Once your happy with it you will have to share this with Tim PhD student folder</p>
-</div>
-</div>
-<div id="merging-meta" class="section level1">
-<h1><span class="header-section-number">2</span> Merging Meta</h1>
-<p>After downloading the data from arcCollector, you end up thre individual .csv for each survey layer, Meta.csv, Use.csv, Avidity.csv. Merge the three sets of data, linking them by their GlobalID and GUID. This is a two step process;</p>
+<div id="merging-data" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Merging Data</h1>
+<p>After downloading the data from arcCollector, you end up three individual .csv docs for each survey layer; meta_21.csv, use_21.csv, avidity_21.csv (this includes data from 2020 field trip to). Merge the three sets of data, linking them by their GlobalID and GUID.</p>
 <ol style="list-style-type: decimal">
-<li>Merge Meta.csv and Use.csv to make MetaUse(ddyy).csv eg. MetaUse0920.csv for the fieldtrip that began in 09/20</li>
-<li>Merge MetaUse(ddyy).csv and Avidity.csv to make Ning0920</li>
+<li>Read in documents</li>
+<li>Merge meta.csv and use.csv to make MetaUse.csv</li>
+<li>Merge MetaUse.csv and avidity.csv to make Ning0421</li>
 </ol>
-<pre class="r"><code>is.data.frame(Meta) # checking object is df -&gt; TRUE
-is.data.frame(Use) # checking object is df -&gt; TRUE
-is.data.frame(Avidity) # checking object is df -&gt; TRUE
+<pre class="r"><code>meta &lt;- read.csv(&quot;rumIgnore/Data-042021/meta_21.csv&quot;)
+use &lt;- read.csv(&quot;rumIgnore/Data-042021/use_21.csv&quot;)
+avidity &lt;- read.csv(&quot;rumIgnore/Data-042021/avidity_21.csv&quot;)
 
-MetaUse0920 &lt;- merge(Meta, Use, by.x = &quot;GlobalID&quot;, 
+is.data.frame(meta) # checking object is df -&gt; TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.data.frame(use) # checking object is df -&gt; TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.data.frame(avidity) # checking object is df -&gt; TRUE</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>MetaUse&lt;- merge(meta, use, by.x = &quot;GlobalID&quot;, 
                 by.y = &quot;Guid&quot;, all.x = TRUE, all.y = TRUE) # merge Meta.csv (x) and Use.csv (y) dfs by GlobalID and GUID column
-Ning1 &lt;- merge(MetaUse, Avidity, by.x = &quot;GlobalID.y&quot;, 
-                   by.y = &quot;Guid&quot;, all.x = TRUE, all.y = TRUE) # merge MetaUse0920.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
+Ning0421 &lt;- merge(MetaUse, avidity, by.x = &quot;GlobalID.y&quot;, 
+                   by.y = &quot;Guid&quot;, all.x = TRUE, all.y = TRUE) # merge MetaUse0421.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
 
-write.csv(Ning1, &#39;Ning1.csv&#39;) # Need to fine tune the data on excel so saving as CSV in current workinmg directory. </code></pre>
-<pre class="r"><code>summary(iris)</code></pre>
-<pre><code>##   Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
-##  Min.   :4.300   Min.   :2.000   Min.   :1.000   Min.   :0.100  
-##  1st Qu.:5.100   1st Qu.:2.800   1st Qu.:1.600   1st Qu.:0.300  
-##  Median :5.800   Median :3.000   Median :4.350   Median :1.300  
-##  Mean   :5.843   Mean   :3.057   Mean   :3.758   Mean   :1.199  
-##  3rd Qu.:6.400   3rd Qu.:3.300   3rd Qu.:5.100   3rd Qu.:1.800  
-##  Max.   :7.900   Max.   :4.400   Max.   :6.900   Max.   :2.500  
-##        Species  
-##  setosa    :50  
-##  versicolor:50  
-##  virginica :50  
-##                 
-##                 
-## </code></pre>
-<pre class="r"><code>iris</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Sepal.Length"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Sepal.Width"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Petal.Length"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Petal.Width"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["Species"],"name":[5],"type":["fct"],"align":["left"]}],"data":[{"1":"5.1","2":"3.5","3":"1.4","4":"0.2","5":"setosa"},{"1":"4.9","2":"3.0","3":"1.4","4":"0.2","5":"setosa"},{"1":"4.7","2":"3.2","3":"1.3","4":"0.2","5":"setosa"},{"1":"4.6","2":"3.1","3":"1.5","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.6","3":"1.4","4":"0.2","5":"setosa"},{"1":"5.4","2":"3.9","3":"1.7","4":"0.4","5":"setosa"},{"1":"4.6","2":"3.4","3":"1.4","4":"0.3","5":"setosa"},{"1":"5.0","2":"3.4","3":"1.5","4":"0.2","5":"setosa"},{"1":"4.4","2":"2.9","3":"1.4","4":"0.2","5":"setosa"},{"1":"4.9","2":"3.1","3":"1.5","4":"0.1","5":"setosa"},{"1":"5.4","2":"3.7","3":"1.5","4":"0.2","5":"setosa"},{"1":"4.8","2":"3.4","3":"1.6","4":"0.2","5":"setosa"},{"1":"4.8","2":"3.0","3":"1.4","4":"0.1","5":"setosa"},{"1":"4.3","2":"3.0","3":"1.1","4":"0.1","5":"setosa"},{"1":"5.8","2":"4.0","3":"1.2","4":"0.2","5":"setosa"},{"1":"5.7","2":"4.4","3":"1.5","4":"0.4","5":"setosa"},{"1":"5.4","2":"3.9","3":"1.3","4":"0.4","5":"setosa"},{"1":"5.1","2":"3.5","3":"1.4","4":"0.3","5":"setosa"},{"1":"5.7","2":"3.8","3":"1.7","4":"0.3","5":"setosa"},{"1":"5.1","2":"3.8","3":"1.5","4":"0.3","5":"setosa"},{"1":"5.4","2":"3.4","3":"1.7","4":"0.2","5":"setosa"},{"1":"5.1","2":"3.7","3":"1.5","4":"0.4","5":"setosa"},{"1":"4.6","2":"3.6","3":"1.0","4":"0.2","5":"setosa"},{"1":"5.1","2":"3.3","3":"1.7","4":"0.5","5":"setosa"},{"1":"4.8","2":"3.4","3":"1.9","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.0","3":"1.6","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.4","3":"1.6","4":"0.4","5":"setosa"},{"1":"5.2","2":"3.5","3":"1.5","4":"0.2","5":"setosa"},{"1":"5.2","2":"3.4","3":"1.4","4":"0.2","5":"setosa"},{"1":"4.7","2":"3.2","3":"1.6","4":"0.2","5":"setosa"},{"1":"4.8","2":"3.1","3":"1.6","4":"0.2","5":"setosa"},{"1":"5.4","2":"3.4","3":"1.5","4":"0.4","5":"setosa"},{"1":"5.2","2":"4.1","3":"1.5","4":"0.1","5":"setosa"},{"1":"5.5","2":"4.2","3":"1.4","4":"0.2","5":"setosa"},{"1":"4.9","2":"3.1","3":"1.5","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.2","3":"1.2","4":"0.2","5":"setosa"},{"1":"5.5","2":"3.5","3":"1.3","4":"0.2","5":"setosa"},{"1":"4.9","2":"3.6","3":"1.4","4":"0.1","5":"setosa"},{"1":"4.4","2":"3.0","3":"1.3","4":"0.2","5":"setosa"},{"1":"5.1","2":"3.4","3":"1.5","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.5","3":"1.3","4":"0.3","5":"setosa"},{"1":"4.5","2":"2.3","3":"1.3","4":"0.3","5":"setosa"},{"1":"4.4","2":"3.2","3":"1.3","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.5","3":"1.6","4":"0.6","5":"setosa"},{"1":"5.1","2":"3.8","3":"1.9","4":"0.4","5":"setosa"},{"1":"4.8","2":"3.0","3":"1.4","4":"0.3","5":"setosa"},{"1":"5.1","2":"3.8","3":"1.6","4":"0.2","5":"setosa"},{"1":"4.6","2":"3.2","3":"1.4","4":"0.2","5":"setosa"},{"1":"5.3","2":"3.7","3":"1.5","4":"0.2","5":"setosa"},{"1":"5.0","2":"3.3","3":"1.4","4":"0.2","5":"setosa"},{"1":"7.0","2":"3.2","3":"4.7","4":"1.4","5":"versicolor"},{"1":"6.4","2":"3.2","3":"4.5","4":"1.5","5":"versicolor"},{"1":"6.9","2":"3.1","3":"4.9","4":"1.5","5":"versicolor"},{"1":"5.5","2":"2.3","3":"4.0","4":"1.3","5":"versicolor"},{"1":"6.5","2":"2.8","3":"4.6","4":"1.5","5":"versicolor"},{"1":"5.7","2":"2.8","3":"4.5","4":"1.3","5":"versicolor"},{"1":"6.3","2":"3.3","3":"4.7","4":"1.6","5":"versicolor"},{"1":"4.9","2":"2.4","3":"3.3","4":"1.0","5":"versicolor"},{"1":"6.6","2":"2.9","3":"4.6","4":"1.3","5":"versicolor"},{"1":"5.2","2":"2.7","3":"3.9","4":"1.4","5":"versicolor"},{"1":"5.0","2":"2.0","3":"3.5","4":"1.0","5":"versicolor"},{"1":"5.9","2":"3.0","3":"4.2","4":"1.5","5":"versicolor"},{"1":"6.0","2":"2.2","3":"4.0","4":"1.0","5":"versicolor"},{"1":"6.1","2":"2.9","3":"4.7","4":"1.4","5":"versicolor"},{"1":"5.6","2":"2.9","3":"3.6","4":"1.3","5":"versicolor"},{"1":"6.7","2":"3.1","3":"4.4","4":"1.4","5":"versicolor"},{"1":"5.6","2":"3.0","3":"4.5","4":"1.5","5":"versicolor"},{"1":"5.8","2":"2.7","3":"4.1","4":"1.0","5":"versicolor"},{"1":"6.2","2":"2.2","3":"4.5","4":"1.5","5":"versicolor"},{"1":"5.6","2":"2.5","3":"3.9","4":"1.1","5":"versicolor"},{"1":"5.9","2":"3.2","3":"4.8","4":"1.8","5":"versicolor"},{"1":"6.1","2":"2.8","3":"4.0","4":"1.3","5":"versicolor"},{"1":"6.3","2":"2.5","3":"4.9","4":"1.5","5":"versicolor"},{"1":"6.1","2":"2.8","3":"4.7","4":"1.2","5":"versicolor"},{"1":"6.4","2":"2.9","3":"4.3","4":"1.3","5":"versicolor"},{"1":"6.6","2":"3.0","3":"4.4","4":"1.4","5":"versicolor"},{"1":"6.8","2":"2.8","3":"4.8","4":"1.4","5":"versicolor"},{"1":"6.7","2":"3.0","3":"5.0","4":"1.7","5":"versicolor"},{"1":"6.0","2":"2.9","3":"4.5","4":"1.5","5":"versicolor"},{"1":"5.7","2":"2.6","3":"3.5","4":"1.0","5":"versicolor"},{"1":"5.5","2":"2.4","3":"3.8","4":"1.1","5":"versicolor"},{"1":"5.5","2":"2.4","3":"3.7","4":"1.0","5":"versicolor"},{"1":"5.8","2":"2.7","3":"3.9","4":"1.2","5":"versicolor"},{"1":"6.0","2":"2.7","3":"5.1","4":"1.6","5":"versicolor"},{"1":"5.4","2":"3.0","3":"4.5","4":"1.5","5":"versicolor"},{"1":"6.0","2":"3.4","3":"4.5","4":"1.6","5":"versicolor"},{"1":"6.7","2":"3.1","3":"4.7","4":"1.5","5":"versicolor"},{"1":"6.3","2":"2.3","3":"4.4","4":"1.3","5":"versicolor"},{"1":"5.6","2":"3.0","3":"4.1","4":"1.3","5":"versicolor"},{"1":"5.5","2":"2.5","3":"4.0","4":"1.3","5":"versicolor"},{"1":"5.5","2":"2.6","3":"4.4","4":"1.2","5":"versicolor"},{"1":"6.1","2":"3.0","3":"4.6","4":"1.4","5":"versicolor"},{"1":"5.8","2":"2.6","3":"4.0","4":"1.2","5":"versicolor"},{"1":"5.0","2":"2.3","3":"3.3","4":"1.0","5":"versicolor"},{"1":"5.6","2":"2.7","3":"4.2","4":"1.3","5":"versicolor"},{"1":"5.7","2":"3.0","3":"4.2","4":"1.2","5":"versicolor"},{"1":"5.7","2":"2.9","3":"4.2","4":"1.3","5":"versicolor"},{"1":"6.2","2":"2.9","3":"4.3","4":"1.3","5":"versicolor"},{"1":"5.1","2":"2.5","3":"3.0","4":"1.1","5":"versicolor"},{"1":"5.7","2":"2.8","3":"4.1","4":"1.3","5":"versicolor"},{"1":"6.3","2":"3.3","3":"6.0","4":"2.5","5":"virginica"},{"1":"5.8","2":"2.7","3":"5.1","4":"1.9","5":"virginica"},{"1":"7.1","2":"3.0","3":"5.9","4":"2.1","5":"virginica"},{"1":"6.3","2":"2.9","3":"5.6","4":"1.8","5":"virginica"},{"1":"6.5","2":"3.0","3":"5.8","4":"2.2","5":"virginica"},{"1":"7.6","2":"3.0","3":"6.6","4":"2.1","5":"virginica"},{"1":"4.9","2":"2.5","3":"4.5","4":"1.7","5":"virginica"},{"1":"7.3","2":"2.9","3":"6.3","4":"1.8","5":"virginica"},{"1":"6.7","2":"2.5","3":"5.8","4":"1.8","5":"virginica"},{"1":"7.2","2":"3.6","3":"6.1","4":"2.5","5":"virginica"},{"1":"6.5","2":"3.2","3":"5.1","4":"2.0","5":"virginica"},{"1":"6.4","2":"2.7","3":"5.3","4":"1.9","5":"virginica"},{"1":"6.8","2":"3.0","3":"5.5","4":"2.1","5":"virginica"},{"1":"5.7","2":"2.5","3":"5.0","4":"2.0","5":"virginica"},{"1":"5.8","2":"2.8","3":"5.1","4":"2.4","5":"virginica"},{"1":"6.4","2":"3.2","3":"5.3","4":"2.3","5":"virginica"},{"1":"6.5","2":"3.0","3":"5.5","4":"1.8","5":"virginica"},{"1":"7.7","2":"3.8","3":"6.7","4":"2.2","5":"virginica"},{"1":"7.7","2":"2.6","3":"6.9","4":"2.3","5":"virginica"},{"1":"6.0","2":"2.2","3":"5.0","4":"1.5","5":"virginica"},{"1":"6.9","2":"3.2","3":"5.7","4":"2.3","5":"virginica"},{"1":"5.6","2":"2.8","3":"4.9","4":"2.0","5":"virginica"},{"1":"7.7","2":"2.8","3":"6.7","4":"2.0","5":"virginica"},{"1":"6.3","2":"2.7","3":"4.9","4":"1.8","5":"virginica"},{"1":"6.7","2":"3.3","3":"5.7","4":"2.1","5":"virginica"},{"1":"7.2","2":"3.2","3":"6.0","4":"1.8","5":"virginica"},{"1":"6.2","2":"2.8","3":"4.8","4":"1.8","5":"virginica"},{"1":"6.1","2":"3.0","3":"4.9","4":"1.8","5":"virginica"},{"1":"6.4","2":"2.8","3":"5.6","4":"2.1","5":"virginica"},{"1":"7.2","2":"3.0","3":"5.8","4":"1.6","5":"virginica"},{"1":"7.4","2":"2.8","3":"6.1","4":"1.9","5":"virginica"},{"1":"7.9","2":"3.8","3":"6.4","4":"2.0","5":"virginica"},{"1":"6.4","2":"2.8","3":"5.6","4":"2.2","5":"virginica"},{"1":"6.3","2":"2.8","3":"5.1","4":"1.5","5":"virginica"},{"1":"6.1","2":"2.6","3":"5.6","4":"1.4","5":"virginica"},{"1":"7.7","2":"3.0","3":"6.1","4":"2.3","5":"virginica"},{"1":"6.3","2":"3.4","3":"5.6","4":"2.4","5":"virginica"},{"1":"6.4","2":"3.1","3":"5.5","4":"1.8","5":"virginica"},{"1":"6.0","2":"3.0","3":"4.8","4":"1.8","5":"virginica"},{"1":"6.9","2":"3.1","3":"5.4","4":"2.1","5":"virginica"},{"1":"6.7","2":"3.1","3":"5.6","4":"2.4","5":"virginica"},{"1":"6.9","2":"3.1","3":"5.1","4":"2.3","5":"virginica"},{"1":"5.8","2":"2.7","3":"5.1","4":"1.9","5":"virginica"},{"1":"6.8","2":"3.2","3":"5.9","4":"2.3","5":"virginica"},{"1":"6.7","2":"3.3","3":"5.7","4":"2.5","5":"virginica"},{"1":"6.7","2":"3.0","3":"5.2","4":"2.3","5":"virginica"},{"1":"6.3","2":"2.5","3":"5.0","4":"1.9","5":"virginica"},{"1":"6.5","2":"3.0","3":"5.2","4":"2.0","5":"virginica"},{"1":"6.2","2":"3.4","3":"5.4","4":"2.3","5":"virginica"},{"1":"5.9","2":"3.0","3":"5.1","4":"1.8","5":"virginica"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+write.csv(Ning0421, &#39;rumIgnore/Ning0421.csv&#39;) # save merged df as .csv, Path specified for rumIgnore folder.</code></pre>
+<pre class="r"><code>tbl_df(Ning0421) # converting to tibble 
+glimpse(Ning0421) # kind of like str for tibble 
+view(Ning0421)
+
+
+Ning0421_v2 &lt;- Ning0421 %&gt;%
+  select(-c(GlobalID.y, GlobalID.x, GlobalID.y.y, Guid, OBJECTID.x, OBJECTID.y, OBJECTID,
+            Creator.x, Creator.y, Creator, EditDate.x, EditDate.y, EditDate, Editor.x, Editor.y,
+            Editor, CreationDate.y, CreationDate)) %&gt;% 
+  
+# The above variables have been deselected because they are unnecessary, ID vars will be replaced with a new ID col, Creator and Editor is always Harrison, only date variable I need is date which was inputted by interviewer and CreationDate.x incase it has been missed
+  
+  select(-c(Boat_ramp_location, Interviewer_name, Day_type,Competition_noncompetition, 
+            Number_boats_interviewed_that_day,What_time_did_lines_enter_the_water, 
+            What_time_did_lines_leave_the_water, What_fishing_method_was_used, 
+            What_type_of_bait_or_lure_was_used, Was_berleying_used, 
+            What_was_the_maximum_depth_of_hooks, What_was_the_minimum_depth_of_hooks,
+            Why_did_you_choose_to_fish_at_that_site, 
+            How_many_fish_did_you_catch_including_those_kept_and_those_returned,
+            What_species_of_fish_did_you_catch, Did_you_experience_shark_bite_offs,
+            If_yes_how_many_fish_did_you_lose, 
+            Were_these_fish_lost_completely_or_was_part_of_the_fish_.e.g.head._retrieved,
+            Boat_name_or_number, Boat_length, Time_of_interview, 
+            Full_completion_or_partial_or_refusal, If_partial_or_refusal_why,
+            Comments, Have_you_been_interviewed_about_shark_bite_offs_before,
+            How_many_times_have_you_fished_from_this_boat_ramp_before,
+            How_many_days_have_you_fished_from_a_boat_this_year,
+            How_many_years_have_you_been_fishing_for,
+            Home_postcode, What_is_your_income_before_tax, How_many_sharks_were_hooked,
+            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today)) %&gt;% # These are Jons Qs
+  
+  # format: rename(newname = currentname)
+  rename(Interviewer = &quot;REQUIRED..Interviewer&quot;,
+         Transect = &quot;REQUIRED..Boat.ramp.transect.name&quot;,
+         Screen1 = &quot;SCREEN..18.&quot;, 
+         Screen2 = &quot;SCREEN..have.we.interviewed.you.in.the.last.2.weeks.&quot;, 
+         Agreement = &quot;REQUIRED..Agreement.to.Participate&quot;,
+         nDaysInArea = &quot;How.many.days.are.you.in.the.area.&quot;,
+         nDaysInArea_other = &quot;If.OTHER....days.in.area&quot;,
+         BoatAccess = &quot;Do.you.have.access.to.a.private.boat.while.your.here.&quot;,
+         nBoatDays = &quot;If.YES....days.you.intend.to.spend.on.boat.&quot;,
+         nBoatDays_other = &quot;If.OTHER....days.on.private.boat.&quot;,
+         nShoreDays = &quot;X..days.you.intend.to.be.engaged.in.shore.based.activities.&quot;,
+         nShoreDays_other = &quot;If.OTHER....days.on.shore.&quot;,
+         nTimesLast12m = &quot;X..separate.times.in.area.in.last.12.months.&quot;,
+         nTimesLast12m_other = &quot;If.OTHER....times.in.last.12.months&quot;,
+         nTimes19 = &quot;X..separate.times.in.area.in.2019.&quot;,
+         nTimes19_other = &quot;If.OTHER....times.in.area.in.2019&quot;,
+         Covid = &quot;Would.you.be.elsewhere.if.it.weren.t.for.travel.restrictions.&quot;,
+         SurveyLong = &quot;x.x&quot;,
+         SurveyLat = &quot;y.x&quot;,
+         EXTRACTIVE = &quot;EXTRACTIVE.SURVEY&quot;,
+         exRecall = &quot;If.RECALL..date&quot;,
+         FishingType = &quot;What.type.of.fishing.did.you.do.at.this.site.&quot;,
+         FishingType_other = &quot;If.OTHER..fishing.type&quot;,
+         BaitLure = &quot;Did.you.use.a.bait.or.lure.&quot;,
+         exStart = &quot;What.time.did.you..if.spearfishing...your.lines.get.in.the.water.&quot;,
+         exStop = &quot;What.time.did.you..if.spearfishing..your.lines.get.out.the.water..&quot;,
+         MaxHookDepth = &quot;Max.depth.of.hook.at.this.site.&quot;,
+         KeptUndam = &quot;X..fish.you.kept.undamaged.at.this.site.&quot;,
+         KeptUdam_other = &quot;If.OTHER....kept.undamaged&quot;,
+         RelUndam = &quot;X..released.undamaged.at.this.site.&quot;,
+         RelUndam_other = &quot;If.OTHER....released.undamaged&quot;,
+         nDP = &quot;X..depredated&quot;,
+         nDP_other = &quot;If.OTHER....depredated&quot;,
+         Species = &quot;What.species.did.you.catch.&quot;,
+         exWhyLeave = &quot;Why.did.you.leave.this.site.&quot;,
+         exWhyLeave_other = &quot;If.OTHER..why.did.you.leave.this.site.&quot;,
+         NONEXTRACTIVE = &quot;NON_EXTRACTIVE.SURVEY&quot;,
+         nexRecall = &quot;If.RECALL..date.1&quot;,
+         Activity = &quot;What.activity.did.you.do.&quot;,
+         Activity_other = &quot;If.OTHER..activity&quot;,
+         nexStart = &quot;What.time.did.you.start.the.activity.&quot;,
+         nexStop = &quot;What.time.did.you.end.the.activity.&quot;,
+         DiveMaxDepth = &quot;If.DIVING..max.depth.&quot;,
+         WhyChoose = &quot;Why.did.you.choose.this.site.&quot;,
+         WhyChoose_other = &quot;If.OTHER..why.this.site&quot;,
+         nexWhyLeave = &quot;Why.did.you.leave.this.site..1&quot;,
+         nexWhyLeave_other = &quot;If.OTHER..why.did.you.leave.this.site..1&quot;,
+         UseLong = &quot;x.y&quot;,
+         UseLat = &quot;y.y&quot;,
+         exnTimes12m = &quot;X..times.fished.from.boat.in.last.12.months.&quot;,
+         nexnTimes12m = &quot;X..times.doing.NEX.last.12.months..&quot;,
+         exYrs = &quot;X..years.fishing.&quot;,
+         nexYrs = &quot;X..years.doing.NEX.&quot;,
+         DiveCert = &quot;Are.you.a.diver..If.so..what.is.your.certification.&quot;,
+         nDives = &quot;If.DIVING....dives.&quot;,
+         YrBorn = &quot;What.year.were.you.born.&quot;,
+         Postcode = &quot;Home.postcode&quot;,
+         Accom = &quot;If.VISITOR..where.are.you.staying.&quot;,
+         Accom_other = &quot;If.OTHER..where.are.you.staying&quot;,
+         Sex = &quot;Male.or.Female&quot;,
+         Party = &quot;Describe.party&quot;,
+         BoatLength = &quot;Boat.length&quot;,
+         BoatType = &quot;Boat.Type&quot;,
+         BoatID = &quot;Boat.name.or.number&quot;
+         )
+
+names(Ning0421_v2)</code></pre>
 </div>
-<pre class="r"><code>plot(iris)</code></pre>
-<div class="figure" style="text-align: center"><span id="fig:irisPlot"></span>
-<img src="rumMother_files/figure-html/irisPlot-1.png" alt="Iris Matrix" width="672" />
-<p class="caption">
-Figure 2.1: Iris Matrix
-</p>
-</div>
-<pre class="r"><code>lm(Species~Petal.Length, data=iris)</code></pre>
-<pre><code>## Warning in model.response(mf, &quot;numeric&quot;): using type = &quot;numeric&quot; with a factor
-## response will be ignored</code></pre>
-<pre><code>## Warning in Ops.factor(y, z$residuals): &#39;-&#39; not meaningful for factors</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = Species ~ Petal.Length, data = iris)
-## 
-## Coefficients:
-##  (Intercept)  Petal.Length  
-##       0.3449        0.4404</code></pre>
-<p>see figure <a href="#fig:irisPlot">2.1</a></p>
-</div>
-<div id="data-analysis" class="section level1 tabset">
+<div id="data-analysis" class="section level1 tabset" number="3">
 <h1><span class="header-section-number">3</span> Data Analysis</h1>
 <p>This is the file where you will put all your data anlysis this will include data exploration, BRTs and RUM prep</p>
-<div id="data-exploration" class="section level2">
+<div id="data-exploration" class="section level2" number="3.1">
 <h2><span class="header-section-number">3.1</span> Data exploration</h2>
 </div>
-<div id="brts" class="section level2">
+<div id="brts" class="section level2" number="3.2">
 <h2><span class="header-section-number">3.2</span> BRTs</h2>
 </div>
-<div id="rum-prep" class="section level2">
+<div id="rum-prep" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> RUM Prep</h2>
 </div>
-</div>
-<div id="spatial-visualisation" class="section level1 tabset">
-<h1><span class="header-section-number">4</span> Spatial Visualisation</h1>
-<p>Here you will do all things spatial associated with your data.</p>
 </div>
 
 
