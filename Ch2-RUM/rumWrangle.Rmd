@@ -3,6 +3,12 @@
 library(tidyverse)
 ```
 
+
+```{r readData, include = FALSE}
+
+meta <- read.csv("/rumIgnore/Data-042021/meta_21.csv")
+```
+
 # Data Wrangling {.tabset} 
 
 # Merging Meta 
