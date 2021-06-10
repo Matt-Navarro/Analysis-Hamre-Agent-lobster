@@ -1,6 +1,7 @@
 
 ```{r libraries, include = FALSE}
 library(tidyverse)
+library(lubridate)
 ```
 
 # Data Wrangling {.tabset} 
@@ -16,10 +17,12 @@ After downloading the data from arcCollector, you end up three individual .csv d
 meta <- read.csv("rumIgnore/Data-042021/meta_21.csv")
 use <- read.csv("rumIgnore/Data-042021/use_21.csv")
 avidity <- read.csv("rumIgnore/Data-042021/avidity_21.csv")
+jon <- read.csv("rumIgnore/Data-jon/ALL3TRIPSMASTERDATASETFEB22.csv")
 
 is.data.frame(meta) # checking object is df -> TRUE
 is.data.frame(use) # checking object is df -> TRUE
 is.data.frame(avidity) # checking object is df -> TRUE
+is.data.frame(jon)
 
 MetaUse<- merge(meta, use, by.x = "GlobalID", 
                 by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge Meta.csv (x) and Use.csv (y) dfs by GlobalID and GUID column
@@ -30,13 +33,12 @@ write.csv(Ning0421, 'rumIgnore/Ning0421.csv') # save merged df as .csv, Path spe
 ```
 
 ```{r clean, eval = FALSE}
-
+tbl_df(jon)
+glimpse(jon)
 tbl_df(Ning0421) # converting to tibble 
 glimpse(Ning0421) # kind of like str for tibble 
-view(Ning0421)
 
-
-Ning0421_v2 <- Ning0421 %>%
+Ning <- bind_rows(Ning0421, jon) %>% # Adding on Jons data
   select(-c(GlobalID.y, GlobalID.x, GlobalID.y.y, Guid, OBJECTID.x, OBJECTID.y, OBJECTID,
             Creator.x, Creator.y, Creator, EditDate.x, EditDate.y, EditDate, Editor.x, Editor.y,
             Editor, CreationDate.y, CreationDate)) %>% 
@@ -60,8 +62,13 @@ Ning0421_v2 <- Ning0421 %>%
             How_many_days_have_you_fished_from_a_boat_this_year,
             How_many_years_have_you_been_fishing_for,
             Home_postcode, What_is_your_income_before_tax, How_many_sharks_were_hooked,
-            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today)) %>% # These are Jons Qs
+            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today)) %>% # These is Canarvan Q's
   
+  select(-c("Day.number", "Trip.number", "Lat.bins", "X5nm.grid..block.code", "Maidenhead..Grid.Square",
+            "Cost.of.gear.lost.to.depredation....", "Burley.used..Y.N", "Min.hook..depth", "Have_you_been_interviewed_about",
+            "How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.",
+            )) %>%
+
   # format: rename(newname = currentname)
   rename(Interviewer = "REQUIRED..Interviewer",
          Transect = "REQUIRED..Boat.ramp.transect.name",
@@ -89,7 +96,7 @@ Ning0421_v2 <- Ning0421 %>%
          BaitLure = "Did.you.use.a.bait.or.lure.",
          exStart = "What.time.did.you..if.spearfishing...your.lines.get.in.the.water.",
          exStop = "What.time.did.you..if.spearfishing..your.lines.get.out.the.water..",
-         MaxHookDepth = "Max.depth.of.hook.at.this.site.",
+         MaxHook = "Max.depth.of.hook.at.this.site.",
          KeptUndam = "X..fish.you.kept.undamaged.at.this.site.",
          KeptUdam_other = "If.OTHER....kept.undamaged",
          RelUndam = "X..released.undamaged.at.this.site.",
@@ -126,11 +133,51 @@ Ning0421_v2 <- Ning0421 %>%
          Party = "Describe.party",
          BoatLength = "Boat.length",
          BoatType = "Boat.Type",
-         BoatID = "Boat.name.or.number"
-         )
-
-names(Ning0421_v2)
-
+         BoatID = "Boat.name.or.number",
+         JulianDay = "Julian.day",
+         BR = "Boat.ramp",
+         BRLat = "Boat.ramp.lat",
+         BRLong = "Boat.ramp.long",
+         nBoatsFishThatDay = "No..boats.fishing.that.day",
+         jUseLat = "Lat",
+         jUseLong = "Long",
+         KernDens = "Kernel.density",
+         SST = "SST..NOAA.data.",
+         DistBRm = "Distance.of..fishing.location..from.boat.ramp..miles.",
+         DistBRnm = "Distance.of..fishing.location..from.boat.ramp..nautical.miles.",
+         DistBRkm = "Distance.of..fishing.location..from.boat.ramp..km.",
+         jCaughtUndam = "No..fish.caught.undamaged",
+         jnDP = "No..fish.lost.to.sharks",
+         nHooked = "Total.fish.hooked",
+         perDP = "Percentage.depredation",
+         proDP = "Proportional.depredation...between.0.1.",
+         binDP = "Binary.depredation.presence.absence",
+         nUndamHr = "No..fish.caught..undamaged.per.hour",
+         nDPHr = "No..fish.lost.per.hour",
+         nHookedHr = "Total.fish.hooked.per.hour",
+         DPRateHr = "Depredation.rate.....per.hour",
+         jexStart = "Time.lines.in",
+         jexStop = "Time.lines.out",
+         MedianTime = "Median.time",
+         DecMedianTime = "Decimal.Median.time",
+         FishingHr = "Fishing.hours",
+         DecFishingHr = "Decimal.fishing.hours",
+         FishTime = "Fishing.time..rounded.to.nearest.whole.number",
+         jFishingType = "Fishing.method",
+         jBaitLure = "Bait.type",
+         jMaxHook = "Max.hook..depth",
+         jBoatID = "Boat.name.number",
+         jBoatLength = "Boat.Length",
+         jTime = "Time.of..interview",
+         nTimesFished = "How_many_times_have_you_fished_",
+         jexYrs = "How_many_years_have_you_been_fi",
+         jDaysBoatFished = "How_many_days_have_you_boat._fished_f",
+         jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>%
+  
+  mutate(Date = ifelse(Date %in% "", CreationDate.x, Date)) %>% # Filling blanks in Date col with values from CreationDate.x 
+  select(-c(CreationDate.x)) # Removing creation date col
+  
+names(Ning)
 ```
 
 
