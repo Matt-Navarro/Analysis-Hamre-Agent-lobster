@@ -198,13 +198,8 @@ names(Ning)
   
 ```{r}
 str(Ning$Date)
-str(Ning$jDate)
-class(Ning$Date)
 names(Ning)
 unique(Ning$Date)
-unique(Ning$jDate)
-
 Sys.timezone()
-
 ```
 
