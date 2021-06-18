@@ -34,7 +34,7 @@ write.csv(Ning0421, 'rumIgnore/Ning0421.csv') # save merged df as .csv, Path spe
 
 To start I am going to select relevant variables and rename them into a R friendly format. 
 
-```{r select and rename, eval = FALSE}
+```{r clean, eval = FALSE}
 tbl_df(jon)
 glimpse(jon)
 tbl_df(Ning0421) # converting to tibble 
@@ -174,26 +174,35 @@ Ning <- bind_rows(Ning0421, jon) %>% # Adding on Jons data
          nTimesFished = "How_many_times_have_you_fished_",
          jexYrs = "How_many_years_have_you_been_fi",
          jDaysBoatFished = "How_many_days_have_you_boat._fished_f",
-         jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>% 
+         jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>%
   
-  # Now that my tbl is a little less unwieldy I am going to start cleaning starting from the leftmost column and work along the data set. 
-  
-  mutate(Date = ifelse(Date %in% "", CreationDate.x, Date)) %>% #Fill Date col NAs with values from CreationDate.x 
-  
+   mutate(Date = ifelse(Date %in% "", CreationDate.x, Date)) %>% #Fill Date col NAs with values from CreationDate.x 
   select(-c(CreationDate.x)) %>% # Removing creation date col
   
-  separate(Date, into = c("Date", "Time", "ampm"), sep = " ", remove = TRUE) 
+  separate(Date, into = c("Date", "Time", "ampm"), sep = " ", remove = TRUE) %>%
+  
+  separate(Date, c("dm", "md", "Year"), sep = "/", remove = FALSE) %>%
 
-## work up to here, to do for next time: Date column cannot be changed from char -> date because it has multiple date formats. Mine and Harry's is formatted as mdY, and Jons is formatted as dmY. Need to either parse and reformat the current date column or format date before uniting them.
+  filter(Year != 2018) %>%
   
-  parse_date_time(Date(), tz = "Australia/Perth", c("%m/%d/%Y", "%d/%m/%Y"), exact = TRUE) %>%
+  select(-c(dm, md)) %>%
   
-  as.Date(Date)
+  filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
+  
+  filter_all(all_vars(!grepl("lah", .))) %>% # getting rid of blah blahs 
+  
+  
+  mutate(jDates = if Year == 2015 | 2016)
+
+
   
   
 
-
+  # Df is no in a manageble format and a little less unwieldy I am going to start cleaning starting from the leftmost column and work along the data set. 
+  
 names(Ning)
+unique(Ning$Date)
+
 ```
   
 ```{r}
@@ -201,5 +210,34 @@ str(Ning$Date)
 names(Ning)
 unique(Ning$Date)
 Sys.timezone()
+
+
+## work up to here, to do for next time: Date column cannot be changed from char -> date because it has multiple date formats. Mine and Harry's is formatted as mdY, and Jons is formatted as dmY. Need to either parse and reformat the current date column or format date before uniting them.
+  
+ 
+  
+  
+  
+  unique(Ning$EXTRACTIVE)
+unique(Ning$NONEXTRACTIVE)
+unique(Ning$nDaysInArea_other)
+unique(Ning$nBoatDays_other)
+unique(Ning$nShoreDays_other)
+unique(Ning$nTimesLast12m_other)
+unique(Ning$nTimes19_other)
+unique(Ning$FishingType_other)
+unique(Ning$KeptUdam_other)
+unique(Ning$RelUndam_other)
+unique(Ning$nDP_other)
+unique(Ning$exWhyLeave_other)
+unique(Ning$Activity_other)
+unique(Ning$WhyChoose_other)
+unique(Ning$nexWhyLeave_other)
+unique(Ning$Accom_other)
+unique(Ning$FINISH.SURVEY)
+unique(Ning$Party)
+
+ifelse(str_detect(df$col, "words to change|bjsbbdsjdb|jbsdjsdb"), "new name",
+       ifelse())
 ```
 
