@@ -190,18 +190,13 @@ Ning <- bind_rows(Ning0421, jon) %>% # Adding on Jons data
   filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
   
   filter_all(all_vars(!grepl("lah", .))) %>% # getting rid of blah blahs 
-  
-  
-  mutate(jDates = if Year == 2015 | 2016)
 
-
-  
-  
 
   # Df is no in a manageble format and a little less unwieldy I am going to start cleaning starting from the leftmost column and work along the data set. 
   
 names(Ning)
 unique(Ning$Date)
+unique(Ning$jDates)
 
 ```
   
