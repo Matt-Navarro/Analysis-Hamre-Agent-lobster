@@ -32,6 +32,9 @@ Ning0421 <- merge(MetaUse, avidity, by.x = "GlobalID.y",
 write.csv(Ning0421, 'rumIgnore/Ning0421.csv') # save merged df as .csv, Path specified for rumIgnore folder.
 ```
 
+
+## Data cleaning 
+
 To start I am going to select relevant variables and rename them into a R friendly format. 
 
 ```{r clean, eval = FALSE}
@@ -40,10 +43,12 @@ glimpse(jon)
 tbl_df(Ning0421) # converting to tibble 
 glimpse(Ning0421) # kind of like str for tibble 
 
-Ning <- bind_rows(Ning0421, jon) %>% # Adding on Jons data
+
+
+Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
   select(-c(GlobalID.y, GlobalID.x, GlobalID.y.y, Guid, OBJECTID.x, OBJECTID.y, OBJECTID,
             Creator.x, Creator.y, Creator, EditDate.x, EditDate.y, EditDate, Editor.x, Editor.y,
-            Editor, CreationDate.y, CreationDate)) %>% 
+            Editor, CreationDate.y, CreationDate))  %>%
   
 # The above variables have been deselected because they are unnecessary, ID vars will be replaced with a new ID col, Creator and Editor is always Harrison, only date variable I need is date which was inputted by interviewer and CreationDate.x incase it has been missed
   
@@ -64,14 +69,14 @@ Ning <- bind_rows(Ning0421, jon) %>% # Adding on Jons data
             How_many_days_have_you_fished_from_a_boat_this_year,
             How_many_years_have_you_been_fishing_for,
             Home_postcode, What_is_your_income_before_tax, How_many_sharks_were_hooked,
-            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today)) %>% # These is Canarvan Q's
+            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today))  %>%# These is Canarvan Q's
   
   select(-c("Day.number", "Trip.number", "Lat.bins", "X5nm.grid..block.code", "Maidenhead..Grid.Square",
             "Cost.of.gear.lost.to.depredation....", "Burley.used..Y.N", "Min.hook..depth", "Have_you_been_interviewed_about",
             "How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.",
             )) %>%
 
-  # format: rename(newname = currentname)
+# format: rename(newname = currentname)
   rename(Interviewer = "REQUIRED..Interviewer",
          Transect = "REQUIRED..Boat.ramp.transect.name",
          Screen1 = "SCREEN..18.", 
@@ -176,27 +181,22 @@ Ning <- bind_rows(Ning0421, jon) %>% # Adding on Jons data
          jDaysBoatFished = "How_many_days_have_you_boat._fished_f",
          jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>%
   
-   mutate(Date = ifelse(Date %in% "", CreationDate.x, Date)) %>% #Fill Date col NAs with values from CreationDate.x 
+  mutate(Date = ifelse(Date %in% "", CreationDate.x, Date)) %>% #Fill Date col NAs with values from CreationDate.x 
   select(-c(CreationDate.x)) %>% # Removing creation date col
-  
   separate(Date, into = c("Date", "Time", "ampm"), sep = " ", remove = TRUE) %>%
-  
   separate(Date, c("dm", "md", "Year"), sep = "/", remove = FALSE) %>%
-
   filter(Year != 2018) %>%
-  
   select(-c(dm, md)) %>%
-  
   filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
-  
-  filter_all(all_vars(!grepl("lah", .))) %>% # getting rid of blah blahs 
+  filter_all(all_vars(!grepl("lah", .)))  # getting rid of blah blahs 
 
-
-  # Df is no in a manageble format and a little less unwieldy I am going to start cleaning starting from the leftmost column and work along the data set. 
+  # Df is no in a manageable format and a little less unwieldy I am going to start cleaning starting from the    leftmost column and work along the data set. 
   
 names(Ning)
 unique(Ning$Date)
-unique(Ning$jDates)
+unique(Ning$Interviewer)
+names(Ning0421)
+
 
 ```
   
