@@ -199,6 +199,13 @@ names(Ning0421)
 
 
 ```
+  What needs done: 
+  
+  * Date column is character with two formats, all dates in 2020/21 are formatted at mdY, while 2015/16 dmY. Need to get all dates in same format and make column as.date
+  
+  * Time, Times in 2021/20 are UK time and need have 8 h added onto them. Then PM values need to be made inti the 24h clock
+  
+  * Interviewer, jon needs to be added for 2015/16 studies. Blanks in 20/21 need to be figured out 
   
 ```{r}
 str(Ning$Date)
