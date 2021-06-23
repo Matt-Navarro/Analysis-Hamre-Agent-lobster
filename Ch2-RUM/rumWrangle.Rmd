@@ -4,9 +4,9 @@ library(tidyverse)
 library(lubridate)
 ```
 
-# Data Wrangling {.tabset} 
+# Data Prep {.tabset} 
 
-## Merging Data 
+## Collating Data 
 After downloading the data from arcCollector, you end up three individual .csv docs for each survey layer; meta_21.csv, use_21.csv, avidity_21.csv (this includes data from 2020 field trip to). Merge the three sets of data, linking them by their GlobalID and GUID. 
 
 1. Read in documents
@@ -30,27 +30,33 @@ Ning0421 <- merge(MetaUse, avidity, by.x = "GlobalID.y",
                    by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge MetaUse0421.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
 
 write.csv(Ning0421, 'rumIgnore/Ning0421.csv') # save merged df as .csv, Path specified for rumIgnore folder.
-```
 
-
-## Data cleaning 
-
-To start I am going to select relevant variables and rename them into a R friendly format. 
-
-```{r clean, eval = FALSE}
 tbl_df(jon)
 glimpse(jon)
 tbl_df(Ning0421) # converting to tibble 
 glimpse(Ning0421) # kind of like str for tibble 
+```
 
+## Cleaning  
+To start I am going to select relevant variables and rename them into a R friendly format. 
 
+```{r General}
+#### Bind ####
+# changing name of date variable so it doesn't not append to Jon's Date variable which is in different format
+
+Ning0421 <- Ning0421 %>% 
+  rename(nDate = Date) 
 
 Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
+  
+#### Select ####
+# The below variables have been deselected because they are unnecessary, ID vars will be replaced with a new ID col, Creator and Editor is always Harrison, only date variable I need is date which was inputted by interviewer and CreationDate.x incase it has been missed
+
   select(-c(GlobalID.y, GlobalID.x, GlobalID.y.y, Guid, OBJECTID.x, OBJECTID.y, OBJECTID,
             Creator.x, Creator.y, Creator, EditDate.x, EditDate.y, EditDate, Editor.x, Editor.y,
             Editor, CreationDate.y, CreationDate))  %>%
   
-# The above variables have been deselected because they are unnecessary, ID vars will be replaced with a new ID col, Creator and Editor is always Harrison, only date variable I need is date which was inputted by interviewer and CreationDate.x incase it has been missed
+# Below are Canarvan Q's
   
   select(-c(Boat_ramp_location, Interviewer_name, Day_type,Competition_noncompetition, 
             Number_boats_interviewed_that_day,What_time_did_lines_enter_the_water, 
@@ -69,13 +75,16 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
             How_many_days_have_you_fished_from_a_boat_this_year,
             How_many_years_have_you_been_fishing_for,
             Home_postcode, What_is_your_income_before_tax, How_many_sharks_were_hooked,
-            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today))  %>%# These is Canarvan Q's
+            If_you_suffered_depredation_what_was_the_cost_of_the_gear_that_you_lost_today))  %>%
   
-  select(-c("Day.number", "Trip.number", "Lat.bins", "X5nm.grid..block.code", "Maidenhead..Grid.Square",
+  # Below are Qs from Jon's data that will not be used in this analysis
+  
+  select(-c("Day.number", "Julian.day", "Trip.number", "Month.Year","Lat.bins", "X5nm.grid..block.code", "Maidenhead..Grid.Square",
             "Cost.of.gear.lost.to.depredation....", "Burley.used..Y.N", "Min.hook..depth", "Have_you_been_interviewed_about",
             "How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.",
             )) %>%
 
+#### Rename ####
 # format: rename(newname = currentname)
   rename(Interviewer = "REQUIRED..Interviewer",
          Transect = "REQUIRED..Boat.ramp.transect.name",
@@ -141,7 +150,7 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
          BoatLength = "Boat.length",
          BoatType = "Boat.Type",
          BoatID = "Boat.name.or.number",
-         JulianDay = "Julian.day",
+         jDate = "Date",
          BR = "Boat.ramp",
          BRLat = "Boat.ramp.lat",
          BRLong = "Boat.ramp.long",
@@ -180,66 +189,107 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
          jexYrs = "How_many_years_have_you_been_fi",
          jDaysBoatFished = "How_many_days_have_you_boat._fished_f",
          jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>%
-  
-  mutate(Date = ifelse(Date %in% "", CreationDate.x, Date)) %>% #Fill Date col NAs with values from CreationDate.x 
-  select(-c(CreationDate.x)) %>% # Removing creation date col
-  separate(Date, into = c("Date", "Time", "ampm"), sep = " ", remove = TRUE) %>%
-  separate(Date, c("dm", "md", "Year"), sep = "/", remove = FALSE) %>%
-  filter(Year != 2018) %>%
-  select(-c(dm, md)) %>%
-  filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
-  filter_all(all_vars(!grepl("lah", .)))  # getting rid of blah blahs 
 
-  # Df is no in a manageable format and a little less unwieldy I am going to start cleaning starting from the    leftmost column and work along the data set. 
+#### Filter ####
+# The following section is separating out Harrisons 2018 data so I can remove it from data set. 
   
+  mutate(nDate = ifelse(
+    nDate %in% "", CreationDate.x, nDate)) %>% 
+  # Fill Date col NAs with values from CreationDate.x: mutate(newcol = ifelse(condition, True, False))
+  select(-c(CreationDate.x)) %>% # Removing CreationDate.x col
+  separate(nDate, into = c("Date", "Time", "ampm"), sep = " ", remove = TRUE) %>% # separating date-time var
+  separate(Date, c("dm", "md", "Year"), sep = "/", remove = FALSE) %>% #Separating dtae to get Year col
+  filter(is.na(Year) | Year != 2018) %>% # Removing observation from 2018. is.na(Year) retains NAs for Jons data
+  select(-c(dm, md)) %>% # removing excess cols
+  filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
+  filter_all(all_vars(!grepl("lah", .)))  # getting rid of blah blahs
+  
+  slice(-(1:4)) # empty observations -> find way to automate and row
+
+#### Checkpoint ####
+# Checking df is as expected
 names(Ning)
 unique(Ning$Date)
-unique(Ning$Interviewer)
-names(Ning0421)
+unique(Ning$jDate)
+unique(Ning$Year)
+```
+ 
+Data Frame is now is less unweildy and contains only data that I need for my analysis. I am now going to clean each column starting with the leftmost. 
+ 
+### Date and Time
+Currently variables associated with date and time are: Date, Year, Time, ampm, jDate, jTime
+ 
+```{r DateExplore}
+unique(Ning$Date)
+typeof(Ning$Date)
+unique(Ning$Year)
+typeof(Ning$Year)
+head(Ning$Time)
+typeof(Ning$Time)
+unique(Ning$ampm)
+unique(Ning$jDate)
+typeof(Ning$jDate)
+unique(Ning$jTime)
+names(jon)
+```
+After doing a explore of the columns here is the state of the current date/time associated cols and changes that need to be made. 
 
+| Column | Current state | Changes to be made |
+|:------:|:-------------:|:------------------:|
+|Date|For 2021/21, mdY, character| Need to add in Jons dates, change to as.date|
+|Year|For 2021/21, NAs are where Jons years need to go, character|Append Jons years|
+|Time|For 2020/21, no surveys were doen before 9 checked metadata time is -8h (uk tz), character| Need to add 8h and get into 24h|
+|ampm|Contains am and pm associated with time | will be redundant when time is in 24h|
+|jDate| Jons Dates, dmY, character|Need to make same format as Date, append and remove|
+|jTime|Jon time, assume correct in 24h| Append to time|
+
+```{r DateClean}
+Ning <- Ning %>%
+  separate(Date, into = c("m", "d", "Y"), sep = "/", remove = TRUE) %>%
+  unite("Date", d, m, Y, sep="/") %>%
+  mutate(Date = ifelse(Date %in% "NA/NA/NA", jDate, Date)) %>%
+  select(-c(jDate))
+
+names(Ning)  
+unique(Ning$Date)
+Ning[1:4,] # check values of rows
 
 ```
-  What needs done: 
-  
-  * Date column is character with two formats, all dates in 2020/21 are formatted at mdY, while 2015/16 dmY. Need to get all dates in same format and make column as.date
-  
-  * Time, Times in 2021/20 are UK time and need have 8 h added onto them. Then PM values need to be made inti the 24h clock
-  
-  * Interviewer, jon needs to be added for 2015/16 studies. Blanks in 20/21 need to be figured out 
-  
+
+to do list 
+* See how to can filter out all rows which contain only NA values
+* See if you can get your Date col to as.date format
+
+
 ```{r}
-str(Ning$Date)
-names(Ning)
-unique(Ning$Date)
-Sys.timezone()
 
-
-## work up to here, to do for next time: Date column cannot be changed from char -> date because it has multiple date formats. Mine and Harry's is formatted as mdY, and Jons is formatted as dmY. Need to either parse and reformat the current date column or format date before uniting them.
-  
+## useful code ill need at some point
+ unique(Ning$EXTRACTIVE)
+ unique(Ning$NONEXTRACTIVE)
+ unique(Ning$nDaysInArea_other)
+ unique(Ning$nBoatDays_other)
+ unique(Ning$nShoreDays_other)
+ unique(Ning$nTimesLast12m_other)
+ unique(Ning$nTimes19_other)
+ unique(Ning$FishingType_other)
+ unique(Ning$KeptUdam_other)
+ unique(Ning$RelUndam_other)
+ unique(Ning$nDP_other)
+ unique(Ning$exWhyLeave_other)
+ unique(Ning$Activity_other)
+ unique(Ning$WhyChoose_other)
+ unique(Ning$nexWhyLeave_other)
+ unique(Ning$Accom_other)
+ unique(Ning$FINISH.SURVEY)
+ unique(Ning$Party)
  
-  
-  
-  
-  unique(Ning$EXTRACTIVE)
-unique(Ning$NONEXTRACTIVE)
-unique(Ning$nDaysInArea_other)
-unique(Ning$nBoatDays_other)
-unique(Ning$nShoreDays_other)
-unique(Ning$nTimesLast12m_other)
-unique(Ning$nTimes19_other)
-unique(Ning$FishingType_other)
-unique(Ning$KeptUdam_other)
-unique(Ning$RelUndam_other)
-unique(Ning$nDP_other)
-unique(Ning$exWhyLeave_other)
-unique(Ning$Activity_other)
-unique(Ning$WhyChoose_other)
-unique(Ning$nexWhyLeave_other)
-unique(Ning$Accom_other)
-unique(Ning$FINISH.SURVEY)
-unique(Ning$Party)
-
 ifelse(str_detect(df$col, "words to change|bjsbbdsjdb|jbsdjsdb"), "new name",
        ifelse())
+       
+which(colnames(Ning)=="jTime") # lets you find col number for specified col
+
 ```
+
+
+
 

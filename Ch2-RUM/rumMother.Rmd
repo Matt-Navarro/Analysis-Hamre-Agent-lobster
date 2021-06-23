@@ -21,7 +21,7 @@ knitr::opts_chunk$set(fig.align = "center",
 
 ```
 
-```{r librarys, echo = FALSE}
+```{r librarys, include = FALSE}
 library(tidyverse)
 library(dplyr)
 ```
