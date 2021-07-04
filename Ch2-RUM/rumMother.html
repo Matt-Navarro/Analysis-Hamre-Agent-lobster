@@ -244,7 +244,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Chapter 1: RUMs</h1>
 <h4 class="author">Nicole Hamre</h4>
-<h4 class="date">23 June, 2021</h4>
+<h4 class="date">29 June, 2021</h4>
 
 </div>
 
@@ -515,7 +515,7 @@ Ning &lt;- bind_rows(Ning0421, jon)  %&gt;% # Adding on Jons data
   
   # Below are Qs from Jon&#39;s data that will not be used in this analysis
   
-  select(-c(&quot;Day.number&quot;, &quot;Trip.number&quot;, &quot;Lat.bins&quot;, &quot;X5nm.grid..block.code&quot;, &quot;Maidenhead..Grid.Square&quot;,
+  select(-c(&quot;Day.number&quot;, &quot;Julian.day&quot;, &quot;Trip.number&quot;, &quot;Month.Year&quot;,&quot;Lat.bins&quot;, &quot;X5nm.grid..block.code&quot;, &quot;Maidenhead..Grid.Square&quot;,
             &quot;Cost.of.gear.lost.to.depredation....&quot;, &quot;Burley.used..Y.N&quot;, &quot;Min.hook..depth&quot;, &quot;Have_you_been_interviewed_about&quot;,
             &quot;How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.&quot;,
             )) %&gt;%
@@ -587,7 +587,6 @@ Ning &lt;- bind_rows(Ning0421, jon)  %&gt;% # Adding on Jons data
          BoatType = &quot;Boat.Type&quot;,
          BoatID = &quot;Boat.name.or.number&quot;,
          jDate = &quot;Date&quot;,
-         JulianDay = &quot;Julian.day&quot;,
          BR = &quot;Boat.ramp&quot;,
          BRLat = &quot;Boat.ramp.lat&quot;,
          BRLong = &quot;Boat.ramp.long&quot;,
@@ -631,17 +630,20 @@ Ning &lt;- bind_rows(Ning0421, jon)  %&gt;% # Adding on Jons data
 # The following section is separating out Harrisons 2018 data so I can remove it from data set. 
   
   mutate(nDate = ifelse(
-    nDate %in% &quot;&quot;, CreationDate.x, nDate)) %&gt;% #Fill Date col NAs with values from CreationDate.x 
+    nDate %in% &quot;&quot;, CreationDate.x, nDate)) %&gt;% 
+  # Fill Date col NAs with values from CreationDate.x: mutate(newcol = ifelse(condition, True, False))
   select(-c(CreationDate.x)) %&gt;% # Removing CreationDate.x col
   separate(nDate, into = c(&quot;Date&quot;, &quot;Time&quot;, &quot;ampm&quot;), sep = &quot; &quot;, remove = TRUE) %&gt;% # separating date-time var
   separate(Date, c(&quot;dm&quot;, &quot;md&quot;, &quot;Year&quot;), sep = &quot;/&quot;, remove = FALSE) %&gt;% #Separating dtae to get Year col
   filter(is.na(Year) | Year != 2018) %&gt;% # Removing observation from 2018. is.na(Year) retains NAs for Jons data
   select(-c(dm, md)) %&gt;% # removing excess cols
   filter_all(all_vars(!grepl(&#39;ummy&#39;, .))) %&gt;% # getting rid of Dummys/dummys
-  filter_all(all_vars(!grepl(&quot;lah&quot;, .))) # getting rid of blah blahs</code></pre>
+  filter_all(all_vars(!grepl(&quot;lah&quot;, .)))  # getting rid of blah blahs</code></pre>
 <pre><code>## New names:
 ## * How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5....100 -&gt; How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.</code></pre>
-<pre class="r"><code>#### Checkpoint ####
+<pre class="r"><code>  # slice(-(1:4)) # empty observations -&gt; find way to automate and row
+
+#### Checkpoint ####
 # Checking df is as expected
 names(Ning)</code></pre>
 <pre><code>##   [1] &quot;Date&quot;                &quot;Year&quot;                &quot;Time&quot;               
@@ -667,21 +669,21 @@ names(Ning)</code></pre>
 ##  [61] &quot;YrBorn&quot;              &quot;Postcode&quot;            &quot;Accom&quot;              
 ##  [64] &quot;Accom_other&quot;         &quot;FINISH.SURVEY&quot;       &quot;Sex&quot;                
 ##  [67] &quot;Party&quot;               &quot;BoatLength&quot;          &quot;BoatType&quot;           
-##  [70] &quot;BoatID&quot;              &quot;jDate&quot;               &quot;JulianDay&quot;          
-##  [73] &quot;Month.Year&quot;          &quot;BR&quot;                  &quot;BRLat&quot;              
-##  [76] &quot;BRLong&quot;              &quot;nBoatsFishThatDay&quot;   &quot;jUseLat&quot;            
-##  [79] &quot;jUseLong&quot;            &quot;onekm&quot;               &quot;twokm&quot;              
-##  [82] &quot;fivekm&quot;              &quot;KernDens&quot;            &quot;SST&quot;                
-##  [85] &quot;DistBRm&quot;             &quot;DistBRnm&quot;            &quot;DistBRkm&quot;           
-##  [88] &quot;jCaughtUndam&quot;        &quot;jnDP&quot;                &quot;nHooked&quot;            
-##  [91] &quot;perDP&quot;               &quot;proDP&quot;               &quot;binDP&quot;              
-##  [94] &quot;nUndamHr&quot;            &quot;nDPHr&quot;               &quot;nHookedHr&quot;          
-##  [97] &quot;DPRateHr&quot;            &quot;jexStart&quot;            &quot;jexStop&quot;            
-## [100] &quot;MedianTime&quot;          &quot;DecMedianTime&quot;       &quot;FishingHr&quot;          
-## [103] &quot;DecFishingHr&quot;        &quot;FishTime&quot;            &quot;jFishingType&quot;       
-## [106] &quot;jBaitLure&quot;           &quot;jMaxHook&quot;            &quot;jBoatID&quot;            
-## [109] &quot;jBoatLength&quot;         &quot;jTime&quot;               &quot;nTimesFished&quot;       
-## [112] &quot;jexYrs&quot;              &quot;jDaysBoatFished&quot;     &quot;jDaysBoatFishedCat&quot;</code></pre>
+##  [70] &quot;BoatID&quot;              &quot;jDate&quot;               &quot;BR&quot;                 
+##  [73] &quot;BRLat&quot;               &quot;BRLong&quot;              &quot;nBoatsFishThatDay&quot;  
+##  [76] &quot;jUseLat&quot;             &quot;jUseLong&quot;            &quot;onekm&quot;              
+##  [79] &quot;twokm&quot;               &quot;fivekm&quot;              &quot;KernDens&quot;           
+##  [82] &quot;SST&quot;                 &quot;DistBRm&quot;             &quot;DistBRnm&quot;           
+##  [85] &quot;DistBRkm&quot;            &quot;jCaughtUndam&quot;        &quot;jnDP&quot;               
+##  [88] &quot;nHooked&quot;             &quot;perDP&quot;               &quot;proDP&quot;              
+##  [91] &quot;binDP&quot;               &quot;nUndamHr&quot;            &quot;nDPHr&quot;              
+##  [94] &quot;nHookedHr&quot;           &quot;DPRateHr&quot;            &quot;jexStart&quot;           
+##  [97] &quot;jexStop&quot;             &quot;MedianTime&quot;          &quot;DecMedianTime&quot;      
+## [100] &quot;FishingHr&quot;           &quot;DecFishingHr&quot;        &quot;FishTime&quot;           
+## [103] &quot;jFishingType&quot;        &quot;jBaitLure&quot;           &quot;jMaxHook&quot;           
+## [106] &quot;jBoatID&quot;             &quot;jBoatLength&quot;         &quot;jTime&quot;              
+## [109] &quot;nTimesFished&quot;        &quot;jexYrs&quot;              &quot;jDaysBoatFished&quot;    
+## [112] &quot;jDaysBoatFishedCat&quot;</code></pre>
 <pre class="r"><code>unique(Ning$Date)</code></pre>
 <pre><code>##  [1] NA           &quot;4/13/2021&quot;  &quot;4/16/2021&quot;  &quot;9/29/2020&quot;  &quot;10/8/2020&quot; 
 ##  [6] &quot;9/27/2020&quot;  &quot;3/31/2021&quot;  &quot;4/5/2021&quot;   &quot;3/28/2021&quot;  &quot;9/26/2020&quot; 
@@ -704,15 +706,7 @@ names(Ning)</code></pre>
 <p>Data Frame is now is less unweildy and contains only data that I need for my analysis. I am now going to clean each column starting with the leftmost.</p>
 <div id="date-and-time" class="section level3" number="1.2.1">
 <h3><span class="header-section-number">1.2.1</span> Date and Time</h3>
-<p>Currently variables associated with date and time are:
-* Date (for 2020/21)
-* Year (only includes 2020/21)
-* Time (for 2020/21)
-* ampm (contain AM or PM associated with Time)
-* jDate (Jons dates)
-* JulianDay (only for Jons data)
-* Month.Year (only for Jons data)
-* jTime (Jons Time)</p>
+<p>Currently variables associated with date and time are: Date, Year, Time, ampm, jDate, jTime</p>
 <pre class="r"><code>unique(Ning$Date)</code></pre>
 <pre><code>##  [1] NA           &quot;4/13/2021&quot;  &quot;4/16/2021&quot;  &quot;9/29/2020&quot;  &quot;10/8/2020&quot; 
 ##  [6] &quot;9/27/2020&quot;  &quot;3/31/2021&quot;  &quot;4/5/2021&quot;   &quot;3/28/2021&quot;  &quot;9/26/2020&quot; 
@@ -749,6 +743,63 @@ names(Ning)</code></pre>
 ## [10] &quot;17:45&quot; &quot;18:15&quot; &quot;18:30&quot; &quot;13:30&quot; &quot;15:15&quot; &quot;17:30&quot; &quot;12:30&quot; &quot;18:00&quot; &quot;14:30&quot;
 ## [19] &quot;16:00&quot; &quot;14:00&quot; &quot;17:15&quot; &quot;12:15&quot; &quot;14:15&quot; &quot;14:45&quot; &quot;12:00&quot; &quot;12:45&quot; &quot;13:00&quot;
 ## [28] &quot;&quot;      &quot;11:45&quot; &quot;11:00&quot; &quot;11:15&quot; &quot;13:15&quot; &quot;22:00&quot;</code></pre>
+<pre class="r"><code>names(jon)</code></pre>
+<pre><code>##  [1] &quot;Date&quot;                                                                                                                     
+##  [2] &quot;Julian.day&quot;                                                                                                               
+##  [3] &quot;Day.number&quot;                                                                                                               
+##  [4] &quot;Trip.number&quot;                                                                                                              
+##  [5] &quot;Month.Year&quot;                                                                                                               
+##  [6] &quot;Boat.ramp&quot;                                                                                                                
+##  [7] &quot;Boat.ramp.lat&quot;                                                                                                            
+##  [8] &quot;Boat.ramp.long&quot;                                                                                                           
+##  [9] &quot;Day_type&quot;                                                                                                                 
+## [10] &quot;No..boats.fishing.that.day&quot;                                                                                               
+## [11] &quot;Lat&quot;                                                                                                                      
+## [12] &quot;Long&quot;                                                                                                                     
+## [13] &quot;Lat.bins&quot;                                                                                                                 
+## [14] &quot;onekm&quot;                                                                                                                    
+## [15] &quot;twokm&quot;                                                                                                                    
+## [16] &quot;fivekm&quot;                                                                                                                   
+## [17] &quot;Kernel.density&quot;                                                                                                           
+## [18] &quot;SST..NOAA.data.&quot;                                                                                                          
+## [19] &quot;Distance.of..fishing.location..from.boat.ramp..miles.&quot;                                                                    
+## [20] &quot;Distance.of..fishing.location..from.boat.ramp..nautical.miles.&quot;                                                           
+## [21] &quot;Distance.of..fishing.location..from.boat.ramp..km.&quot;                                                                       
+## [22] &quot;X5nm.grid..block.code&quot;                                                                                                    
+## [23] &quot;Maidenhead..Grid.Square&quot;                                                                                                  
+## [24] &quot;No..fish.caught.undamaged&quot;                                                                                                
+## [25] &quot;No..fish.lost.to.sharks&quot;                                                                                                  
+## [26] &quot;Total.fish.hooked&quot;                                                                                                        
+## [27] &quot;Percentage.depredation&quot;                                                                                                   
+## [28] &quot;Proportional.depredation...between.0.1.&quot;                                                                                  
+## [29] &quot;Binary.depredation.presence.absence&quot;                                                                                      
+## [30] &quot;No..fish.caught..undamaged.per.hour&quot;                                                                                      
+## [31] &quot;No..fish.lost.per.hour&quot;                                                                                                   
+## [32] &quot;Total.fish.hooked.per.hour&quot;                                                                                               
+## [33] &quot;Depredation.rate.....per.hour&quot;                                                                                            
+## [34] &quot;Time.lines.in&quot;                                                                                                            
+## [35] &quot;Time.lines.out&quot;                                                                                                           
+## [36] &quot;Median.time&quot;                                                                                                              
+## [37] &quot;Decimal.Median.time&quot;                                                                                                      
+## [38] &quot;Fishing.hours&quot;                                                                                                            
+## [39] &quot;Decimal.fishing.hours&quot;                                                                                                    
+## [40] &quot;Fishing.time..rounded.to.nearest.whole.number&quot;                                                                            
+## [41] &quot;Cost.of.gear.lost.to.depredation....&quot;                                                                                     
+## [42] &quot;Fishing.method&quot;                                                                                                           
+## [43] &quot;Burley.used..Y.N&quot;                                                                                                         
+## [44] &quot;Bait.type&quot;                                                                                                                
+## [45] &quot;Max.hook..depth&quot;                                                                                                          
+## [46] &quot;Min.hook..depth&quot;                                                                                                          
+## [47] &quot;Boat.name.number&quot;                                                                                                         
+## [48] &quot;Boat.Length&quot;                                                                                                              
+## [49] &quot;Time.of..interview&quot;                                                                                                       
+## [50] &quot;Comments&quot;                                                                                                                 
+## [51] &quot;Have_you_been_interviewed_about&quot;                                                                                          
+## [52] &quot;How_many_times_have_you_fished_&quot;                                                                                          
+## [53] &quot;How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.&quot;      
+## [54] &quot;How_many_years_have_you_been_fi&quot;                                                                                          
+## [55] &quot;How_many_days_have_you_boat._fished_f&quot;                                                                                    
+## [56] &quot;How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5....100&quot;</code></pre>
 <p>After doing a explore of the columns here is the state of the current date/time associated cols and changes that need to be made.</p>
 <table>
 <colgroup>
@@ -772,7 +823,7 @@ names(Ning)</code></pre>
 <tr class="even">
 <td align="center">Year</td>
 <td align="center">For 2021/21, NAs are where Jons years need to go, character</td>
-<td align="center"></td>
+<td align="center">Append Jons years</td>
 </tr>
 <tr class="odd">
 <td align="center">Time</td>
@@ -796,11 +847,80 @@ names(Ning)</code></pre>
 </tr>
 </tbody>
 </table>
-<p>What needs done:</p>
-<ul>
-<li><p>Date column is character with two formats, all dates in 2020/21 are formatted at mdY, while 2015/16 dmY. Need to get all dates in same format and make column as.date</p></li>
-<li><p>Time, Times in 2021/20 are UK time and need have 8 h added onto them. Then PM values need to be made inti the 24h clock</p></li>
-</ul>
+<pre class="r"><code>Ning &lt;- Ning %&gt;%
+  separate(Date, into = c(&quot;m&quot;, &quot;d&quot;, &quot;Y&quot;), sep = &quot;/&quot;, remove = TRUE) %&gt;%
+  unite(&quot;Date&quot;, d, m, Y, sep=&quot;/&quot;) %&gt;%
+  mutate(Date = ifelse(Date %in% &quot;NA/NA/NA&quot;, jDate, Date)) %&gt;%
+  select(-c(jDate))
+
+names(Ning)  </code></pre>
+<pre><code>##   [1] &quot;Date&quot;                &quot;Year&quot;                &quot;Time&quot;               
+##   [4] &quot;ampm&quot;                &quot;Interviewer&quot;         &quot;Transect&quot;           
+##   [7] &quot;Site&quot;                &quot;Screen1&quot;             &quot;Screen2&quot;            
+##  [10] &quot;Agreement&quot;           &quot;nDaysInArea&quot;         &quot;nDaysInArea_other&quot;  
+##  [13] &quot;BoatAccess&quot;          &quot;nBoatDays&quot;           &quot;nBoatDays_other&quot;    
+##  [16] &quot;nShoreDays&quot;          &quot;nShoreDays_other&quot;    &quot;nTimesLast12m&quot;      
+##  [19] &quot;nTimesLast12m_other&quot; &quot;nTimes19&quot;            &quot;nTimes19_other&quot;     
+##  [22] &quot;Covid&quot;               &quot;SurveyLong&quot;          &quot;SurveyLat&quot;          
+##  [25] &quot;EXTRACTIVE&quot;          &quot;exRecall&quot;            &quot;FishingType&quot;        
+##  [28] &quot;FishingType_other&quot;   &quot;BaitLure&quot;            &quot;exStart&quot;            
+##  [31] &quot;exStop&quot;              &quot;MaxHook&quot;             &quot;KeptUndam&quot;          
+##  [34] &quot;KeptUdam_other&quot;      &quot;RelUndam&quot;            &quot;RelUndam_other&quot;     
+##  [37] &quot;nDP&quot;                 &quot;nDP_other&quot;           &quot;Species&quot;            
+##  [40] &quot;exWhyLeave&quot;          &quot;exWhyLeave_other&quot;    &quot;NONEXTRACTIVE&quot;      
+##  [43] &quot;nexRecall&quot;           &quot;Activity&quot;            &quot;Activity_other&quot;     
+##  [46] &quot;nexStart&quot;            &quot;nexStop&quot;             &quot;DiveMaxDepth&quot;       
+##  [49] &quot;WhyChoose&quot;           &quot;WhyChoose_other&quot;     &quot;nexWhyLeave&quot;        
+##  [52] &quot;nexWhyLeave_other&quot;   &quot;UseLong&quot;             &quot;UseLat&quot;             
+##  [55] &quot;exnTimes12m&quot;         &quot;nexnTimes12m&quot;        &quot;exYrs&quot;              
+##  [58] &quot;nexYrs&quot;              &quot;DiveCert&quot;            &quot;nDives&quot;             
+##  [61] &quot;YrBorn&quot;              &quot;Postcode&quot;            &quot;Accom&quot;              
+##  [64] &quot;Accom_other&quot;         &quot;FINISH.SURVEY&quot;       &quot;Sex&quot;                
+##  [67] &quot;Party&quot;               &quot;BoatLength&quot;          &quot;BoatType&quot;           
+##  [70] &quot;BoatID&quot;              &quot;BR&quot;                  &quot;BRLat&quot;              
+##  [73] &quot;BRLong&quot;              &quot;nBoatsFishThatDay&quot;   &quot;jUseLat&quot;            
+##  [76] &quot;jUseLong&quot;            &quot;onekm&quot;               &quot;twokm&quot;              
+##  [79] &quot;fivekm&quot;              &quot;KernDens&quot;            &quot;SST&quot;                
+##  [82] &quot;DistBRm&quot;             &quot;DistBRnm&quot;            &quot;DistBRkm&quot;           
+##  [85] &quot;jCaughtUndam&quot;        &quot;jnDP&quot;                &quot;nHooked&quot;            
+##  [88] &quot;perDP&quot;               &quot;proDP&quot;               &quot;binDP&quot;              
+##  [91] &quot;nUndamHr&quot;            &quot;nDPHr&quot;               &quot;nHookedHr&quot;          
+##  [94] &quot;DPRateHr&quot;            &quot;jexStart&quot;            &quot;jexStop&quot;            
+##  [97] &quot;MedianTime&quot;          &quot;DecMedianTime&quot;       &quot;FishingHr&quot;          
+## [100] &quot;DecFishingHr&quot;        &quot;FishTime&quot;            &quot;jFishingType&quot;       
+## [103] &quot;jBaitLure&quot;           &quot;jMaxHook&quot;            &quot;jBoatID&quot;            
+## [106] &quot;jBoatLength&quot;         &quot;jTime&quot;               &quot;nTimesFished&quot;       
+## [109] &quot;jexYrs&quot;              &quot;jDaysBoatFished&quot;     &quot;jDaysBoatFishedCat&quot;</code></pre>
+<pre class="r"><code>unique(Ning$Date)</code></pre>
+<pre><code>##  [1] NA           &quot;13/4/2021&quot;  &quot;16/4/2021&quot;  &quot;29/9/2020&quot;  &quot;8/10/2020&quot; 
+##  [6] &quot;27/9/2020&quot;  &quot;31/3/2021&quot;  &quot;5/4/2021&quot;   &quot;28/3/2021&quot;  &quot;26/9/2020&quot; 
+## [11] &quot;2/10/2020&quot;  &quot;7/4/2021&quot;   &quot;30/9/2020&quot;  &quot;4/10/2020&quot;  &quot;1/4/2021&quot;  
+## [16] &quot;18/4/2021&quot;  &quot;2/4/2021&quot;   &quot;29/3/2021&quot;  &quot;17/4/2021&quot;  &quot;12/4/2021&quot; 
+## [21] &quot;22/4/2021&quot;  &quot;3/10/2020&quot;  &quot;30/3/2021&quot;  &quot;28/9/2020&quot;  &quot;15/4/2021&quot; 
+## [26] &quot;14/4/2021&quot;  &quot;24/4/2021&quot;  &quot;1/10/2020&quot;  &quot;6/4/2021&quot;   &quot;19/4/2021&quot; 
+## [31] &quot;9/10/2020&quot;  &quot;4/4/2021&quot;   &quot;1/9/2020&quot;   &quot;10/10/2020&quot; &quot;21/07/2015&quot;
+## [36] &quot;22/07/2015&quot; &quot;23/07/2015&quot; &quot;24/07/2015&quot; &quot;25/07/2015&quot; &quot;26/07/2015&quot;
+## [41] &quot;28/07/2015&quot; &quot;29/07/2015&quot; &quot;30/07/2015&quot; &quot;31/07/2015&quot; &quot;2/08/2015&quot; 
+## [46] &quot;23/09/2015&quot; &quot;24/09/2015&quot; &quot;25/09/2015&quot; &quot;2/10/2015&quot;  &quot;3/10/2015&quot; 
+## [51] &quot;4/10/2015&quot;  &quot;5/10/2015&quot;  &quot;6/10/2015&quot;  &quot;7/10/2015&quot;  &quot;10/10/2015&quot;
+## [56] &quot;11/10/2015&quot; &quot;6/04/2016&quot;  &quot;7/04/2016&quot;  &quot;8/04/2016&quot;  &quot;9/04/2016&quot; 
+## [61] &quot;10/04/2016&quot; &quot;11/04/2016&quot; &quot;12/04/2016&quot; &quot;13/04/2016&quot; &quot;14/04/2016&quot;
+## [66] &quot;15/04/2016&quot; &quot;17/04/2016&quot; &quot;18/04/2016&quot; &quot;19/04/2016&quot; &quot;20/04/2016&quot;
+## [71] &quot;22/04/2016&quot; &quot;23/04/2016&quot; &quot;&quot;</code></pre>
+<pre class="r"><code>Ning[1:4,] # check values of rows</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Date"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Year"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Time"],"name":[3],"type":["chr"],"align":["left"]},{"label":["ampm"],"name":[4],"type":["chr"],"align":["left"]},{"label":["Interviewer"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Transect"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Site"],"name":[7],"type":["chr"],"align":["left"]},{"label":["Screen1"],"name":[8],"type":["chr"],"align":["left"]},{"label":["Screen2"],"name":[9],"type":["chr"],"align":["left"]},{"label":["Agreement"],"name":[10],"type":["chr"],"align":["left"]},{"label":["nDaysInArea"],"name":[11],"type":["chr"],"align":["left"]},{"label":["nDaysInArea_other"],"name":[12],"type":["chr"],"align":["left"]},{"label":["BoatAccess"],"name":[13],"type":["chr"],"align":["left"]},{"label":["nBoatDays"],"name":[14],"type":["chr"],"align":["left"]},{"label":["nBoatDays_other"],"name":[15],"type":["chr"],"align":["left"]},{"label":["nShoreDays"],"name":[16],"type":["chr"],"align":["left"]},{"label":["nShoreDays_other"],"name":[17],"type":["chr"],"align":["left"]},{"label":["nTimesLast12m"],"name":[18],"type":["int"],"align":["right"]},{"label":["nTimesLast12m_other"],"name":[19],"type":["chr"],"align":["left"]},{"label":["nTimes19"],"name":[20],"type":["int"],"align":["right"]},{"label":["nTimes19_other"],"name":[21],"type":["chr"],"align":["left"]},{"label":["Covid"],"name":[22],"type":["chr"],"align":["left"]},{"label":["SurveyLong"],"name":[23],"type":["dbl"],"align":["right"]},{"label":["SurveyLat"],"name":[24],"type":["dbl"],"align":["right"]},{"label":["EXTRACTIVE"],"name":[25],"type":["chr"],"align":["left"]},{"label":["exRecall"],"name":[26],"type":["chr"],"align":["left"]},{"label":["FishingType"],"name":[27],"type":["chr"],"align":["left"]},{"label":["FishingType_other"],"name":[28],"type":["chr"],"align":["left"]},{"label":["BaitLure"],"name":[29],"type":["chr"],"align":["left"]},{"label":["exStart"],"name":[30],"type":["chr"],"align":["left"]},{"label":["exStop"],"name":[31],"type":["chr"],"align":["left"]},{"label":["MaxHook"],"name":[32],"type":["chr"],"align":["left"]},{"label":["KeptUndam"],"name":[33],"type":["int"],"align":["right"]},{"label":["KeptUdam_other"],"name":[34],"type":["chr"],"align":["left"]},{"label":["RelUndam"],"name":[35],"type":["int"],"align":["right"]},{"label":["RelUndam_other"],"name":[36],"type":["chr"],"align":["left"]},{"label":["nDP"],"name":[37],"type":["int"],"align":["right"]},{"label":["nDP_other"],"name":[38],"type":["chr"],"align":["left"]},{"label":["Species"],"name":[39],"type":["chr"],"align":["left"]},{"label":["exWhyLeave"],"name":[40],"type":["chr"],"align":["left"]},{"label":["exWhyLeave_other"],"name":[41],"type":["chr"],"align":["left"]},{"label":["NONEXTRACTIVE"],"name":[42],"type":["chr"],"align":["left"]},{"label":["nexRecall"],"name":[43],"type":["chr"],"align":["left"]},{"label":["Activity"],"name":[44],"type":["chr"],"align":["left"]},{"label":["Activity_other"],"name":[45],"type":["chr"],"align":["left"]},{"label":["nexStart"],"name":[46],"type":["chr"],"align":["left"]},{"label":["nexStop"],"name":[47],"type":["chr"],"align":["left"]},{"label":["DiveMaxDepth"],"name":[48],"type":["chr"],"align":["left"]},{"label":["WhyChoose"],"name":[49],"type":["chr"],"align":["left"]},{"label":["WhyChoose_other"],"name":[50],"type":["chr"],"align":["left"]},{"label":["nexWhyLeave"],"name":[51],"type":["chr"],"align":["left"]},{"label":["nexWhyLeave_other"],"name":[52],"type":["chr"],"align":["left"]},{"label":["UseLong"],"name":[53],"type":["dbl"],"align":["right"]},{"label":["UseLat"],"name":[54],"type":["dbl"],"align":["right"]},{"label":["exnTimes12m"],"name":[55],"type":["chr"],"align":["left"]},{"label":["nexnTimes12m"],"name":[56],"type":["chr"],"align":["left"]},{"label":["exYrs"],"name":[57],"type":["chr"],"align":["left"]},{"label":["nexYrs"],"name":[58],"type":["chr"],"align":["left"]},{"label":["DiveCert"],"name":[59],"type":["chr"],"align":["left"]},{"label":["nDives"],"name":[60],"type":["chr"],"align":["left"]},{"label":["YrBorn"],"name":[61],"type":["int"],"align":["right"]},{"label":["Postcode"],"name":[62],"type":["chr"],"align":["left"]},{"label":["Accom"],"name":[63],"type":["chr"],"align":["left"]},{"label":["Accom_other"],"name":[64],"type":["chr"],"align":["left"]},{"label":["FINISH.SURVEY"],"name":[65],"type":["chr"],"align":["left"]},{"label":["Sex"],"name":[66],"type":["chr"],"align":["left"]},{"label":["Party"],"name":[67],"type":["chr"],"align":["left"]},{"label":["BoatLength"],"name":[68],"type":["int"],"align":["right"]},{"label":["BoatType"],"name":[69],"type":["chr"],"align":["left"]},{"label":["BoatID"],"name":[70],"type":["chr"],"align":["left"]},{"label":["BR"],"name":[71],"type":["chr"],"align":["left"]},{"label":["BRLat"],"name":[72],"type":["dbl"],"align":["right"]},{"label":["BRLong"],"name":[73],"type":["dbl"],"align":["right"]},{"label":["nBoatsFishThatDay"],"name":[74],"type":["int"],"align":["right"]},{"label":["jUseLat"],"name":[75],"type":["dbl"],"align":["right"]},{"label":["jUseLong"],"name":[76],"type":["dbl"],"align":["right"]},{"label":["onekm"],"name":[77],"type":["int"],"align":["right"]},{"label":["twokm"],"name":[78],"type":["int"],"align":["right"]},{"label":["fivekm"],"name":[79],"type":["int"],"align":["right"]},{"label":["KernDens"],"name":[80],"type":["dbl"],"align":["right"]},{"label":["SST"],"name":[81],"type":["dbl"],"align":["right"]},{"label":["DistBRm"],"name":[82],"type":["dbl"],"align":["right"]},{"label":["DistBRnm"],"name":[83],"type":["dbl"],"align":["right"]},{"label":["DistBRkm"],"name":[84],"type":["dbl"],"align":["right"]},{"label":["jCaughtUndam"],"name":[85],"type":["int"],"align":["right"]},{"label":["jnDP"],"name":[86],"type":["int"],"align":["right"]},{"label":["nHooked"],"name":[87],"type":["int"],"align":["right"]},{"label":["perDP"],"name":[88],"type":["dbl"],"align":["right"]},{"label":["proDP"],"name":[89],"type":["dbl"],"align":["right"]},{"label":["binDP"],"name":[90],"type":["int"],"align":["right"]},{"label":["nUndamHr"],"name":[91],"type":["dbl"],"align":["right"]},{"label":["nDPHr"],"name":[92],"type":["dbl"],"align":["right"]},{"label":["nHookedHr"],"name":[93],"type":["dbl"],"align":["right"]},{"label":["DPRateHr"],"name":[94],"type":["dbl"],"align":["right"]},{"label":["jexStart"],"name":[95],"type":["chr"],"align":["left"]},{"label":["jexStop"],"name":[96],"type":["chr"],"align":["left"]},{"label":["MedianTime"],"name":[97],"type":["chr"],"align":["left"]},{"label":["DecMedianTime"],"name":[98],"type":["dbl"],"align":["right"]},{"label":["FishingHr"],"name":[99],"type":["chr"],"align":["left"]},{"label":["DecFishingHr"],"name":[100],"type":["dbl"],"align":["right"]},{"label":["FishTime"],"name":[101],"type":["int"],"align":["right"]},{"label":["jFishingType"],"name":[102],"type":["chr"],"align":["left"]},{"label":["jBaitLure"],"name":[103],"type":["chr"],"align":["left"]},{"label":["jMaxHook"],"name":[104],"type":["int"],"align":["right"]},{"label":["jBoatID"],"name":[105],"type":["chr"],"align":["left"]},{"label":["jBoatLength"],"name":[106],"type":["int"],"align":["right"]},{"label":["jTime"],"name":[107],"type":["chr"],"align":["left"]},{"label":["nTimesFished"],"name":[108],"type":["chr"],"align":["left"]},{"label":["jexYrs"],"name":[109],"type":["int"],"align":["right"]},{"label":["jDaysBoatFished"],"name":[110],"type":["chr"],"align":["left"]},{"label":["jDaysBoatFishedCat"],"name":[111],"type":["int"],"align":["right"]}],"data":[{"1":"NA","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"NA","8":"NA","9":"NA","10":"NA","11":"NA","12":"NA","13":"NA","14":"NA","15":"NA","16":"NA","17":"NA","18":"NA","19":"NA","20":"NA","21":"NA","22":"NA","23":"NA","24":"NA","25":"NA","26":"NA","27":"NA","28":"NA","29":"NA","30":"NA","31":"NA","32":"NA","33":"NA","34":"NA","35":"NA","36":"NA","37":"NA","38":"NA","39":"NA","40":"NA","41":"NA","42":"NA","43":"NA","44":"NA","45":"NA","46":"NA","47":"NA","48":"NA","49":"NA","50":"NA","51":"NA","52":"NA","53":"NA","54":"NA","55":"","56":"","57":"","58":"","59":"","60":"","61":"NA","62":"","63":"","64":"","65":"","66":"","67":"","68":"NA","69":"","70":"","71":"NA","72":"NA","73":"NA","74":"NA","75":"NA","76":"NA","77":"NA","78":"NA","79":"NA","80":"NA","81":"NA","82":"NA","83":"NA","84":"NA","85":"NA","86":"NA","87":"NA","88":"NA","89":"NA","90":"NA","91":"NA","92":"NA","93":"NA","94":"NA","95":"NA","96":"NA","97":"NA","98":"NA","99":"NA","100":"NA","101":"NA","102":"NA","103":"NA","104":"NA","105":"NA","106":"NA","107":"NA","108":"NA","109":"NA","110":"NA","111":"NA","_rn_":"1"},{"1":"NA","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"NA","8":"NA","9":"NA","10":"NA","11":"NA","12":"NA","13":"NA","14":"NA","15":"NA","16":"NA","17":"NA","18":"NA","19":"NA","20":"NA","21":"NA","22":"NA","23":"NA","24":"NA","25":"NA","26":"NA","27":"NA","28":"NA","29":"NA","30":"NA","31":"NA","32":"NA","33":"NA","34":"NA","35":"NA","36":"NA","37":"NA","38":"NA","39":"NA","40":"NA","41":"NA","42":"NA","43":"NA","44":"NA","45":"NA","46":"NA","47":"NA","48":"NA","49":"NA","50":"NA","51":"NA","52":"NA","53":"NA","54":"NA","55":"","56":"","57":"","58":"","59":"","60":"","61":"NA","62":"","63":"","64":"","65":"","66":"","67":"","68":"NA","69":"","70":"","71":"NA","72":"NA","73":"NA","74":"NA","75":"NA","76":"NA","77":"NA","78":"NA","79":"NA","80":"NA","81":"NA","82":"NA","83":"NA","84":"NA","85":"NA","86":"NA","87":"NA","88":"NA","89":"NA","90":"NA","91":"NA","92":"NA","93":"NA","94":"NA","95":"NA","96":"NA","97":"NA","98":"NA","99":"NA","100":"NA","101":"NA","102":"NA","103":"NA","104":"NA","105":"NA","106":"NA","107":"NA","108":"NA","109":"NA","110":"NA","111":"NA","_rn_":"2"},{"1":"NA","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"NA","8":"NA","9":"NA","10":"NA","11":"NA","12":"NA","13":"NA","14":"NA","15":"NA","16":"NA","17":"NA","18":"NA","19":"NA","20":"NA","21":"NA","22":"NA","23":"NA","24":"NA","25":"NA","26":"NA","27":"NA","28":"NA","29":"NA","30":"NA","31":"NA","32":"NA","33":"NA","34":"NA","35":"NA","36":"NA","37":"NA","38":"NA","39":"NA","40":"NA","41":"NA","42":"NA","43":"NA","44":"NA","45":"NA","46":"NA","47":"NA","48":"NA","49":"NA","50":"NA","51":"NA","52":"NA","53":"NA","54":"NA","55":"","56":"","57":"","58":"","59":"","60":"","61":"NA","62":"","63":"","64":"","65":"","66":"","67":"","68":"NA","69":"","70":"","71":"NA","72":"NA","73":"NA","74":"NA","75":"NA","76":"NA","77":"NA","78":"NA","79":"NA","80":"NA","81":"NA","82":"NA","83":"NA","84":"NA","85":"NA","86":"NA","87":"NA","88":"NA","89":"NA","90":"NA","91":"NA","92":"NA","93":"NA","94":"NA","95":"NA","96":"NA","97":"NA","98":"NA","99":"NA","100":"NA","101":"NA","102":"NA","103":"NA","104":"NA","105":"NA","106":"NA","107":"NA","108":"NA","109":"NA","110":"NA","111":"NA","_rn_":"3"},{"1":"NA","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"NA","8":"NA","9":"NA","10":"NA","11":"NA","12":"NA","13":"NA","14":"NA","15":"NA","16":"NA","17":"NA","18":"NA","19":"NA","20":"NA","21":"NA","22":"NA","23":"NA","24":"NA","25":"NA","26":"NA","27":"NA","28":"NA","29":"NA","30":"NA","31":"NA","32":"NA","33":"NA","34":"NA","35":"NA","36":"NA","37":"NA","38":"NA","39":"NA","40":"NA","41":"NA","42":"NA","43":"NA","44":"NA","45":"NA","46":"NA","47":"NA","48":"NA","49":"NA","50":"NA","51":"NA","52":"NA","53":"NA","54":"NA","55":"20","56":"","57":"30","58":"","59":"","60":"","61":"1967","62":"Bunbury","63":"CoralBay","64":"","65":"","66":"Male","67":"2 men, 1 woman, 2 kids","68":"NA","69":"G","70":"Youngbloods","71":"NA","72":"NA","73":"NA","74":"NA","75":"NA","76":"NA","77":"NA","78":"NA","79":"NA","80":"NA","81":"NA","82":"NA","83":"NA","84":"NA","85":"NA","86":"NA","87":"NA","88":"NA","89":"NA","90":"NA","91":"NA","92":"NA","93":"NA","94":"NA","95":"NA","96":"NA","97":"NA","98":"NA","99":"NA","100":"NA","101":"NA","102":"NA","103":"NA","104":"NA","105":"NA","106":"NA","107":"NA","108":"NA","109":"NA","110":"NA","111":"NA","_rn_":"4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>to do list
+* See how to can filter out all rows which contain only NA values
+* See if you can get your Date col to as.date format</p>
+<p>`</p>
+</div>
+</div>
+<div id="useful-code-ill-need-at-some-point" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> useful code ill need at some point</h2>
 <p>unique(Ning<span class="math inline">\(EXTRACTIVE)  unique(Ning\)</span>NONEXTRACTIVE)
 unique(Ning<span class="math inline">\(nDaysInArea_other)  unique(Ning\)</span>nBoatDays_other)
 unique(Ning<span class="math inline">\(nShoreDays_other)  unique(Ning\)</span>nTimesLast12m_other)
@@ -809,11 +929,10 @@ unique(Ning<span class="math inline">\(KeptUdam_other)  unique(Ning\)</span>RelU
 unique(Ning<span class="math inline">\(nDP_other)  unique(Ning\)</span>exWhyLeave_other)
 unique(Ning<span class="math inline">\(Activity_other)  unique(Ning\)</span>WhyChoose_other)
 unique(Ning<span class="math inline">\(nexWhyLeave_other)  unique(Ning\)</span>Accom_other)
-unique(Ning<span class="math inline">\(FINISH.SURVEY)  unique(Ning\)</span>Party)
-which(colnames(Ning)==“jTime”) # lets you find col number for specified col</p>
+unique(Ning<span class="math inline">\(FINISH.SURVEY)  unique(Ning\)</span>Party)</p>
 <p>ifelse(str_detect(df$col, “words to change|bjsbbdsjdb|jbsdjsdb”), “new name”,
 ifelse())</p>
-</div>
+<p>which(colnames(Ning)==“jTime”) # lets you find col number for specified col</p>
 </div>
 </div>
 <div id="data-analysis" class="section level1 tabset" number="2">

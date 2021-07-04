@@ -2,6 +2,7 @@
 ```{r libraries, include = FALSE}
 library(tidyverse)
 library(lubridate)
+library(chron)
 ```
 
 # Data Prep {.tabset} 
@@ -87,9 +88,9 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
 #### Rename ####
 # format: rename(newname = currentname)
   rename(Interviewer = "REQUIRED..Interviewer",
-         Transect = "REQUIRED..Boat.ramp.transect.name",
-         Screen1 = "SCREEN..18.", 
-         Screen2 = "SCREEN..have.we.interviewed.you.in.the.last.2.weeks.", 
+         BR = "REQUIRED..Boat.ramp.transect.name",
+         Screen18 = "SCREEN..18.", 
+         PrevInter = "SCREEN..have.we.interviewed.you.in.the.last.2.weeks.", 
          Agreement = "REQUIRED..Agreement.to.Participate",
          nDaysInArea = "How.many.days.are.you.in.the.area.",
          nDaysInArea_other = "If.OTHER....days.in.area",
@@ -151,7 +152,7 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
          BoatType = "Boat.Type",
          BoatID = "Boat.name.or.number",
          jDate = "Date",
-         BR = "Boat.ramp",
+         jBR = "Boat.ramp",
          BRLat = "Boat.ramp.lat",
          BRLong = "Boat.ramp.long",
          nBoatsFishThatDay = "No..boats.fishing.that.day",
@@ -188,108 +189,544 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Adding on Jons data
          nTimesFished = "How_many_times_have_you_fished_",
          jexYrs = "How_many_years_have_you_been_fi",
          jDaysBoatFished = "How_many_days_have_you_boat._fished_f",
-         jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>%
-
-#### Filter ####
-# The following section is separating out Harrisons 2018 data so I can remove it from data set. 
+         jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.") %>% 
   
-  mutate(nDate = ifelse(
-    nDate %in% "", CreationDate.x, nDate)) %>% 
-  # Fill Date col NAs with values from CreationDate.x: mutate(newcol = ifelse(condition, True, False))
-  select(-c(CreationDate.x)) %>% # Removing CreationDate.x col
-  separate(nDate, into = c("Date", "Time", "ampm"), sep = " ", remove = TRUE) %>% # separating date-time var
-  separate(Date, c("dm", "md", "Year"), sep = "/", remove = FALSE) %>% #Separating dtae to get Year col
-  filter(is.na(Year) | Year != 2018) %>% # Removing observation from 2018. is.na(Year) retains NAs for Jons data
-  select(-c(dm, md)) %>% # removing excess cols
+ #### Filter ####
   filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
-  filter_all(all_vars(!grepl("lah", .)))  # getting rid of blah blahs
-  
-  slice(-(1:4)) # empty observations -> find way to automate and row
+  filter_all(all_vars(!grepl("lah", .))) %>% # getting rid of blah blahs
+  filter(is.na(BR) | BR != "BeadonCreek")  # Getting rid of Onslow data
+# how to get rid of blank observations
 
 #### Checkpoint ####
 # Checking df is as expected
-names(Ning)
-unique(Ning$Date)
-unique(Ning$jDate)
-unique(Ning$Year)
+tbl_df(Ning)
+
 ```
- 
 Data Frame is now is less unweildy and contains only data that I need for my analysis. I am now going to clean each column starting with the leftmost. 
  
 ### Date and Time
-Currently variables associated with date and time are: Date, Year, Time, ampm, jDate, jTime
- 
-```{r DateExplore}
-unique(Ning$Date)
-typeof(Ning$Date)
-unique(Ning$Year)
-typeof(Ning$Year)
-head(Ning$Time)
-typeof(Ning$Time)
-unique(Ning$ampm)
-unique(Ning$jDate)
-typeof(Ning$jDate)
-unique(Ning$jTime)
-names(jon)
-```
-After doing a explore of the columns here is the state of the current date/time associated cols and changes that need to be made. 
-
-| Column | Current state | Changes to be made |
-|:------:|:-------------:|:------------------:|
-|Date|For 2021/21, mdY, character| Need to add in Jons dates, change to as.date|
-|Year|For 2021/21, NAs are where Jons years need to go, character|Append Jons years|
-|Time|For 2020/21, no surveys were doen before 9 checked metadata time is -8h (uk tz), character| Need to add 8h and get into 24h|
-|ampm|Contains am and pm associated with time | will be redundant when time is in 24h|
-|jDate| Jons Dates, dmY, character|Need to make same format as Date, append and remove|
-|jTime|Jon time, assume correct in 24h| Append to time|
-
+* Date and jDate need to be a standard format, appended then formatted as.Date
+* Add year column and filter our 2018
+* Time needs to be changed from UTC to AWST and put into 24h format and appended to jTime
 ```{r DateClean}
+##### Date  and Year ####
+
 Ning <- Ning %>%
-  separate(Date, into = c("m", "d", "Y"), sep = "/", remove = TRUE) %>%
-  unite("Date", d, m, Y, sep="/") %>%
-  mutate(Date = ifelse(Date %in% "NA/NA/NA", jDate, Date)) %>%
-  select(-c(jDate))
+  mutate(Date = ifelse(nDate %in% "", CreationDate.x, nDate)) %>% # Appending Creation date to blanks
+  separate(Date, into = c("Date", "Time", "ampm"), sep = " ") %>% # Separate datetime var for later
+  mutate(Date = parse_date_time(nDate, c("mdY IMS p")), # making POSIX
+         Date = substr(Date, 1, 10), # separating out Date
+         Date = as.Date(Date, "%Y-%m-%d"), # formatting as.Date to standardise format
+         jDate = as.Date(jDate, "%d/%m/%Y"), # formatting as.Date to standardise format
+         Year = substr(Date, 1, 4), # taking substring to make year col (1,4) chacrter in col date
+         jYear = substr(jDate, 1, 4)) %>% 
+  filter(is.na(Year) | Year != 2018) %>% # keep NAs and years that dont equal 2018
+  mutate(Date = as.character(Date, "%d/%m/%Y"), # format as chacrter to be able to append 
+         jDate = as.character(jDate, "%d/%m/%Y"), # without changing to character comes back numeric nonsense
+         Date = ifelse(is.na(Date), jDate, Date), # Append date cols
+         Date = as.Date(Date, "%d/%m/%Y")) %>% # format as date
+  mutate(Year = ifelse(is.na(Year), jYear, Year)) %>% # Appending year data
+  relocate(Date, Time, ampm, jTime, Year) %>% # Putting temporal data at front
+  select(-c(CreationDate.x, nDate, jYear, jDate)) # de selecting redundant cols
 
-names(Ning)  
-unique(Ning$Date)
-Ning[1:4,] # check values of rows
+##### Time ####
+##  Format as 24h
+# Ning <- Ning %>% 
+#  unite("nTime", Time, ampm, sep=" ") %>%
+#  mutate(Time = hms::as.hms(parse_date_time(nTime, "IMS p")))
+#  mutate(Time = format(strptime(nTime, "%I:%M:%S %p"), format="%H:%M"))
+##  Add 8 h 
+##  Append jTime
+# mutate(Time = ifelse(Time %in% "NA", jTime, Time))
+```
+
+### Survey Meta data 
+* Add ID column in chonological order - Done
+* Add Jon as interviewer - Done
+* Append jBR to BR and standardise format - Done
+* Standardise Site names - Done
+* Add Transect column which = corresponding shore transect/BR
+* If boat nume/number is duplicated within one trip = Yes
+* 
+```{r SurveyMetaClean}
+##### ID ####
+# Add in ID col arranged by Date and Time
+
+Ning <- Ning %>%
+  arrange(Date, Time) %>% 
+  mutate(ID = row_number()) %>%
+  relocate(ID) %>%
+  
+##### Interviewer ####
+# If Year = 2015|2016, interviewer = Jon 
+# 
+  mutate(Interviewer = ifelse(Year == "2015", "Jon", Interviewer),
+         Interviewer = ifelse(Year == "2016", "Jon", Interviewer))
+
+#### Site Data ####
+#### 
+Ning <- Ning %>% 
+  mutate(BR = ifelse(is.na(BR), jBR, BR), # Appending jBR and BR
+         BR = ifelse(str_detect(BR, "Coral"), "Coral Bay", # Standardising format
+                     ifelse(str_detect(BR, "Exmouth"), "Exmouth", BR)),# Standardising format
+         BR = ifelse(!is.na(Site), "", BR),
+         
+         Site = ifelse(str_detect(Site, "Turquoise"), "Turquoise", 
+                       ifelse(str_detect(Site, "Bills"), "BillsBay", 
+                              ifelse(str_detect(Site, "Pilg"), "Pilgramunna", 
+                                     ifelse(str_detect(Site, "Mildura"), "MilduraWreck", Site))))) # remove last bracket if adding transect
+         
+#        Transect = ifelse(str_detect(Site,"Turquoise|Sandy|Oys|Osp|Lake|Kori|Tris|Mes|Yar|Tul|Neds|Pilg|SKurr"),
+#                           "Tantabiddi",
+#                           ifelse(str_detect(Site, "Yacht|Golf|Town|BundegiSouth"), "ExmouthN",
+#                                 ifelse(str_detect(Site, "Pebble|Lear|ExmouthS|McL"), "ExmouthS",
+#                                        ifelse(str_detect(Site, "Maud|Bill"), "CoralBay",
+#                                               ifelse(str_detect(Site,
+#                                                                 "LH|Wob|Dunes|Jan|BundegiBeach|Hunt|NTant|Mil|Bau|"), "Bundegi", BR))))) %>%
+#  relocate(Transect, .before = BR)) <- works by itself just not after transect
+  
+names(Ning)
+unique(Ning$BR)
+unique(Ning$Site)
+unique(Ning$Transect)
+class(Ning$Transect)
+
+#### PrevInter ####
+#### Agreement ####
+Ning <- Ning %>%
+  mutate(Agreement = ifelse(Year == "2015", "Yes",
+                            ifelse( Year == "2016", "Yes", Agreement)))
+unique(Ning$Agreement)
+which(is.na(Ning$Agreement))
+which(Ning$Agreement == "")
+# note there is a weird gap between 1357 - 1377
+# Figure out what to do with all the blank observations
+```
+
+### Meta Data
+```{r MetaClean}
+##### Resident vs local  #####
+# Adding Binary Resident column
+#
+Ning <- Ning %>%
+  mutate(Resident = ifelse(str_detect(nDaysInArea, "Resident"), 1, 0)) %>%
+  relocate(Resident, .before = nDaysInArea)
+
+names(Ning)
+class(Ning$Resident)
+
+##### nDaysinArea ####
+# Standardise nDaysinAreaOther  
+Ning <- Ning %>% 
+  # Turning times into days
+  mutate(nDaysInArea_other = ifelse(str_detect(nDaysInArea_other, "Three weeks|3W|three weeks"), "21",
+                                    ifelse(str_detect(nDaysInArea_other, "Month|4 week"), "28",
+                                           ifelse(str_detect(nDaysInArea_other, "4 months"), "112",
+                                                  ifelse(str_detect(nDaysInArea_other, "6 months"), "168",
+                                                         ifelse(str_detect(nDaysInArea_other, "8 weeks - semi resident"), "56",
+                                                                ifelse(str_detect(nDaysInArea_other, "3 months|3mm"), "84",
+                                                                       ifelse(str_detect(nDaysInArea_other, "5 days"), 5,
+                                                                              ifelse(str_detect(nDaysInArea_other, "7 Exmouth|7 days in Exmouth "), 7,
+                                                                                     ifelse(str_detect(nDaysInArea_other, "4 in ex"), 4,
+                                                                                            ifelse(str_detect(nDaysInArea_other, "Maybe|Traveling|visiting"), NA, # NAing misc comments that arnt useful
+                                                                                              ifelse(str_detect(nDaysInArea_other, "7 month"), "196", nDaysInArea_other)))))))))))) %>%
+  # Dealing with rougue comments 
+  mutate(Refusal = ifelse(str_detect(nDaysInArea_other, "Did|Language|Change|dog"), nDaysInArea_other, NA), 
+         Party = ifelse(str_detect(nDaysInArea_other, "Family"), "2a2c", Party), 
+         PrevInter = ifelse(str_detect(nDaysInArea_other, "Family"), "Yes", PrevInter),
+         Site = ifelse(str_detect(nDaysInArea_other, "Mildura"), "MilduraWreck", Site),
+         nDaysInArea_other = ifelse(str_detect(nDaysInArea_other, "Family|Mil|DUNES|Did|Language|Change|dog"), NA, nDaysInArea_other),
+         nDaysInArea = ifelse(str_detect(nDaysInArea_other, "112|168|56|84|21|25|28|5|7|4|196|30|90|23"), nDaysInArea_other, nDaysInArea)) %>%
+  select(-c(nDaysInArea_other))
+# Each of the ifelse statements were checked after each run, this was done by checking which row number in nDaysInArea_other associated with comment changed, and was checked to make sure it matched the corresponing row in new col eg. which(Ning$nDaysInArea_other == "2a2c") == which(Ning$Party == "2a2c")
+
+#### BoatAccess #### 
+Ning <- Ning %>% 
+  mutate(BoatAccess = ifelse(Year == "2015", "Yes", BoatAccess),
+         BoatAccess = ifelse(Year == "2016", "Yes", BoatAccess))
+
+#### nBoatDays ####
+unique(Ning$nBoatDays)
+
+Ning <- Ning %>%
+  mutate(nBoatDays = ifelse(nBoatDays == "All", nDaysInArea, nBoatDays))
+
+
+#### nBoatDays_other ####
+unique(Ning$nBoatDays)
+unique(Ning$nBoatDays_other)
+
+# Explore
+Ning %>%
+  select(ID, Resident, nBoatDays_other, nBoatDays, nDaysInArea) %>%
+  mutate(nBoatDays_other = ifelse(nBoatDays_other == "", NA, nBoatDays_other)) %>%
+  filter(nBoatDays_other == ""|!is.na(nBoatDays_other)) %>% 
+  group_by(nBoatDays_other) %>%
+  arrange(Resident)
+
+# Add ResBoatAvid - got to be applicable only when resident = 1 make NA
+# Deal with visitor nBoatDays
+#
+# Ning <- Ning %>%
+ #  mutate(ResBoatAvidYr = ifelse(str_detect(nBoatDays_other, "1 formiye|Every couple of weeks|For|"), "26",
+    #                             ifelse(str_detect(nBoatDays_other, ""), T, F)))
+# Manual method
+# unique(Ning$nBoatDays_other)
+# which(Ning$nBoatDays_other == "Couple weekly")
+# which(colnames(Ning) == "Resident")
+
+# 
 
 ```
 
-to do list 
-* See how to can filter out all rows which contain only NA values
-* See if you can get your Date col to as.date format
+#### DP RUM Prep ####
+```{r DP_RUM}
 
+meta <- read.csv("rumIgnore/Data-042021/meta_21.csv")
+use <- read.csv("rumIgnore/Data-042021/use_21.csv")
+avidity <- read.csv("rumIgnore/Data-042021/avidity_21.csv")
+jon <- read.csv("rumIgnore/Data-jon/ALL3TRIPSMASTERDATASETFEB22.csv")
 
-```{r}
+is.data.frame(meta) # checking object is df -> TRUE
+is.data.frame(use) # checking object is df -> TRUE
+is.data.frame(avidity) # checking object is df -> TRUE
+is.data.frame(jon)
 
-## useful code ill need at some point
- unique(Ning$EXTRACTIVE)
- unique(Ning$NONEXTRACTIVE)
- unique(Ning$nDaysInArea_other)
- unique(Ning$nBoatDays_other)
- unique(Ning$nShoreDays_other)
- unique(Ning$nTimesLast12m_other)
- unique(Ning$nTimes19_other)
- unique(Ning$FishingType_other)
- unique(Ning$KeptUdam_other)
- unique(Ning$RelUndam_other)
- unique(Ning$nDP_other)
- unique(Ning$exWhyLeave_other)
- unique(Ning$Activity_other)
- unique(Ning$WhyChoose_other)
- unique(Ning$nexWhyLeave_other)
- unique(Ning$Accom_other)
- unique(Ning$FINISH.SURVEY)
- unique(Ning$Party)
- 
-ifelse(str_detect(df$col, "words to change|bjsbbdsjdb|jbsdjsdb"), "new name",
-       ifelse())
+MetaUse<- merge(meta, use, by.x = "GlobalID", 
+                by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge Meta.csv (x) and Use.csv (y) dfs by GlobalID and GUID column
+Ning0421 <- merge(MetaUse, avidity, by.x = "GlobalID.y", 
+                   by.y = "Guid", all.x = TRUE, all.y = TRUE) # merge MetaUse0421.csv (x) and Avidity.csv (y) dfs by GlobalUse and GUIDavid column
+
+write.csv(Ning0421, 'rumIgnore/Ning0421.csv') 
+
+#### Bind ####
+# changing name of date variable so it doesn't not append to Jon's Date variable which is in different format
+names(DPrum)
+Ning0421 <- Ning0421 %>% 
+  rename(nDate = Date) 
+
+DPrum <- bind_rows(Ning0421, jon) %>%  # Adding on Jons data
+
+#### Select ####
+  select(nDate, CreationDate.x, REQUIRED..Boat.ramp.transect.name, Site,
+         SCREEN..have.we.interviewed.you.in.the.last.2.weeks.,
+         How.many.days.are.you.in.the.area., If.OTHER....days.in.area,
+         Do.you.have.access.to.a.private.boat.while.your.here., If.YES....days.you.intend.to.spend.on.boat.,
+         If.OTHER....days.on.private.boat., X..separate.times.in.area.in.last.12.months.,
+         If.OTHER....times.in.last.12.months,
+         X..separate.times.in.area.in.2019., If.OTHER....times.in.area.in.2019, x.y, y.y, EXTRACTIVE.SURVEY,
+         If.RECALL..date, What.type.of.fishing.did.you.do.at.this.site., If.OTHER..fishing.type,
+         Did.you.use.a.bait.or.lure., What.time.did.you..if.spearfishing...your.lines.get.in.the.water.,
+         What.time.did.you..if.spearfishing..your.lines.get.out.the.water.., Max.depth.of.hook.at.this.site.,
+         X..fish.you.kept.undamaged.at.this.site., If.OTHER....kept.undamaged, X..released.undamaged.at.this.site.,
+         If.OTHER....released.undamaged, X..depredated, If.OTHER....depredated, What.species.did.you.catch.,
+         Why.did.you.leave.this.site., If.OTHER..why.did.you.leave.this.site.,
+         X..times.fished.from.boat.in.last.12.months., X..years.fishing., What.year.were.you.born., Home.postcode, 
+         If.VISITOR..where.are.you.staying., If.OTHER..where.are.you.staying, FINISH.SURVEY, Male.or.Female,
+         Describe.party, Boat.length, Boat.Type, Boat.name.or.number, Date, Boat.ramp, Boat.ramp.lat, Boat.ramp.long,
+         Lat, Long, Distance.of..fishing.location..from.boat.ramp..miles.,
+         Distance.of..fishing.location..from.boat.ramp..nautical.miles.,
+         Distance.of..fishing.location..from.boat.ramp..km., No..fish.caught.undamaged, No..fish.lost.to.sharks, 
+         Total.fish.hooked, Percentage.depredation, Proportional.depredation...between.0.1.,
+         Binary.depredation.presence.absence, No..fish.caught..undamaged.per.hour, No..fish.lost.per.hour,
+         Total.fish.hooked.per.hour, Depredation.rate.....per.hour, Time.lines.in, Time.lines.out, Median.time, 
+         Decimal.Median.time, Fishing.hours, Decimal.fishing.hours, Fishing.time..rounded.to.nearest.whole.number, 
+         Fishing.method, Bait.type, Max.hook..depth, Min.hook..depth, Boat.name.number, Boat.Length, Time.of..interview,
+         Have_you_been_interviewed_about, How_many_times_have_you_fished_, 
+         How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.,
+         How_many_years_have_you_been_fi, How_many_days_have_you_boat._fished_f, 
+         How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.) %>%
+         
+#### Rename ####
+# format: rename(newname = currentname)
+  rename(BR = "REQUIRED..Boat.ramp.transect.name",
+         PrevInter = "SCREEN..have.we.interviewed.you.in.the.last.2.weeks.", 
+         nDaysInArea = "How.many.days.are.you.in.the.area.",
+         nDaysInArea_other = "If.OTHER....days.in.area",
+         BoatAccess = "Do.you.have.access.to.a.private.boat.while.your.here.",
+         nBoatDays = "If.YES....days.you.intend.to.spend.on.boat.",
+         nBoatDays_other = "If.OTHER....days.on.private.boat.",
+         nTimesLast12m = "X..separate.times.in.area.in.last.12.months.",
+         nTimesLast12m_other = "If.OTHER....times.in.last.12.months",
+         nTimes19 = "X..separate.times.in.area.in.2019.",
+         nTimes19_other = "If.OTHER....times.in.area.in.2019",
+         EXTRACTIVE = "EXTRACTIVE.SURVEY",
+         exRecall = "If.RECALL..date",
+         FishingType = "What.type.of.fishing.did.you.do.at.this.site.",
+         FishingType_other = "If.OTHER..fishing.type",
+         BaitLure = "Did.you.use.a.bait.or.lure.",
+         exStart = "What.time.did.you..if.spearfishing...your.lines.get.in.the.water.",
+         exStop = "What.time.did.you..if.spearfishing..your.lines.get.out.the.water..",
+         MaxHook = "Max.depth.of.hook.at.this.site.",
+         KeptUndam = "X..fish.you.kept.undamaged.at.this.site.",
+         KeptUdam_other = "If.OTHER....kept.undamaged",
+         RelUndam = "X..released.undamaged.at.this.site.",
+         RelUndam_other = "If.OTHER....released.undamaged",
+         nDP = "X..depredated",
+         nDP_other = "If.OTHER....depredated",
+         Species = "What.species.did.you.catch.",
+         exWhyLeave = "Why.did.you.leave.this.site.",
+         exWhyLeave_other = "If.OTHER..why.did.you.leave.this.site.",
+         UseLong = "x.y",
+         UseLat = "y.y",
+         exnTimes12m = "X..times.fished.from.boat.in.last.12.months.",
+         exYrs = "X..years.fishing.",
+         YrBorn = "What.year.were.you.born.",
+         Postcode = "Home.postcode",
+         Accom = "If.VISITOR..where.are.you.staying.",
+         Accom_other = "If.OTHER..where.are.you.staying",
+         Sex = "Male.or.Female",
+         Party = "Describe.party",
+         BoatLength = "Boat.length",
+         BoatType = "Boat.Type",
+         BoatID = "Boat.name.or.number",
+         jDate = "Date",
+         jBR = "Boat.ramp",
+         BRLat = "Boat.ramp.lat",
+         BRLong = "Boat.ramp.long",
+         jUseLat = "Lat",
+         jUseLong = "Long",
+         DistBRm = "Distance.of..fishing.location..from.boat.ramp..miles.",
+         DistBRnm = "Distance.of..fishing.location..from.boat.ramp..nautical.miles.",
+         DistBRkm = "Distance.of..fishing.location..from.boat.ramp..km.",
+         jCaughtUndam = "No..fish.caught.undamaged",
+         jnDP = "No..fish.lost.to.sharks",
+         nHooked = "Total.fish.hooked",
+         perDP = "Percentage.depredation",
+         proDP = "Proportional.depredation...between.0.1.",
+         binDP = "Binary.depredation.presence.absence",
+         nUndamHr = "No..fish.caught..undamaged.per.hour",
+         nDPHr = "No..fish.lost.per.hour",
+         nHookedHr = "Total.fish.hooked.per.hour",
+         DPRateHr = "Depredation.rate.....per.hour",
+         jexStart = "Time.lines.in",
+         jexStop = "Time.lines.out",
+         MedianTime = "Median.time",
+         DecMedianTime = "Decimal.Median.time",
+         FishingHr = "Fishing.hours",
+         DecFishingHr = "Decimal.fishing.hours",
+         FishTime = "Fishing.time..rounded.to.nearest.whole.number",
+         jFishingType = "Fishing.method",
+         jBaitLure = "Bait.type",
+         jMaxHook = "Max.hook..depth",
+         jBoatID = "Boat.name.number",
+         jBoatLength = "Boat.Length",
+         jTime = "Time.of..interview",
+         nTimesFished = "How_many_times_have_you_fished_",
+         jexYrs = "How_many_years_have_you_been_fi",
+         jDaysBoatFished = "How_many_days_have_you_boat._fished_f",
+         jDaysBoatFishedCat = "How.many.days.have.you.boat.fished.in.the.last.year.categorical..1...0.25..2...26.50..3...51...75..4...76...100..5.",
+         jTimesFishThisBR = "How.many.times.fished.from.this.boat.ramp.categorical..1...0.25.times..2...26.50..3...51.75..4...76.100..5.....100.",
+         jPrevInter = "Have_you_been_interviewed_about") %>% 
+  
+ #### Filter ####
+  filter_all(all_vars(!grepl('ummy', .))) %>% # getting rid of Dummys/dummys
+  filter_all(all_vars(!grepl("lah", .))) %>% # getting rid of blah blahs
+  filter(is.na(BR) | BR != "BeadonCreek") %>% # Getting rid of Onslow data
+
+# how to get rid of blank observations
+
+#### Checkpoint ####
+# Checking df is as expected
+# tbl_df(DPrum)
+# names(DPrum)
+
+##### Date  and Year ####
+  mutate(Date = ifelse(nDate %in% "", CreationDate.x, nDate)) %>% # Appending Creation date to blanks
+  separate(Date, into = c("Date", "Time", "ampm"), sep = " ") %>% # Separate datetime var for later
+  mutate(Date = parse_date_time(nDate, c("mdY IMS p")), # making POSIX
+         Date = substr(Date, 1, 10), # separating out Date
+         Date = as.Date(Date, "%Y-%m-%d"), # formatting as.Date to standardise format
+         jDate = as.Date(jDate, "%d/%m/%Y"), # formatting as.Date to standardise format
+         Year = substr(Date, 1, 4), # taking substring to make year col (1,4) chacrter in col date
+         jYear = substr(jDate, 1, 4)) %>% 
+  filter(is.na(Year) | Year != 2018) %>% # keep NAs and years that dont equal 2018
+  mutate(Date = as.character(Date, "%d/%m/%Y"), # format as chacrter to be able to append 
+         jDate = as.character(jDate, "%d/%m/%Y"), # without changing to character comes back numeric nonsense
+         Date = ifelse(is.na(Date), jDate, Date), # Append date cols
+         Date = as.Date(Date, "%d/%m/%Y")) %>% # format as date
+  mutate(Year = ifelse(is.na(Year), jYear, Year)) %>% # Appending year data
+  relocate(Date, Time, ampm, jTime, Year) %>% # Putting temporal data at front
+  select(-c(CreationDate.x, nDate, jYear, jDate)) %>% # de selecting redundant cols
+  arrange(Date, Time) %>% 
+#### useID ####
+  mutate(useID = row_number()) %>% 
+  relocate(useID) %>%
+#### Appending BR ####
+  mutate(BR = ifelse(is.na(BR), jBR, BR), # Appending jBR and BR
+         BR = ifelse(str_detect(BR, "Coral"), "Coral Bay", # Standardising format
+                     ifelse(str_detect(BR, "Exmouth"), "Exmouth", BR))) %>% # Standardising format
+#### Appending PrevInter ####
+  mutate(PrevInter = ifelse(Year == "2015", jPrevInter, PrevInter),
+         PrevInter = ifelse(Year == "2016", jPrevInter, PrevInter)) %>%
+#### Adding resident col ####
+  mutate(Resident = ifelse(str_detect(nDaysInArea, "Resident"), 1, 0)) %>%
+  relocate(Resident, .before = nDaysInArea) %>%
+##### nDaysinArea ####
+# Standardise nDaysinAreaOther  
+  # Turning times into days
+  mutate(nDaysInArea_other = ifelse(str_detect(nDaysInArea_other, "Three weeks|3W|three weeks"), "21",
+                                    ifelse(str_detect(nDaysInArea_other, "Month|4 week"), "28",
+                                           ifelse(str_detect(nDaysInArea_other, "4 months"), "112",
+                                                  ifelse(str_detect(nDaysInArea_other, "6 months"), "168",
+                                                         ifelse(str_detect(nDaysInArea_other, "8 weeks - semi resident"), "56",
+                                                                ifelse(str_detect(nDaysInArea_other, "3 months|3mm"), "84",
+                                                                       ifelse(str_detect(nDaysInArea_other, "5 days"), 5,
+                                                                              ifelse(str_detect(nDaysInArea_other, "7 Exmouth|7 days in Exmouth "), 7,
+                                                                                     ifelse(str_detect(nDaysInArea_other, "4 in ex"), 4,
+                                                                                            ifelse(str_detect(nDaysInArea_other, "Maybe|Traveling|visiting"), NA, # NAing misc comments that arnt useful
+                                                                                              ifelse(str_detect(nDaysInArea_other, "7 month"), "196", nDaysInArea_other)))))))))))) %>%
+  # Dealing with rougue comments 
+  mutate(Refusal = ifelse(str_detect(nDaysInArea_other, "Did|Language|Change|dog"), nDaysInArea_other, NA), 
+         Party = ifelse(str_detect(nDaysInArea_other, "Family"), "2a2c", Party), 
+         PrevInter = ifelse(str_detect(nDaysInArea_other, "Family"), "Yes", PrevInter),
+         Site = ifelse(str_detect(nDaysInArea_other, "Mildura"), "MilduraWreck", Site),
+         nDaysInArea_other = ifelse(str_detect(nDaysInArea_other, "Family|Mil|DUNES|Did|Language|Change|dog"), NA, nDaysInArea_other),
+         nDaysInArea = ifelse(str_detect(nDaysInArea_other, "112|168|56|84|21|25|28|5|7|4|196|30|90|23"), nDaysInArea_other, nDaysInArea)) %>%
+  select(-c(nDaysInArea_other)) %>%
+# Each of the ifelse statements were checked after each run, this was done by checking which row number in nDaysInArea_other associated with comment changed, and was checked to make sure it matched the corresponing row in new col eg. which(Ning$nDaysInArea_other == "2a2c") == which(Ning$Party == "2a2c")
+
+#### BoatAccess #### 
+  mutate(BoatAccess = ifelse(Year == "2015", "Yes", BoatAccess),
+         BoatAccess = ifelse(Year == "2016", "Yes", BoatAccess)) %>%
+#### nBoatDays ####
+  mutate(nBoatDays = ifelse(nBoatDays == "All", nDaysInArea, nBoatDays)) %>%
+#### nBoatDays_other ####
+# Explore
+# DPrum %>%
+#  select(ID, Resident, nBoatDays_other, nBoatDays, nDaysInArea) %>%
+#  mutate(nBoatDays_other = ifelse(nBoatDays_other == "", NA, nBoatDays_other)) %>%
+#  filter(nBoatDays_other == ""|!is.na(nBoatDays_other)) %>% 
+#  group_by(nBoatDays_other) %>%
+#  arrange(Resident)
+# Add ResBoatAvid - got to be applicable only when resident = 1 make NA
+# Deal with visitor nBoatDays
+# Ning <- Ning %>%
+#   mutate(ResBoatAvidYr = ifelse(str_detect(nBoatDays_other, "1 formiye|Every couple of weeks|For|"), "26",
+#                                 ifelse(str_detect(nBoatDays_other, ""), T, F)))
+# Manual method
+# unique(Ning$nBoatDays_other)
+# which(Ning$nBoatDays_other == "Couple weekly")
+# which(colnames(Ning) == "Resident")
+
+#### nTimesLast12m ####
+  mutate(nTimesLast12m_other = ifelse(str_detect(nTimesLast12m_other, "1|July"), "1",
+                                      ifelse(str_detect(nTimesLast12m_other, "0|Zero|5-6|o"), NA, nTimesLast12m_other)),
+         Comments = ifelse(str_detect(nTimesLast12m_other, "dog|house"), nTimesLast12m_other, NA),
+         nTimesLast12m_other = ifelse(str_detect(nTimesLast12m_other, "dog|house"), NA, nTimesLast12m_other),
+         nTimesLast12m = ifelse(nTimesLast12m_other == "1", "1", nTimesLast12m)) %>%
+  select(-nTimesLast12m_other) %>%
+#### nTimes19 #### 
+  mutate(nTimes19_other = ifelse(str_detect(nTimes19_other, "1|Once"), "1",
+                                 ifelse(str_detect(nTimes19_other, "Can’t|H|She’d|For|ould|Might"), NA,
+                                        ifelse(str_detect(nTimes19_other, "Was living here"), "Resident", nTimes19_other))),
+         Resident = ifelse(nTimes19_other == "Resident", "1", Resident),
+         nTimes19_other = ifelse(str_detect(nTimes19_other, "Resident"), NA, nTimes19_other),
+         nTimes19 = ifelse(nTimes19_other == "1", "1", nTimes19)) %>%
+  select(-nTimes19_other) %>%
+#### Append useLat/Long ####
+  mutate(UseLong = ifelse(Year == "2015", jUseLong, UseLong),
+         UseLong = ifelse(Year == "2016", jUseLong, UseLong),
+         UseLat = ifelse(Year == "2015", jUseLat, UseLat),
+         UseLat = ifelse(Year == "2016", jUseLat, UseLat)) %>%
+  select(-c(jUseLong, jUseLat)) %>%
+#### EXTRACTIVE ####
+# Every entry which had a location name had coordinates checked to se if they matched or not, if not new coord added
+  mutate(UseLong = ifelse(str_detect(EXTRACTIVE, "ooper|squidding"), "114.2212", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Artificial reef|King"), "114.187083", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Marion"),"114.359287", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Exmouth reef"), "114.3667", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Five finger reef"), "113.751633", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "10k of bay"), "114.1126", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "South tanatabiddid"), "113.901809", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Ned’s"), "113.915051", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Fishing off Exmouth boat ramp|harbour"), "114.139613", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "trolled"), "113.919484", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "100m line"), "113.923947", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Helby bank|west side?"), "114.027586", UseLong),
+         UseLong = ifelse(str_detect(EXTRACTIVE, "Long Island"), "114.674036", UseLong),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Peak island"), "114.509023", UseLat)) %>% 
+    
+  mutate(UseLat = ifelse(str_detect(EXTRACTIVE, "ooper|squidding"), "-22.0555", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Artificial reef|King"), "-21.9155", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Marion"), "-21.6583", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Exmouth reef"), "-21.8500", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Five finger reef"), "-23.1820", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "10k of bay"), "-22.4413", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "South tanatabiddid"), "-21.9977", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Ned’s"), "-21.9956", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Fishing off Exmouth boat ramp|harbour"), "-21.9559", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "trolled"), "-21.9193", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "100m line"), "21.8559", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Helby bank|west side?"), "-21.8100", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Long Island"), "-21.6144", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "Peak island"), "-21.6039", UseLat)) %>%
+  
+  mutate(EXTRACTIVE = ifelse(str_detect(EXTRACTIVE, "ooper|squidding|Artificial reef|King|Marion|Exmouth reef|Five finger reef|10k of bay|South tanatabiddid|Ned’s|Fishing off Exmouth boat ramp|harbour|trolled|100m line|Helby bank|west side?|Long Island|Peak island|Trolling|trawled|Don’t fish|interviewed|school|Janz|inlet|Bro|I|22k|Larked|tang"), NA, EXTRACTIVE)) %>%
+  mutate(YrBorn = ifelse(str_detect(EXTRACTIVE, "1982"), "1982", YrBorn),
+         Postcode = ifelse(str_detect(EXTRACTIVE, "6166"), "6166", Postcode),
+         Comments = ifelse(str_detect(EXTRACTIVE, "70%depredated"), "0%depredated - gone up, less fish", Comments),
+         Comments = ifelse(str_detect(EXTRACTIVE, "Doesn’t fish deeper than 16m because of sharks"), "Doesn’t fish deeper than 16m because of sharks", Comments),
+         Comments = ifelse(str_detect(EXTRACTIVE, "6 spots"), "6 spots between tantabiddi br to light house outside reef", Comments),
+         Comments = ifelse(str_detect(EXTRACTIVE, "Targeting marlin"), "Targeting marlin", Comments),
+         Comments = ifelse(str_detect(EXTRACTIVE, "Oil"), "Oil rigs", Comments),
+         Comments = ifelse(str_detect(EXTRACTIVE, "They tag and release sharks"), "They tag and release sharks", Comments),
+         Comments = ifelse(str_detect(EXTRACTIVE, "Couldn’t be blthard telling me about all the sites but they went to 5 sites and left every time because of sharks"), "Couldn’t be blthard telling me about all the sites but they went to 5 sites and left every time because of sharks", Comments),
+         BaitLure = ifelse(str_detect(EXTRACTIVE, "bait"), "Both", BaitLure),
+         BoatID = ifelse(str_detect(EXTRACTIVE, "BO 343"), "BO 343", BoatID)) %>%
+  select(-EXTRACTIVE)
+#### exRecall ####
+# DPrum <- DPrum %>% 
+#  separate(exRecall, into = c("exDate", "b", "c"), sep = " ") %>%# Separate datetime var for later
+#  mutate(exDate = parse_date_time(exDate, c("mdY IMS p")), # making POSIX
+#         exDate = substr(exDate, 1, 10), # separating out Date
+#         exDate = as.Date(exDate, "%Y-%m-%d"), # formatting as.Date to standardise format
+#         exDate = as.character(exDate, "%d/%m/%Y"), # format as chacrter to be able to append 
+#         Date = as.character(Date, "%Y/%m/%d"), # without changing to character comes back numeric nonsense
+#         Date = ifelse(str_detect(exDate, "201"), exDate, Date), # Append date cols
+#         Date = as.Date(Date, "%d/%m/%Y")) # format as date%>% # Appending year data
+
+#### Fishing Type ####
+unique(DPrum$FishingType)
+unique(DPrum$FishingType_other)
+unique(DPrum$jFishingType)
+
+DPrum <- DPrum %>% 
+  mutate(FishingType_other = ifelse(str_detect(FishingType_other, "we’re just squidding|Going for squid|Squidding"), "Squidding", FishingType_other),
+         FishingType_other = ifelse(str_detect(FishingType_other, "ottom|Drift|Demersal"), "Demersal", FishingType_other),
+         FishingType_other = ifelse(str_detect(FishingType_other, "Free|Spearing"), "Spearing", FishingType_other),
+         FishingType_other = ifelse(str_detect(FishingType_other, "Casting|Lining"), "Casting", FishingType_other),
+         FishingType_other = ifelse(str_detect(FishingType_other, "Trawling|Trolling|For. Arlin|Marlin|game"), "Trolling", FishingType_other),
+         FishingType_other = ifelse(str_detect(FishingType_other, "Prawning"), "Prawning", FishingType_other),
+         BaitLure = ifelse(str_detect(FishingType_other, "Both|Bith"), "Both", BaitLure),
+         BaitLure = ifelse(str_detect(FishingType_other, "Bait"), "Bait", BaitLure),
+         MaxHook = ifelse(str_detect(FishingType_other, "80"), "80", FishingType_other),
+         UseLong = ifelse(str_detect(FishingType_other, "fly"), "114.555110", UseLong),
+         UseLat = ifelse(str_detect(FishingType_other, "fly"), "-21.809301", UseLat),
+         exnTimes12m = ifelse(str_detect(FishingType_other, "25 times a year"), "25", exnTimes12m),
+         FishingType_other = ifelse(str_detect(FishingType_other, "Both|Bith|Bait|80|fly|25|0ff|From"), NA, FishingType_other),
+         FishingType = ifelse(str_detect(FishingType_other, "Squidding"), "Squidding", FishingType),
+         FishingType = ifelse(str_detect(FishingType_other, "Demersal"), "Demersal", FishingType),
+         FishingType = ifelse(str_detect(FishingType_other, "Spearing"), "Spearing", FishingType),
+         FishingType = ifelse(str_detect(FishingType_other, "Casting"), "Casting", FishingType),
+         FishingType = ifelse(str_detect(FishingType_other, "Trolling"), "Trolling", FishingType),
+         FishingType = ifelse(str_detect(FishingType_other, "Prawning"), "Prawning", FishingType),
+         FishingType_other = ifelse(str_detect(FishingType_other, "Squidding|Demersal|Spear|Casting|Trolling|Prawning"), NA, FishingType_other))
+#### exStart ####
+#### exStop ####
        
-which(colnames(Ning)=="jTime") # lets you find col number for specified col
 
+unique(DPrum$exStop)
+unique(DPrum$FishingType_other)
+which(DPrum$FishingType_other =="Coral trout fly island ")
+which(colnames(DPrum)=="Species")
+DPrum[1270, 7] # BR
+DPrum[1270, 20] # FishingTYoe
+DPrum[1353, 17] #Long
+DPrum[1353, 18] #Lat
+DPrum[733, 8] # site
+DPrum[1353, 26] # MaxHook
+DPrum[1353, 32] #
+names(DPrum)
+unique(DPrum$BaitLure)
 ```
-
-
-
-
