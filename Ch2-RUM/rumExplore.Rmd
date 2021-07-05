@@ -1,0 +1,17 @@
+```{r libraries, include = FALSE}
+library(tidyverse)
+library(lubridate)
+library(chron)
+library(sp)
+library(raster)
+library(ggplot2)
+library(leaflet)
+library(rgdal)
+library(sf)
+library(tmap)
+```
+
+```{r Explore}
+# Spatial plot
+```
+
