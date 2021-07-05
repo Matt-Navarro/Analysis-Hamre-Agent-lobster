@@ -26,17 +26,24 @@ install.packages("devtools")
 install.packages("chron")
 install.packages("sp")
 install.packages("raster")
+install.packages("ggplot2")
+install.packages("leaflet")
+
+
 install.packages("rgdal", configure.args = c("--with-proj-lib=/usr/local/lib/", "--with-proj-include=/usr/local/include/"))
 install.packages("sf")
-install.packages("ggplot2")
 
 install.packages("rgeos", repos="http://R-Forge.R-project.org", type="source")
 install.packages("rgdal", repos="http://R-Forge.R-project.org", type="source")
 library(devtools)
 install_github("r-spatial/sf", configure.args = "--with-proj-lib=/usr/local/lib/")
 
+install.packages("tmap")
+
 library(tidyverse)
 library(dplyr)
+
+leaflet, tmap
 ```
 
 ```{r functions, echo=FALSE}
