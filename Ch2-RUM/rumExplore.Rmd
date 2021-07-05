@@ -6,12 +6,132 @@ library(sp)
 library(raster)
 library(ggplot2)
 library(leaflet)
+library(rgeos)
 library(rgdal)
 library(sf)
 library(tmap)
 ```
 
 ```{r Explore}
-# Spatial plot
+unique(Test$Activity)
+unique(Test$Activity_other)
+
+### This is being done quickly for the purposes of plot - double check no comments misinterpreted
+### eg. Tant sz should be check for coordinates/scenery and waiting should be considered, are Sup and surfing clumpable? Making assumong that Kid/Family means beachgoing? Swimming but went for mega fauna?
+dat <- Ning %>%
+  mutate(Activity_other= ifelse(str_detect(Activity_other,"Swim|swim|play|Relax|castles|Chilling|Drinking|Kid|scenery|Waiting|waiting|Beach|Family|relax|whale"), "Beachgoing", Activity_other),
+         Activity_other= ifelse(str_detect(Activity_other, "Dog|dog"), "DogWalking",Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Kayak|kayak"), "RowSport", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "walk|Walk"), "Walking", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Whale|turtle|Mega"), "Megafauna", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Sand|glass|Rockpooling|Quad|Bird|shells"), "Other", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Wing"), "WindSport", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Skurfing|Sup|Paddle|surf"), "Surfing", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Snork|snork|Tant|trout"), "Snorkeling", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Explore|explore|weather|look"), "Explore", Activity_other),
+         Activity_other = ifelse(str_detect(Activity_other, "Just briefly |With group of fishers"), "", Activity_other),
+         Activity = ifelse(str_detect(Activity, "Relaxing"), "Beachgoing", Activity),
+         Activity = ifelse(str_detect(Activity, "Kite surfing "), "WindSport", Activity),
+         Activity = ifelse(str_detect(Activity, "Snork"), "Snorkeling", Activity),
+         Activity = ifelse(str_detect(Activity_other,"Beachgoing|DogWalking|RowSport|Walking|Mega|Other|Wind|Surfing|Snork|Explore"), Activity_other, Activity),
+         Activity = ifelse(Year == "2015", "Fishing", Activity),
+         Activity = ifelse(Year == "2016", "Fishing", Activity),
+         Activity = ifelse(Activity == "", "Fishing", Activity),
+         FishingType = ifelse(str_detect(FishingType, "Demersal|Bottom"), "Demersal", FishingType),
+         UseLong = as.numeric(UseLong),
+         UseLat = as.numeric(UseLat)) %>%
+  filter(!is.na(UseLong), UseLong != "", !is.na(UseLat), UseLat != "")
+  
+exdat <- dat %>% 
+  filter(Activity == "Fishing")
+
+nexdat <- dat %>% 
+  filter(Activity != "Fishing")
+
+names(dat)
+unique(exdat$Activity)
+unique(dat$FishingType)
+which(dat$Activity == "")
+which(colnames(dat)=="UseLong")
+which(colnames(dat)=="UseLat")
+class(dat$UseLong)
+class(dat$UseLat)
+
+# dat
+histogram of activities
+
+ggplot(dat) +
+  aes(x = UseLong, y = UseLat, color = Activity) +
+  geom_point()
+
+sdat <- st_as_sf(dat, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+sdat
+
+plot(sdat["Activity"])
+
+tm_shape(sdat) +
+  tm_dots(col = "Activity",
+          palette = "Blues",
+          title = "Activities")
+
+#exdat
+ggplot(exdat) +
+  aes(x = UseLong, y = UseLat, color = perDP) +
+  geom_point()
+
+sexdat <- st_as_sf(exdat, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+sexdat
+
+plot(sexdat["perDP"])
+
+tm_shape(sexdat) +
+  tm_dots(col = "perDP",
+          palette = "Blues",
+          title = "Percentage Depredated")
+
+ggplot(exdat) +
+  aes(x = perDP) +
+  geom_histogram()
+
+ggplot(exdat) +
+  aes(x = FishingType, y = perDP) +
+  geom_col(color = "Orange", fill = "Orange")
+
+ggplot(exdat) +
+  aes(x = Year, y = perDP) +
+  geom_col(color = "Pink", fill = "Pink")
+
+#nexdat
+ggplot(nexdat) +
+  aes(x = UseLong, y = UseLat, color = Activity) +
+  geom_point()
+
+snexdat <- st_as_sf(nexdat, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+snexdat
+
+plot(snexdat["Activity"])
+
+tm_shape(snexdat) +
+  tm_dots(col = "Activity",
+          title = "Activities")
+
+
+WA <- "/Users/23088313/Documents/Spatial/shp/waCoast.shp"
+st_read(WA)
+
+WA <- st_read(s.dir, "waCoast", sep ="/")
+
+WA <- st_read("/Users/23088313/Documents/Spatial/shp/waCoast.shp")
+
+gb <- readOGR(paste(s.dir, "waCoast.shp",sep='/'))
+
+
+
 ```
 

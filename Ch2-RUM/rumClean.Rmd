@@ -365,7 +365,7 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Appending Jon's data
          UseLat = ifelse(str_detect(EXTRACTIVE, "Ned’s"), "-21.9956", UseLat),
          UseLat = ifelse(str_detect(EXTRACTIVE, "Fishing off Exmouth boat ramp|harbour"), "-21.9559", UseLat),
          UseLat = ifelse(str_detect(EXTRACTIVE, "trolled"), "-21.9193", UseLat),
-         UseLat = ifelse(str_detect(EXTRACTIVE, "100m line"), "21.8559", UseLat),
+         UseLat = ifelse(str_detect(EXTRACTIVE, "100m line"), "-21.8559", UseLat),
          UseLat = ifelse(str_detect(EXTRACTIVE, "Helby bank|west side?"), "-21.8100", UseLat),
          UseLat = ifelse(str_detect(EXTRACTIVE, "Long Island"), "-21.6144", UseLat),
          UseLat = ifelse(str_detect(EXTRACTIVE, "Peak island"), "-21.6039", UseLat)) %>%

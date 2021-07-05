@@ -30,16 +30,10 @@ install.packages("ggplot2")
 install.packages("leaflet")
 install.packages("rgeos")
 install.packages("rgdal")
-install.packages("sf")
+install.packages("sf") # select no
 install.packages("tmap")
 
-install.packages("rgeos", repos="http://R-Forge.R-project.org", type="source")
-install.packages("rgdal", repos="http://R-Forge.R-project.org", type="source")
-devtools::install_github("r-spatial/sf", configure.args = "--with-proj-lib=/usr/local/lib/")
-
-
-install.packages(c("rgdal","sf"), "https://mac.R-project.org")
-
+library(rgdal) ## confirm the GDAL version being used
 library(tidyverse)
 library(dplyr)
 library(lubridate)
