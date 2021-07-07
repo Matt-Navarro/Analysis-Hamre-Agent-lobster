@@ -22,16 +22,17 @@ knitr::opts_chunk$set(fig.align = "center",
 ```
 
 ```{r librarys, include = FALSE}
-install.packages("devtools")
-install.packages("chron")
-install.packages("sp")
-install.packages("raster")
-install.packages("ggplot2")
-install.packages("leaflet")
-install.packages("rgeos")
-install.packages("rgdal")
-install.packages("sf") # select no
-install.packages("tmap")
+# install.packages("tidyverse")
+# install.packages("devtools")
+# install.packages("chron")
+# install.packages("sp")
+# install.packages("raster")
+# install.packages("ggplot2")
+# install.packages("leaflet")
+# install.packages("rgeos")
+# install.packages("rgdal")
+# install.packages("sf") # select no
+# install.packages("tmap")
 
 library(rgdal) ## confirm the GDAL version being used
 library(tidyverse)
@@ -48,7 +49,7 @@ library(chron)
 
 ```
 
-```{r child = c('rumWrangle.Rmd')}
+```{r child = c('rumExplore.Rmd')}
 
 ```
 

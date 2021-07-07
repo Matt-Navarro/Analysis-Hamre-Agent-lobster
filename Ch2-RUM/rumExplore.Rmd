@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 ```{r libraries, include = FALSE}
 library(tidyverse)
 library(lubridate)
@@ -40,26 +45,50 @@ dat <- Ning %>%
          FishingType = ifelse(str_detect(FishingType, "Demersal|Bottom"), "Demersal", FishingType),
          UseLong = as.numeric(UseLong),
          UseLat = as.numeric(UseLat)) %>%
-  filter(!is.na(UseLong), UseLong != "", !is.na(UseLat), UseLat != "")
+  filter(!is.na(UseLong), UseLong != "", !is.na(UseLat), UseLat != "") %>%
+  mutate(ActivityType = ifelse(str_detect(Activity, "Fishing"), "Extractive", "Non-Extractive")) %>%
+  mutate(Year = as.factor(Year))
   
 exdat <- dat %>% 
-  filter(Activity == "Fishing")
+  filter(Activity == "Fishing") 
+
+unique(exdat$Activity)
 
 nexdat <- dat %>% 
   filter(Activity != "Fishing")
 
-names(dat)
-unique(exdat$Activity)
-unique(dat$FishingType)
-which(dat$Activity == "")
-which(colnames(dat)=="UseLong")
-which(colnames(dat)=="UseLat")
-class(dat$UseLong)
-class(dat$UseLat)
+unique(nexdat$Activity)
 
+# library(package)
+# ifelse(str_detect(col, ""), T, F)
 # dat
-histogram of activities
+# Histogram of activities
+Ac <- dat %>% 
+  group_by(Activity) %>%   
+  mutate(count_name_occurr = n())
 
+Ac %>% ggplot(
+  aes(x=reorder(Activity,-count_name_occurr))) +
+  geom_bar(stat="count", fill = "Orange") +
+  labs(x = "Activity", y = "Frequency")
+
+Ac %>%
+  count(Activity)
+
+dat %>% 
+  count(Activity) %>%
+  count(n_distinct(Activity))
+
+# Histogram of extractive vs non extractive
+ ggplot(dat) +
+  aes(x = ActivityType) +
+  geom_bar(fill = "orange") +
+   labs(x = "Activity Type", y = "Frequency")
+ 
+ dat %>% 
+   count(ActivityType)
+
+# spatial plots of activities
 ggplot(dat) +
   aes(x = UseLong, y = UseLat, color = Activity) +
   geom_point()
@@ -69,14 +98,90 @@ sdat <- st_as_sf(dat, coords = c("UseLong", "UseLat"), ## This wont worj if ther
 
 sdat
 
-plot(sdat["Activity"])
+plot(sdat["Activity"]) 
 
 tm_shape(sdat) +
   tm_dots(col = "Activity",
-          palette = "Blues",
           title = "Activities")
 
 #exdat
+# Hist of fihsing type
+FT <- exdat %>% 
+  group_by(FishingType) %>%   
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") 
+
+FT %>% ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) +
+  geom_bar(stat='count', fill = "Orange") +
+  labs(x = "Fishing Type", y = "Frequency")
+
+
+
+ FT %>% 
+  ggplot(aes(x=reorder(FishingType,-count_name_occurr), fill = Year)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Fishing Type", y = "Frequency")
+ 
+# Freq of DP with each fishing type  -> scale to 6000?? need to get overall percentage per group
+
+# FT %>% ggplot(
+#   aes(x=reorder(FishingType,-count_name_occurr), y = perDP)) +
+#   geom_col(color = "Orange", fill = "Orange") +
+#   labs(x = "Fishing Type", y = "Percentage Depredated") +
+#  scale_y_continuous(labels = scales::percent)
+
+summary(FT$perDP)
+
+FT %>%
+  count(n_distinct(FishingType))
+
+# Hist of nDP
+
+ggplot(exdat) +
+  aes(x = nDP) +
+  geom_histogram(fill = "Orange") +
+  labs(x = "Depredation", y = "Frequency")
+
+ggplot(exdat) +
+  aes(x = nDP) +
+  geom_histogram(fill = "Orange") +
+  labs(x = "Depredation", y = "Frequency")
+
+which(exdat$nDP > 15) # 8 datra points
+which(exdat$nDP == 50 )
+
+a <- exdat %>%
+  filter(nDP < 15) 
+
+  ggplot(a) +
+  aes(x = nDP) +
+  geom_histogram(fill = "Orange") +
+  labs(x = "Depredation", y = "Frequency")
+
+
+# Hist of perDP
+ggplot(exdat) +
+  aes(x = perDP) +
+  geom_histogram(fill = "Orange") +
+  labs(x = "Percentage Depredated", y = "Frequency")
+  
+# per DP vs Year -> need to be summed for each year 
+# 
+b <- exdat %>%
+  group_by(Year) %>%
+  summarise(THooked = cumsum(nHooked),
+            TDP = cumsum(nDP),
+            TperDP = TDP/THooked*100)
+
+b
+
+ggplot(exdat) +
+  aes(x = Year, y = perDP) +
+  geom_col(colour = "Orange", fill = "Orange") +
+  labs(y = "Percentage Depredated")
+
+# Spatial plot  of fishing
 ggplot(exdat) +
   aes(x = UseLong, y = UseLat, color = perDP) +
   geom_point()
@@ -89,21 +194,44 @@ sexdat
 plot(sexdat["perDP"])
 
 tm_shape(sexdat) +
+  tm_dots(title = "Fishing Distribution")
+
+# Spatial plor of fishing with percentage depredation
+tm_shape(sexdat) +
+  tm_dots(col = "perDP",
+          palette = "Oranges",
+          title = "Percentage Depredated")
+
+# Spatail plot of fishing with percent of depredation for 2015/16
+jexdat <- dat %>%
+  filter(Year == "2015") 
+
+jexdat %>%
+  count(Year)
+
+sjexdat <- st_as_sf(jexdat, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = "+proj=longlat +datum=WGS84 +no_defs")
+tm_shape(sjexdat) +
   tm_dots(col = "perDP",
           palette = "Blues",
           title = "Percentage Depredated")
 
-ggplot(exdat) +
-  aes(x = perDP) +
-  geom_histogram()
+# Spatail plot of fishing with percent of depredation for 2020/21
+ 
+exdat20 <- exdat %>%
+  filter(Year > 2016)
 
-ggplot(exdat) +
-  aes(x = FishingType, y = perDP) +
-  geom_col(color = "Orange", fill = "Orange")
+exdat20 %>%
+  count(Year) 
 
-ggplot(exdat) +
-  aes(x = Year, y = perDP) +
-  geom_col(color = "Pink", fill = "Pink")
+sexdat20 <- st_as_sf(exdat20, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+tm_shape(sexdat20) +
+  tm_dots(col = "perDP",
+          palette = "Purples",
+          title = "Percentage Depredated")
+
 
 #nexdat
 ggplot(nexdat) +
@@ -120,18 +248,19 @@ plot(snexdat["Activity"])
 tm_shape(snexdat) +
   tm_dots(col = "Activity",
           title = "Activities")
-
+names(dat)
 
 WA <- "/Users/23088313/Documents/Spatial/shp/waCoast.shp"
 st_read(WA)
 
 WA <- st_read(s.dir, "waCoast", sep ="/")
 
-WA <- st_read("/Users/23088313/Documents/Spatial/shp/waCoast.shp")
+WA <- st_read("~/Documents/Spatial/shp/waCoast.shp")
+
+WA <- st_read("../../Spatial/shp/waCoast.shp")
 
 gb <- readOGR(paste(s.dir, "waCoast.shp",sep='/'))
 
-
-
+summary(Ning$nDP)
 ```
 

@@ -1,6 +1,7 @@
 
 ```{r libraries, include = FALSE}
 library(tidyverse)
+library(dplyr)
 library(lubridate)
 library(chron)
 ```
@@ -440,35 +441,38 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Appending Jon's data
  mutate(RelUndam_other = ifelse(str_detect(RelUndam_other, "Rel|Too"), "1", RelUndam_other),
         RelUndam = ifelse(str_detect(RelUndam_other, "0|1|8|4|15"), RelUndam_other, RelUndam),
         RelUndam_other = ifelse(str_detect(RelUndam_other, "0|1|8|4|15"), NA, RelUndam_other),
+        RelUndam = ifelse(KeptUndam > 0 & is.na(RelUndam), "0", RelUndam),
+        RelUndam = ifelse(KeptUndam == "0" & is.na(RelUndam), "0", RelUndam),
         RelUndam = as.integer(RelUndam)) %>%
-#### jCaughtUndam ####
-# Append Rel Undam + Kept Undam to 2020/21 values
-  mutate(jCaughtUndam = ifelse(Year =="2020", RelUndam + KeptUndam, jCaughtUndam),
-         jCaughtUndam = ifelse(Year =="2021", RelUndam + KeptUndam, jCaughtUndam)) %>%
-  rename(CaughtUndam = jCaughtUndam) %>%
 #### nDP ####
 # standardise and append to other and jnDP
   mutate(nDP_other = ifelse(str_detect(nDP_other, "mate"), "1", nDP_other),
          nDP = ifelse(str_detect(nDP_other, "1"), nDP_other, nDP),
-         nDP = ifelse(Year =="2015", jnDP, nDP),
-         nDP = ifelse(Year == "2016", jnDP, nDP),
+         nDP = ifelse(Year < "2020", jnDP, nDP),
+         nDP = ifelse(is.na(nDP)|is.nan(nDP), "0", nDP),
          nDP = as.integer(nDP)) %>%
   select(-jnDP) %>%
+#### jCaughtUndam ####
+# Append Rel Undam + Kept Undam to 2020/21 values
+  mutate(jCaughtUndam = ifelse(Year > "2016", RelUndam + KeptUndam, jCaughtUndam)) %>%
+  rename(CaughtUndam = jCaughtUndam) %>%
 #### nHooked ####
 # If Year = 2020/21, then = RelUndam + nDP + KeptUndam
  mutate(nHooked = ifelse(Year == "2020", KeptUndam + RelUndam + nDP, nHooked),
         nHooked = ifelse(Year == "2021", KeptUndam + RelUndam + nDP, nHooked)) %>%
 #### perDP ####
 # if Year = 2020/21, then = nDP/nHooked
- mutate(perDP = ifelse(Year == "2020", nDP/nHooked, perDP),
-        perDP = ifelse(Year == "2021", nDP/nHooked, perDP)) %>%
+ mutate(perDP = ifelse(Year == "2020", nDP/nHooked*100, perDP),
+        perDP = ifelse(Year == "2021", nDP/nHooked*100, perDP)) %>%
+  relocate(CaughtUndam, nHooked, perDP, proDP, binDP, .before = Species) %>%
 
 #### Append useLat/Long ####
   mutate(UseLong = ifelse(Year == "2015", jUseLong, UseLong),
          UseLong = ifelse(Year == "2016", jUseLong, UseLong),
          UseLat = ifelse(Year == "2015", jUseLat, UseLat),
          UseLat = ifelse(Year == "2016", jUseLat, UseLat)) %>%
-  select(-c(jUseLong, jUseLat)) 
+  select(-c(jUseLong, jUseLat))
+  
 ```
 
 ```{r csv}
