@@ -21,7 +21,7 @@ knitr::opts_chunk$set(fig.align = "center",
 
 ```
 
-```{r librarys, include = FALSE}
+```{r packages, include = FALSE}
 # install.packages("tidyverse")
 # install.packages("devtools")
 # install.packages("chron")
@@ -33,20 +33,42 @@ knitr::opts_chunk$set(fig.align = "center",
 # install.packages("rgdal")
 # install.packages("sf") # select no
 # install.packages("tmap")
+# install.packages("ggspatial")
+# install.packages("ggsn")
+# install.packages("cowplot")
+# install.packages("rcartocolor")
 
-library(rgdal) ## confirm the GDAL version being used
 library(tidyverse)
-library(dplyr)
 library(lubridate)
 library(chron)
+library(sp)
+library(raster)
+library(ggplot2)
+library(leaflet)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(tmap)
+library(ggspatial)
+library(ggsn)
+library(cowplot)
+library(rcartocolor)
+```
+
+```{r dir, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Agent-lobster"
+d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
+
 ```
 
 ```{r functions, echo=FALSE}
 
 ```
 
-```{r child = c('rumClean.Rmd')}
-
+```{r readData, echo = FALSE}
+Ning <- read.csv(paste(d.dir, "Ning_v2.csv", sep = "/"))
 ```
 
 ```{r child = c('rumExplore.Rmd')}
