@@ -490,6 +490,7 @@ Ning <- bind_rows(Ning0421, jon)  %>% # Appending Jon's data
   dplyr::mutate(UseLong = ifelse(Year < "2020", jUseLong, UseLong),
                 UseLat = ifelse(Year < "2020", jUseLat, UseLat)) %>%
   dplyr::select(-c(jUseLong, jUseLat))
+
 ```
 
 ```{r csv}
