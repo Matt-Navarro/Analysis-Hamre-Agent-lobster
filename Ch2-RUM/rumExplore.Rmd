@@ -18,24 +18,27 @@
 # library(rcartocolor)
 ```
 
-```{r dat}
+```{r DataPrep}
 ### All data 
  N1 <- Ning %>%
   dplyr::filter(!is.na(UseLong), UseLong != "",
                 !is.na(UseLat), UseLat != "")
+               # UseLat != "-21.06476")
 
 # Extractive data 
 exdat <- N1 %>% 
-  filter(Activity == "Fishing") 
+  dplyr::filter(Activity == "Fishing") 
 
 unique(exdat$Activity)
 
 # Non-extractive data
 nexdat <- N1 %>% 
-  filter(Activity != "Fishing")
+  dplyr::filter(Activity != "Fishing")
 
 unique(nexdat$Activity)
+```
 
+```{r spDataPrep}
 ## Setting up spatial layers
 ## crs1 <- 4283 is it useful to give a crs a name ?? GDA94
 # Data 
@@ -46,21 +49,56 @@ sNing <- st_as_sf(N1, coords = c("UseLong", "UseLat"), ## Won't work if there ar
 WA <- st_read(paste(s.dir, "waCoast.shp", sep = '/')) %>%
   st_transform(crs = 4283)
 
-NWS <- st_crop(WA, sNing) # what you want to crop, masked onto what
-CB <- st_crop(WA, xmin = 113.6271, xmax = 114.000, ymin = -23.46973, ymax = -22.562)
-#Cape < - st_crop(sNing, ????)
-
-# cropping sNing to CB/cape extent
-CBning <- st_crop(sNing, CB)
-#Capening <- st_crop(sNing, Cape)
+NWS <- st_crop(WA, xmin = 113.00, ymin = -24.00, xmax = 115.00, ymax = -20.5) # what you want to crop, masked onto what
+# CB <- st_crop(WA, xmin = 113.6271, xmax = 114.000, ymin = -23.46973, ymax = -22.562)
+# # Cape <- st_crop(WA, xmin = 113.6271, ymin = -22.562, xmax = 114.7503, ymax = -21.56369)
+# 
+# # cropping sNing to CB/cape extent
+# CBning <- st_crop(sNing, CB)
+# #Capening <- st_crop(sNing, Cape)
+# Capening <- st_crop(sNing, Cape)
 
 ## BR
 ausBR <- st_read(paste(s.dir, "ausRamps.shp", sep = '/')) %>%
   st_transform(crs = 4283)
 
-BR <- st_crop(BR, sNing)
-CBR <- st_crop(BR, CB)
+BR <- st_crop(ausBR, sNing)
+# CBR <- st_crop(BR, CB)
+# CapeBR <- st_crop(BR, Cape)
 
+
+ #### Bathy
+bathy <- st_read(paste(s.dir, "waDepths.shp", sep = '/')) %>%
+  st_transform(crs = 4283) %>%
+  st_make_valid()
+
+bathy
+
+NWSbathy <- st_crop(bathy, NWS)
+# CBbathy <- st_crop(NWSbathy, CB)
+# Capebathy <- st_crop(NWSbathy, Cape)
+
+# ggplot() +
+#   geom_sf(data = NWSbathy, lwd = 0.1, fill = "white") +
+#   geom_sf(data = NWS, lwd = 0.1) +
+#   geom_sf(data = sNing)
+# 
+# # summary(Ning$UseLat)
+# # max(Ning$UseLat, na.rm = T)
+# # which(Ning$UseLat == "-21.06476")
+# # Ning[567,]
+# # max(N1$UseLat, na.rm = T)
+# 
+# NWS xmin: 113.4615 ymin: -24.0027 xmax: 115 ymax: -21.4219
+# NWSbathy xmin: 113.4615 ymin: -24.0027 xmax: 115 ymax: -21.4219
+# sNing xmin: 113.2797 ymin: -23.46818 xmax: 114.7503 ymax: -21.06476
+# 
+# 113, -24, 115, -21
+# 
+# NWS
+```
+
+```{r Insets}
 # Making bbox for CB 
 CBbbox = st_as_sfc(st_bbox(CB))
 
@@ -81,20 +119,13 @@ CBinset <- ggplot() +
 CBinset
 
  ggsave(paste(rumPlots, "spBR.png", sep='/'), width = 8, height = 4)
-
-# Bathy
-# bathy <- st_read(paste(s.dir, "waDepths.shp", sep = '/')) %>%
-#   st_transform(crs = 4283)
-# 
-# NWSbathy <- st_crop(bathy, sNing)
-# plot(NWSbathy)
-
+ 
 ```
 
-
-```{r dat}
-```{r ActivityExplore, fig.dim = c(7, 7)}
-## Histogram of all activities
+# Overview of recreational marine use {.tabset}
+## Activities
+Histogram showing of data collected across all activities captured. 
+```{r ActFreq, fig.dim = c(7, 7)}
 ActFreq <- N1 %>% 
   group_by(Activity) %>%   
   mutate(count_name_occurr = n()) %>% 
@@ -105,8 +136,11 @@ ActFreq <- N1 %>%
   
 ActFreq
 ggsave(paste(rumPlots, "ActFreq.png", sep='/'), width = 8, height = 4)
+```
 
-## Histogram of extractive vs non extractive
+## Activity Type
+Histogram showing data collected of extractive and non-extractive activities. 
+```{r ActTyp}
  ActTyp <- ggplot(N1) +
    aes(x = ActivityType) +
    geom_bar(fill = "mediumaquamarine") +
@@ -115,9 +149,15 @@ ggsave(paste(rumPlots, "ActFreq.png", sep='/'), width = 8, height = 4)
  
  ActTyp
  ggsave(paste(rumPlots, "ActTyp.png", sep='/'), width = 8, height = 4)
+```
 
+## Spatial distribution of activities
+Spatial distribution of marine reacrretional use. This included extarctive and non-extractive activities, boat and shore based. 
+```{r spAct}
 #### Spatial plot for all eactivities across whole study site
 spAct <- ggplot() +
+  geom_sf(data = NWSbathy, lwd = 0.1, fill = "white") +
+   #geom_sf_text(data = NWSbathy, aes(label = LABEL), size = 2) +
   geom_sf(data = NWS, lwd = 0.1) +
   geom_sf(data = sNing, aes(color = Activity, shape = ActivityType), size = 1) + # colour for discrete, fill for continuous
   scale_color_brewer(palette = "Set3") + # colour for discrete, fill for continuous
@@ -133,11 +173,13 @@ spAct <- ggplot() +
         legend.key = element_rect(fill = "White", color = "White"),
         plot.caption = element_text(hjust = 0, size = 5),
         legend.title = element_text(size = 7, vjust = 1),
-        legend.text = element_text(size = 7))
+        legend.text = element_text(size = 7)) 
 
 spAct
 ggsave(paste(rumPlots, "spAct.png", sep='/'), width = 5, height = 6)
+```
 
+```{r CBActFreq}
 ##### Spatial plot for all activties at CB 
 CBspAct <- ggplot() +
   geom_sf(data = CB, lwd = 0.1) +
@@ -169,14 +211,38 @@ ggsave(paste(rumPlots, "CBspAct.png", sep='/'), width = 5, height = 6)
 # CBspAct_inset
 # 
 # ggsave(paste(rumPlots, "CBspAct_inset.png", sep='/'), width = 5, height = 6)
+```
 
+```{r CapeActFreq}
+##### Spatial plot for all activties at CB 
+CapespAct <- ggplot() +
+  geom_sf(data = Cape, lwd = 0.1) +
+  geom_sf(data = Capening, aes(color = Activity, shape = ActivityType), size = 1) + # colour for discrete, fill for continuous
+  scale_color_brewer(palette = "Set3") + # colour for discrete, fill for continuous
+  labs(caption = "Spatial distribution of marine recreational use") +
+  annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true", 
+        pad_x = unit(0.5, "cm"), pad_y = unit(1, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+                                               fill = c("white", "Grey"), text_col = "grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme(axis.text.x = element_text(angle = 90, size = 7),
+        axis.text.y = element_text(size = 7),
+        legend.key = element_rect(fill = "White", color = "White"),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 7, vjust = 1),
+        legend.text = element_text(size = 7),
+        title = element_text(size = 8))
+
+CapespAct
+ggsave(paste(rumPlots, "CapespAct.png", sep='/'), width = 5, height = 6)
 
 ```
 
-
-```{r ExtractiveExplore1}
-#exdat
-# Hist of fihsing type
+# Extractive Activities {.tabset}
+## Fishing Type
+Histogram showing data collected across all fishing types facetted by year. 
+```{r FTyp}
 FTyp <- exdat %>% 
   group_by(FishingType) %>%   
   mutate(count_name_occurr = n()) %>%
@@ -193,33 +259,66 @@ FTyp
 ggsave(paste(rumPlots, "FTyp.png", sep='/'), width = 8, height = 4)
 ```
 
+## Catch rate
+Barplot showing the average catch rate per site facetted by year. 
+```{r CR}
+CR <- exdat %>%
+  group_by(Year) %>%
+  summarise(avCR = mean(CaughtUndam)) %>%
+  mutate(Year = as.character(Year)) 
 
-```{r ExtractiveExplore2}
+CR
+
 # Hist of nDP
-# ggplot(exdat) +
-#   aes(x = nDP) +
-#   geom_histogram(fill = "mediumaquamarine") +
-#   labs(x = "Number of depredation fish", y = "Frequency of occurence") +
-#   facet_wrap(. ~ Year)
-# ggplot(exdat) +
-#   aes(x = nDP) +
-#   geom_histogram(fill = "Orange") +
-#   labs(x = "Depredation", y = "Frequency")
-# 
-# which(exdat$nDP > 15) # 8 datra points
-# which(exdat$nDP == 50 )
-# 
-# a <- exdat %>%
-#   filter(nDP < 15) 
-# 
-#   ggplot(a) +
-#   aes(x = nDP) +
-#   geom_histogram(fill = "Orange") +
-#   labs(x = "Depredation", y = "Frequency")
+avCR <- ggplot(CR) +
+  aes(y = avCR, x = Year) +
+  geom_col(fill = "mediumaquamarine") +
+  labs(x = "Average catch rate per site", y = "Year")
+
+avCR
+ggsave(paste(rumPlots, "avCR.png", sep='/'), width = 8, height = 4)
 ```
 
+## Average depredation
+Barplot showing the Average number of fish depredated per site facetted by year. 
+```{r avDPYr}
+# Average number of fish depredated per year
+avDPYr <- exdat %>%
+  filter(!is.na(nHooked),  nHooked != "", !is.na(nDP), nDP != "") %>%
+  group_by(Year) %>%
+  summarise(ave = mean(nDP)) %>%
+  mutate(Year = as.character(Year)) %>%
+  ggplot( 
+  aes(x = Year, y = ave)) +
+  geom_col(fill = "mediumaquamarine") +
+  labs(x = "Year", y = "Average number of fish depredated per site")
+  
+avDPYr
+ggsave(paste(rumPlots, "avDPYr.png", sep='/'), width = 8, height = 4)
 
-```{r ExtractiveExplore3}
+```
+
+```{r DPFTyp}
+# dpFT <- exdat %>%
+#   group_by(FishingType) %>%
+#   summarise(tHooked = sum(nHooked),
+#             tDP = sum(nDP),
+#             tperDP = tDP/tHooked*100) 
+# 
+# dpFT
+# 
+# pdpFT <- ggplot(dpFT) +
+#   aes(x = FishingType, y = tperDP) +
+#    geom_col(fill = "mediumaquamarine") +
+#   labs(x = "Fishing Type", y = "Percentage depredation")
+# 
+# pdpFT
+
+```
+
+## Percentage depredation
+Barplot showing the percentage of total yearly catch lost to depredation
+```{r perDP}
 # Making data
 exdp <- exdat %>%
   filter(!is.na(nHooked),  nHooked != "", !is.na(nDP), nDP != "") %>%
@@ -231,31 +330,6 @@ exdp <- exdat %>%
 
 exdp
 
-# Hist of perDP
-nDPYr <- ggplot(exdat) +
-  aes(x = nDP) +
-  geom_histogram(fill = "mediumaquamarine") +
-  labs(x = "Number of fish depredated", y = "Frequency") +
-   facet_wrap(. ~ Year)
-
-nDPYr
-ggsave(paste(rumPlots, "nDPYr.png", sep='/'), width = 8, height = 4)
-
-# Average number of fish depredated per year
-avDPYr <- exdat %>%
-  filter(!is.na(nHooked),  nHooked != "", !is.na(nDP), nDP != "") %>%
-  group_by(Year) %>%
-  summarise(ave = mean(nDP)) %>%
-  mutate(Year = as.character(Year)) %>%
-  ggplot( 
-  aes(x = Year, y = ave)) +
-  geom_col(fill = "mediumaquamarine") +
-  labs(x = "Number of fish depredated", y = "Average number of fish depredated per site")
-  
-avDPYr
-ggsave(paste(rumPlots, "avDPYr.png", sep='/'), width = 8, height = 4)
-
-
 # Bar plot of percentage depredation per year
  dpYr <- ggplot(exdp) +
   aes(x = Year, y = tperDP) +
@@ -264,10 +338,13 @@ ggsave(paste(rumPlots, "avDPYr.png", sep='/'), width = 8, height = 4)
  
  dpYr
  ggsave(paste(rumPlots, "dpYr.png", sep='/'), width = 8, height = 4)
- 
+```
+
+## Spatial distribution of shark depredation
+Spatial distribution of recreational fishing coloured by percentage of depredation at each site. 
+```{r spDP}
 #### Spatial plot  of fishing ####
 ## st of just nDP == 0
-
 sexdp0 <- exdat %>%
   filter(nDP == "0") %>%
   st_as_sf(coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
@@ -308,7 +385,9 @@ spexdp <- ggplot() +
 
 spexdp
 ggsave(paste(rumPlots, "spexdp.png", sep='/'), width = 4, height = 6)
+```
 
+```{r spDP_CB}
 # Make an extent for coral bay and run the above code
 ## st of just nDP == 0
 CBsexdp0 <- st_crop(sexdp0, CB)
@@ -342,12 +421,47 @@ CBspexdp <- ggplot() +
 CBspexdp
 
 ggsave(paste(rumPlots, "CBspexdp.png", sep='/'), width = 4, height = 6)
-
-# Make an extent for cape and run above code
-# Cape <- st_crop(WA...)
 ```
 
+```{r spDP_Cape}
+# Cape
+## st of just nDP == 0
+Capesexdp0 <- st_crop(sexdp0, Cape)
 
+## st  nDP > 0
+Capesexdp <- st_crop(sexdp, Cape)
+
+Capespexdp <- ggplot() +
+  geom_sf(data = Cape, lwd = 0.1) +
+  geom_sf(data = Capesexdp0, shape = 1, size = 0.5, color= "grey") +
+  geom_sf(data = Capesexdp, aes(color = perDP), size = 1) + # colour for discrete, fill for continuous
+  scale_color_distiller(palette = "YlGnBu", trans = "reverse") + # colour for discrete, fill for continuous
+  scale_fill_continuous(trans = 'reverse') +
+  labs(color = "Percentage\nDepredated", caption = "Points indicate sites of recreational fishing coloured by percentage depredation.\nSites denoted by hollow grey circle are sites where zero depredation occured.") +
+  theme(axis.text.x = element_text(angle = 90, size = 5),
+        axis.text.y = element_text(size = 5),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 5, vjust = 1),
+        legend.text = element_text(size = 5),
+        legend.key.height = unit(25, "mm"),
+        title = element_text(size = 8)) +
+  guides(color = guide_colorbar(reverse = TRUE)) +
+  facet_wrap(. ~ Year) +
+  annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true", 
+        pad_x = unit(0.25, "cm"), pad_y = unit(0.5, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+                                               fill = c("white", "Grey"), text_col = "grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm"))
+
+Capespexdp
+
+ggsave(paste(rumPlots, "Capespexdp.png", sep='/'), width = 4, height = 6)
+```
+
+# Non-extractive
+## Spatial distribution
+Spatial plot showing the spatial distribution of non-extractive activities. 
 ```{r NonextractiveExplore}
 
 snexdat <- st_as_sf(nexdat, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
@@ -375,9 +489,6 @@ spnex <- ggplot() +
 
 spnex
 ggsave(paste(rumPlots, "spnex.png", sep='/'), width = 4, height = 6)
-
-# Make CB map (Can you do an inset on this?)
-# Make Cape map
 ```
 
 
