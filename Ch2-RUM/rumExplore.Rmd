@@ -262,21 +262,28 @@ ggsave(paste(rumPlots, "FTyp.png", sep='/'), width = 8, height = 4)
 ## Catch rate
 Barplot showing the average catch rate per site facetted by year. 
 ```{r CR}
-CR <- exdat %>%
-  group_by(Year) %>%
-  summarise(avCR = mean(CaughtUndam)) %>%
-  mutate(Year = as.character(Year)) 
+CR <- exdat1 %>%
+  group_by(facYear) %>%
+  summarise(avCR = mean(CaughtUndam)) 
 
 CR
 
 # Hist of nDP
 avCR <- ggplot(CR) +
-  aes(y = avCR, x = Year) +
+  aes(y = avCR, x = facYear) +
   geom_col(fill = "mediumaquamarine") +
   labs(x = "Average catch rate per site", y = "Year")
 
 avCR
 ggsave(paste(rumPlots, "avCR.png", sep='/'), width = 8, height = 4)
+```
+```{r}
+nDP <- ggplot(exdat1) +
+  aes(x = nDP) +
+  geom_histogram(fill = "mediumaquamarine") +
+  labs(x = "Number of fish depredated")
+
+nDP
 ```
 
 ## Average depredation
@@ -285,11 +292,11 @@ Barplot showing the Average number of fish depredated per site facetted by year.
 # Average number of fish depredated per year
 avDPYr <- exdat %>%
   filter(!is.na(nHooked),  nHooked != "", !is.na(nDP), nDP != "") %>%
-  group_by(Year) %>%
+  group_by(facYear) %>%
   summarise(ave = mean(nDP)) %>%
-  mutate(Year = as.character(Year)) %>%
+  #mutate(numYear = as.character(Year)) %>%
   ggplot( 
-  aes(x = Year, y = ave)) +
+  aes(x = facYear, y = ave)) +
   geom_col(fill = "mediumaquamarine") +
   labs(x = "Year", y = "Average number of fish depredated per site")
   
@@ -491,4 +498,249 @@ spnex
 ggsave(paste(rumPlots, "spnex.png", sep='/'), width = 4, height = 6)
 ```
 
+
+
+
+```{r}
+grid
+
+## res.dev=3.05, lr=0.01, tc=1, nt=540
+```
+```{r}
+  dp.stepW_dem<-dismo::gbm.step(data=exdat1,
+                           gbm.x=c("numYear", "Resident", "nTimesLast12m", "UseLat", "UseLong", "DecFishingHr", "MaxHook",
+                                   "exYrs", "jBRAvid", "BoatLength", "nHooked"), ## explanatory
+                           gbm.y=c(40),## response
+                           #offset=c("nHooked"), ## adds offset 
+                           ##fold.vector=dat$folds, 
+                           lr=0.01, ## ref to grid 
+                           tc=3, ## ref to grid 
+                           step.size=5,
+                           family="poisson", ## distribution family
+                           bag.fraction=0.75)
+  grid[i, "res.dev"] <-dp.stepW_dem$self.statistics$mean.resid ### store res.dev in grid 
+#sink()
+#
+#790
+
+```
+
+```{r Creating layers}
+## Everything in this chunk only needs to be done once
+## crs =  4283 (GDA94), units = m
+
+# Adding coast
+# WA <- st_read(paste(s.dir, "waCoast.shp", sep = '/')) %>%
+#   st_transform(crs = 4283)
+
+# Making bbox
+# StudySite = st_as_sfc(st_bbox(c(xmin = 112.5, ymin = -24.03353, xmax = 115.00, ymax = -20.5), crs = 4283))
+# st_write(StudySite, paste(s.dir, "StudySite.shp", sep = '/'))
+
+# Cropping coast to study site
+# NWS <- st_crop(WA, StudySite)
+# NWS <- st_union(NWS)
+# st_write(NWS, paste(s.dir, "NWScoast.shp", sep = '/'))
+
+NWS <- st_read(paste(s.dir, "NWScoast.shp", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+StudySite <- st_read(paste(s.dir, "StudySite.shp", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+GridExtent <- st_read(paste(s.dir, "GridExtent.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+# Adding habitat layers
+# Pelagic <- st_read(paste(s.dir, "Pelagic.gpkg", sep = '/')) %>%
+#   st_transform(crs = 4283) 
+# 
+# Backreef <- st_read(paste(s.dir, "Backreef.shp", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# Reef <- st_read(paste(s.dir, "Reef.shp", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# Lagoon <- st_read(paste(s.dir, "Lagoon.shp", sep = '/')) %>%
+#   st_transform(crs = 4283)
+
+# Making grids - use this when you need to manipulate size of grids
+# PelagicGrid <- Pelagic %>%
+#   st_make_grid(cellsize = 0.05, square = FALSE, crs=4283) %>%
+#   st_intersection(Pelagic)
+# st_write(PelagicGrid, paste(s.dir, "PelagicGrid.shp", sep = '/'))
+# 
+# BackreefGrid <- Backreef %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(Backreef)
+# st_write(BackreefGrid, paste(s.dir, "BackreefGrid.shp", sep = '/'))
+# 
+# ReefGrid <- Reef %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(Reef)
+# st_write(ReefGrid, paste(s.dir, "ReefGrid.shp", sep = '/'))
+# 
+# LagoonGrid <- Lagoon %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(Lagoon)
+# st_write(LagoonGrid, paste(s.dir, "LagoonGrid.shp", sep = '/'))
+
+## Reading grids
+PelagicGrid <- st_read(paste(s.dir, "PelagicGrid.shp", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+BackreefGrid <- st_read(paste(s.dir, "BackreefGrid.shp", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+ReefGrid <- st_read(paste(s.dir, "ReefGrid.shp", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+LagoonGrid <- st_read(paste(s.dir, "LagoonGrid.shp", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+## Adding habitat variable to Grids
+PelagicGrid$Habitat <- c("Pelagic")
+BackreefGrid$Habitat <- c("Backreef")
+ReefGrid$Habitat <- c("Reef")
+LagoonGrid$Habitat <- c("Lagoon")
+
+## Joining Grids
+Grid <- rbind(PelagicGrid, BackreefGrid)
+Grid <- rbind(Grid, ReefGrid)
+Grid <- rbind(Grid, LagoonGrid)
+
+## Adding depth 
+Bathy <- raster(paste(r.dir, "NWSbathy.tif", sep = '/'))
+crs(Bathy)  # 4362
+
+Grid_wgs84<-st_transform(Grid, 4326)
+
+# Extracting depth   
+Grid_wgs84<-extract_mean_from_raster(Bathy, Grid_wgs84)
+Grid_wgs84$Depth<-Grid_wgs84$mean
+
+# convert back to 4283
+Grid <- st_transform(Grid_wgs84, 4283)
+
+## Add Grid ID
+Grid <- Grid %>%
+  mutate(GridID = row_number())
+
+ggplot() +
+  theme_void() +
+  geom_sf(data = PelagicGrid, lwd = 0.1, fill = "light blue") +
+  geom_sf(data = BackreefGrid, lwd = 0.1, fill = "pink") +
+  #geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat))
+  geom_sf(data = ReefGrid, lwd = 0.1, fill = "coral") +
+  geom_sf(data = LagoonGrid, lwd = 0.1, fill = "aquamarine") +
+  geom_sf(data = spNing, size = 0.05) 
+```
+
+```{r Allocating sites}
+spNing <- Ning %>%
+  dplyr::filter(!is.na(UseLong), UseLong != "",
+                !is.na(UseLat), UseLat != "")
+
+spNing <- spNing %>%
+  filter(!is.na(UseLat), !is.na(UseLong), UseLat < -21.25) # defo a mistake in the survey
+
+spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283)
+
+spNing %>% 
+  st_join(Grid[ , c("GridID")], left = T, join = st_intersects) %>%
+  st_join(Grid[ , c("Depth")], left = T, join = st_intersects) %>%
+  st_join(Grid[ , c("Habitat")], left = T, join = st_intersects) 
+```
+
+Proximity to artificial infrastructure 
+```{r}
+# Add artificial infrastructure
+Pipes <- st_read(paste(s.dir, "Pipes.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+Wells <- st_read(paste(s.dir, "Wells.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+ArtReef <- st_read(paste(s.dir, "ArtReef.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+## note that some distance  that there is no argument to prevent distance from intersecting with land - however as we are just taking the proximity to nearest it doesn't matter
+
+n <- st_nn(spNing, Wells, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+DistNearestWellm = sapply(n[[2]], "[", 1) # Name distance
+DistNearestWellkm = DistNearestWell/1000 # Convert to km
+spNing$DistNearestWellkm = DistNearestWellkm # Bind distances
+
+n <- st_nn(spNing, Pipes, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+DistNearestPipem = sapply(n[[2]], "[", 1) # Name distance
+DistNearestPipekm = DistNearestPipem/1000 # Convert to km
+spNing$DistNearestPipekm = DistNearestPipekm # Bind distances
+
+DistArtReefm = st_distance(spNing, ArtReef)
+DistArtReefkm = DistArtReefkm/1000
+spNing$DistArtReefkm = DistArtReefkm
+
+spNing <- spNing %>%
+  rowwise() %>%
+  mutate(DistNearestInfra = min(DistNearestWellkm, DistNearestPipekm, DistArtReefkm)) %>%
+  relocate(DistNearestWellkm, DistNearestPipekm, DistArtReefkm, DistNearestInfra, .before =
+             geometry) %>%
+  ungroup()
+```
+```{r spNing and shp}
+st_write(spNing, paste(s.dir, "spNing.shp", sep = '/'))
+```
+```{r Distance to BR}
+BR <- st_read(paste(s.dir, "NingBR.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+n <- st_nn(spNing, BR, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+DistNearestBRm = sapply(n[[2]], "[", 1) # Name distance
+DistNearestBRkm = DistNearestBRm/1000 # Convert to km
+spNing$DistNearestBRkm = DistNearestBRkm # Bind distances
+```
+
+
+```{r Kernal denisty}
+# Ning1 <- Ning %>%
+#   dplyr::filter(!is.na(UseLong),!is.na(UseLat))
+# n <- kde2d(Ning1$UseLong, Ning1$UseLat)
+# KernalDensity = sapply(n[[3]], "[", 1)
+# 
+# Ning1$KernalDensity = KernalDensity
+# 
+# ggplot() +
+#   theme_void() +
+#   geom_sf(data = StudySite, lwd = 0.1, fill = "white") +
+#   geom_sf(data = NWS, lwd = 0.1) +
+#   stat_density2d(aes(fill = ..level..), h = .02, n = 300,
+#                  geom = "polygon", data = Ning1) +
+#   scale_fill_viridis_c()
+#   
+# rm(Ning1)
+# 
+# ## Using denisty from spatstat
+# spNing_Lam <- st_read(paste(s.dir, "spNing.shp", sep = '/')) %>%
+#   st_transform(crs = 3112)
+# 
+# spNing_Lam <- as.ppp(spNing_Lam)
+# spNingkm_Lam <- rescale(spNing_Lam, 1000, "km")
+# 
+# spNingkm_Lam$KernalDensity <- density(spNingkm_Lam, sigma = 5) # Using the default bandwidth
+# kdens <- plot(spNingkm_Lam$KernalDensity, main=NULL, las=1)
+# contour(spNingkm_Lam$KernalDensity, add=TRUE)
+```
+
+```{r}
+ggplot() +
+  theme_void() +
+  geom_sf(data = StudySite, lwd = 0.1, fill = "white") +
+  geom_sf(data = NWS, lwd = 0.1) +
+  geom_sf(data = Pelagic, lwd = 0.1, colour = "purple") +
+  geom_sf(data = Backreef, lwd = 0.1, aes(colour = "light blue")) +
+  geom_sf(data = Reef, lwd = 0.1, aes(colour = "coral")) +
+  geom_sf(data = Lagoon, lwd = 0.1, aes(colour = "aquamarine")) +
+  geom_sf(data = Pipes, lwd = 0.1) +
+  geom_sf(data = ArtInf, lwd = 0.1) 
+```
 

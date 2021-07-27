@@ -4,7 +4,6 @@ install.packages('lunar', dependencies=TRUE) ## adding lunar data
 install.packages('dplyr', dependencies=TRUE) 
 install.packages('dismo', dependencies=TRUE) 
 install.packages('gbm', dependencies=TRUE) 
-install.packages('lunar', dependencies=TRUE) 
 install.packages("devtools", dependencies=TRUE)
 devtools::install_github("JBjouffray/ggBRT")
 
