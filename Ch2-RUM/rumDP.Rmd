@@ -24,7 +24,7 @@ knitr::opts_chunk$set(fig.align = "center",
 ```{r packages, include = FALSE}
 # install.packages("tidyverse")
 # install.packages("devtools")
-# install.packages("chron")
+# install.packages("remotes")
 # install.packages("sp")
 # install.packages("raster")
 # install.packages("ggplot2")
@@ -32,15 +32,13 @@ knitr::opts_chunk$set(fig.align = "center",
 # install.packages("rgeos")
 # install.packages("rgdal")
 # install.packages("sf") # select no
-# install.packages("tmap")
-# install.packages("ggspatial")
-# install.packages("ggsn")
-# install.packages("cowplot")
-# install.packages("rcartocolor")
-# install.packages("mgcv")
+# install.packages('dismo', dependencies=TRUE) 
+# install.packages('gbm', dependencies=TRUE) 
+# devtools::install_github("JBjouffray/ggBRT") 
+
 library(tidyverse)
-library(lubridate)
-library(chron)
+library(devtools)
+library(remotes)
 library(sp)
 library(raster)
 library(ggplot2)
@@ -48,12 +46,10 @@ library(leaflet)
 library(rgeos)
 library(rgdal)
 library(sf)
-library(tmap)
-library(ggspatial)
-library(ggsn)
-library(cowplot)
-library(rcartocolor)
-library(mgcv)
+library(dismo)
+library(gbm)
+library(ggBRT)
+
 ```
 
 ```{r dir, echo = FALSE}
@@ -73,22 +69,15 @@ Hyp 2:Shark depredation will not influence site choice for visitor, which will t
 
 ```{r DataPrep, include = FALSE}
 exdat <- Ning %>%
-  dplyr::select(ID, PersonID, TripNum, SiteNum, Date, Month, numYear, facYear, Time, Side, Site, SiteType, SurveyLat, SurveyLong,
-                Screen18,PrevInter, Agreement, Resident, ResnBoatDaysYr, nTimesLast12m, nTimes19, Covid, UseLat, UseLong,
-                ActivityType, exRecall, FishingType, BaitLure, exStart, exStop, exDecMedianTime, DecFishingHr, FishingHr,
+  dplyr::select(ID, PersonID, TripNum, SiteNum, Date, Month, numYear, facYear, Time, TripJulianDay, FieldTrip, Side, Site, GridID, SiteType, SurveyLat, SurveyLong,
+                Screen18,PrevInter, Agreement, Resident, ResnBoatDaysYr, nBoatDays, nTimesLast12m, nTimes19, Covid, UseLat, UseLong,
+                ActivityType, exRecall, FishingType, BaitLure, exStart, exStop, exMedianTime, exDecMedianTime, DecFishingHr, FishingHr,
                 StillThere, MaxHook, KeptUndam, RelUndam, CaughtUndam, nHooked, DP, nDP, perDP, nUndamHr, nDPHr,
-                nHookedHr, DPrateHr, Species, exWhyLeave, exnTimes12m, exYrs, FishLife, FishOcc,
-                nTimesFished, jDaysBoatFished, jDaysBoatFishedCat, jBRAvid, Postcode, YrBorn, Sex, Party, Accom, BoatID,
-                BoatType, BoatLength, LunarPhase, Comments)
+                nHookedHr, DPrateHr, Species, exWhyLeave, exnTimes12m, exYrs, FishLife, FishOcc, nTimesFished, jDaysBoatFished, jDaysBoatFishedCat, jBRAvid, LunarPhase, DistNearestBRkm, DistNearestInfra,
+                Depth, Habitat, Postcode, YrBorn, Sex, Party, Accom, BoatID, BoatType, BoatLength, Comments)
 
 exdat <- exdat %>%
   filter(ActivityType =="Extractive")
-```
-
-```{r}
-spNing1 <- spNing %>%
- mutate(fivekm = lengths(st_is_within_distance(spNing, spNing, dist = 5000))) %>%
-  mutate(fivekm_day = lengths(st_is_within_distance(spNing, spNing, dist = 5000)))
 ```
 
 Response rate for full extractive data set is...
@@ -132,6 +121,13 @@ dpdat <- exdat %>%
 #   summarise(TotalDP = sum(nDP, na.rm = TRUE))
 ```
 
+```{r fivekm, include = FALSE, echo = FALSE}
+# exdat1 <- exdat %>%
+#  mutate(fivekm = lengths(st_is_within_distance(spNing, spNing, dist = 5000))) 
+# 
+#   mutate(fivekm_day = lengths(st_is_within_distance(spNing, spNing, dist = 5000)))
+```
+
 Having been filtered by fishing type, the histogram below show the number of uses in data set associated with each type of fishing.  
 
 
@@ -139,11 +135,11 @@ Having been filtered by fishing type, the histogram below show the number of use
 FTyp_dp <- dpdat %>% 
   group_by(FishingType) %>%   
   mutate(count_name_occurr = n()) %>%
-  filter(!is.na(FishingType), FishingType != "") %>% 
+  filter(!is.na(FishingType), FishingType != "") %>%
   ggplot(
-  aes(x=reorder(FishingType,-count_name_occurr))) , #reorder(col to reorder, by what var)
-  geom_bar(stat='count', fill = "mediumaquamarine") ,
-  labs(x = "Fishing Type (n = 3)", y = "Frequency (n = 622)") ,
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', fill = "mediumaquamarine") +
+  labs(x = "Fishing Type (n = 3)", y = "Frequency (n = 622)") +
   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
 
 FTyp_dp
@@ -159,16 +155,24 @@ ggsave(paste(rumPlots, "FTyp_dp.png", sep='/'), width = 8, height = 4)
   summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
                      TotalDP = sum(nDP, na.rm = TRUE),
                      TotalperDP = (TotalDP/TotalHooked)*100)
-```
-```{r nDP hist, echo = FALSE}
-nDP_hist <- ggplot(dpdat) ,
-  aes(x = nDP) ,
-  geom_histogram(fill = "mediumaquamarine") ,
+
+nDP_hist <- ggplot(dpdat) +
+  aes(x = nDP) +
+  geom_histogram(fill = "mediumaquamarine") +
   labs(x = "Number of fish depredated (n= 994)")
 
 nDP_hist
 
 ggsave(paste(rumPlots, "nDP_hist.png", sep='/'), width = 8, height = 4)
+
+nHooked_hist <- ggplot(dpdat) +
+  aes(x = nHooked) +
+  geom_histogram(fill = "mediumaquamarine") +
+  labs(x = "Number of fish hooked (n = 6548)")
+
+nHooked_hist
+
+ggsave(paste(rumPlots, "nHooked_hist.png", sep='/'), width = 8, height = 4)
 ```
 
 ## Faceted by side of cape
@@ -188,6 +192,7 @@ dpdat %>%
   summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
                      TotalDP = sum(nDP, na.rm = TRUE),
                      TotalperDP = (TotalDP/TotalHooked)*100) 
+
 ```
 
 ## Facetted by side and year
@@ -210,7 +215,7 @@ dpdat %>%
 ```
 ## Faceted by side of cape
 ```{r avoverall_fside, echo = FALSE}
-exdat %>% 
+dpdat %>% 
   group_by(Side) %>%
   summarise(AvHooked = mean(nHooked, na.rm = TRUE),
             AvDP = mean(nDP, na.rm = TRUE),
@@ -218,11 +223,31 @@ exdat %>%
 ```
 ## Faceted by Year
 ```{r avoverall_fyear, echo = FALSE}
-exdat %>% 
+dpdat %>% 
   group_by(facYear) %>%
   summarise(AvHooked = mean(nHooked, na.rm = TRUE),
             AvDP = mean(nDP, na.rm = TRUE),
             AvperDP = (AvDP/AvHooked)*100) 
+
+dpdat %>%
+  group_by(facYear) %>%
+  summarise(avDP = mean(nDP)) %>%
+ggplot( 
+  aes(y = avDP, x = facYear)) +
+  geom_col(fill = "mediumaquamarine") +
+  labs(x = "Average number of depredated at each site", y = "Year")
+
+ggsave(paste(rumPlots, "avDP.png", sep='/'), width = 8, height = 4)
+
+dpdat %>%
+  group_by(facYear) %>%
+  summarise(avCR = mean(CaughtUndam)) %>%
+ggplot( 
+  aes(y = avCR, x = facYear)) +
+  geom_col(fill = "mediumaquamarine") +
+  labs(x = "Average catch rate per site", y = "Year")
+
+ggsave(paste(rumPlots, "avCR.png", sep='/'), width = 8, height = 4)
 ```
 ## Faceted by side of cape and year
 ```{r avoverall_fyearside, echo = FALSE}
@@ -256,15 +281,17 @@ Number of fish depredated ~ Site number , Year , Month , Side , Resident , Resid
 
 The output below is has the optimal parameters of:
 
-lr = 
+lr = 0.1
 
-tc =
+tc = 3
 
-bf =
+bf = 0.9
 
-nt = 
+nt = 1000
 
-This was detemrined through selecting model with smallest residual devience when parameters were run through loop. 
+step size = 50
+
+This was determined through selecting model with smallest residual devience when parameters were run through the following loop `grid<-expand.grid(lr=c(0.1, 0.05, 0.01), tc=c(2, 3, 5), bf=c(0.5, 0.75, 0.9))`
 ```{r loop grid, include=FALSE}
 ## making a grid for loop
 res.dev<-c() ## make a res.dev variable to store in grid
@@ -280,23 +307,31 @@ dpdat <- dpdat %>%
                 FishingType = as.factor(FishingType),
                 BaitLure = as.factor(BaitLure),
                 BoatType = as.factor(BoatType),
-                LunarPhase = as.factor(LunarPhase))
+                LunarPhase = as.factor(LunarPhase),
+                Habitat = as.factor(Habitat))
 ## make ex median time decimal and add
 
 ```
 
+BRT Model
+nDP ~ TripNum + SiteNum + numYear + Month + Side+ Resident + ResnBoatDaysYr+ nTimesLast12m + exDecMedianTime + nHooked + Depth + Habitat + DistNearestBRkm + DistNearestInfra + UseLat + UseLong + FishingType+ BaitLure + DecFishingHr + MaxHook + exYrs + jBRAvid + BoatLength + LunarPhase
+
+TripJulianDay as random factor
+
 ```{r dp.step loop, include = FALSE}
 for(i in 1:nrow(grid)) {
   dp.step<-dismo::gbm.step(data=dpdat,
-                           gbm.x=c("SiteNum", "numYear", "Month", "Side", "Resident", "ResnBoatDaysYr", "nTimesLast12m",
-                                   "UseLat", "UseLong","FishingType","BaitLure", "DecFishingHr",
-                                   "MaxHook", "exYrs", "jBRAvid", "BoatLength", "BoatType", "LunarPhase"), ## explanatory
-                           gbm.y=c(40),## response - number of fish depredated
+                           gbm.x=c("TripNum", "SiteNum", "numYear", "Month", "Side", "Resident",
+                                   "ResnBoatDaysYr", "nTimesLast12m","exDecMedianTime", "nHooked",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "BaitLure", "DecFishingHr","MaxHook",
+                                   "exYrs", "jBRAvid", "BoatLength", "LunarPhase"), ## explanatory
+                           gbm.y=c(46),## response - number of fish depredated
                            #offset=c("nHooked"), ## adds offset 
                            ##fold.vector=dat$folds, 
                            lr=grid[i,"lr"], ## ref to grid 
                            tc=grid[i,"tc"], ## ref to grid 
-                           step.size=5,
+                           step.size=50,
                            family="poisson", ## distribution family
                            bag.fraction=grid[i,"bf"])
   grid[i, "res.dev"] <-dp.step$self.statistics$mean.resid} ### store res.dev in grid `
@@ -309,58 +344,129 @@ grid
 
 ```{r dp.step, echo = FALSE}
   dp.step<-dismo::gbm.step(data=dpdat,
-                           gbm.x=c("SiteNum", "numYear", "Month", "Side", "Resident", "ResnBoatDaysYr", "nTimesLast12m",
-                                   "UseLat", "UseLong","FishingType","BaitLure", "DecFishingHr",
-                                   "MaxHook", "exYrs", "jBRAvid", "BoatLength", "BoatType", "LunarPhase"), ## explanatory
-                           gbm.y=c(40),## response - number of fish depredated
-                           #offset=c("nHooked"), ## adds offset 
+                           gbm.x=c("TripNum", "SiteNum", "numYear", "Month", "Side", "Resident",
+                                   "ResnBoatDaysYr", "nTimesLast12m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "BaitLure", "DecFishingHr","MaxHook",
+                                   "exYrs", "jBRAvid", "BoatLength", "LunarPhase"), ## explanatory
+                           gbm.y=c(46),## response - number of fish depredated
+                           offset=c("nHooked"), ## adds offset 
                            ##fold.vector=dat$folds, 
                            lr=0.1, ## ref to grid 
-                           tc=5, ## ref to grid 
-                           step.size=5,
+                           tc=3, ## ref to grid 
+                           step.size=50,
                            family="poisson", ## distribution family
-                           bag.fraction=0.75)
-
-# 425 trees
+                           bag.fraction=0.9)
 ```
 
 ```{r output of dp.step}
-ggInfluence(dp.step) ## better influence summary - used gbm.step 
-ggPD(dp.step,rug = T) ## plots PDP for fitted functions  no CI for every variable in a matrix
+
+vars<-expand.grid(vars=c(1:24))
+
+ggPerformance(dp.step)
+ggInfluence(dp.step, show.signif = TRUE) ## better influence summary - used gbm.step 
+# ggsave(paste(rumPlots, "dpInfluence.step.png", sep='/'), width = 8, height = 4)
+
+# for(i in 1:nrow(vars)) {
+# ggPD(dp.step,rug = T, smooth = T, predictor = grid[i, "vars"])
+# }## plots PDP for fitted functions  no CI for every variable in a matrix
+
+ggPD(dp.step, predictor = 2, rug = T, smooth = T)
+     
+# ggsave(paste(rumPlots, "dpPD.step.png", sep='/'), width = 8, height = 4)
 ggPDfit(dp.step) ## plots PDPs for fitted value no CI for evey variable in a matrix 
 ggInteract_list(dp.step,index = T) ## shows table of interactions-only showing baittype?
+
+
+
 ```
+
+```{r}
+dp.step_prerun<- plot.gbm.4list(dp.step)
+
+dp.step_boot <- gbm.bootstrap.functions(dp.step, list.predictors=dp.step_prerun, n.reps=100)
+
+dp.step_PDboot<-ggPD_boot(dp.step, list.4.preds=dp.step_prerun, 
+                booted.preds=dp.step_boot$function.preds, type.ci="ribbon", rug=T)
+```
+
+
 
 ```{r BRT}
 dp.BRT <- gbm::gbm(
-  formula = nDP ~ SiteNum + numYear + Month + Side + Resident + ResnBoatDaysYr + nTimesLast12m + UseLat+
-    UseLong + FishingType + BaitLure + DecFishingHr+ MaxHook + exYrs + jBRAvid + BoatLength + BoatType + LunarPhase,
+  formula = nDP ~ TripNum + SiteNum+ numYear+ Month+ Side+ Resident+
+                                   ResnBoatDaysYr+ nTimesLast12m+exDecMedianTime+
+                                   Depth+ Habitat+DistNearestBRkm+ DistNearestInfra+ UseLat+
+                                   UseLong+FishingType+ BaitLure+ DecFishingHr+MaxHook+
+                                   exYrs+ jBRAvid+ BoatLength+ LunarPhase, offset(nHooked),
   distribution = "poisson",
   data = dpdat,
-  n.trees = 425,
+  n.trees = 1250,
   shrinkage = 0.1, # lr
-  bag.fraction = 0.75,
-  interaction.depth = 5) # tc
+  bag.fraction = 0.9,
+  interaction.depth = 3) # txc
 
-# 900 Trees
-# res.dev = 2.281
-summary(dp.BRT)
+summary(dp.BRT, las = 1, cex.names = 0.5)
+
+pretty.gbm.tree(dp.BRT, i.tree=1) 
+
+
+plot.gbm(dp.BRT, i.var=c(1)) 
+plot.gbm(dp.BRT, i.var=c(2)) 
+plot.gbm(dp.BRT, i.var=c(3)) 
+plot.gbm(dp.BRT, i.var=c(4)) 
+plot.gbm(dp.BRT, i.var=c(5)) 
+plot.gbm(dp.BRT, i.var=c(6)) 
+plot.gbm(dp.BRT, i.var=c(7)) 
+plot.gbm(dp.BRT, i.var=c(8)) 
+plot.gbm(dp.BRT, i.var=c(9)) 
+plot.gbm(dp.BRT, i.var=c(10)) 
+plot.gbm(dp.BRT, i.var=c(11)) 
+plot.gbm(dp.BRT, i.var=c(12))
+plot.gbm(dp.BRT, i.var=c(13)) 
+plot.gbm(dp.BRT, i.var=c(14)) 
+plot.gbm(dp.BRT, i.var=c(15)) 
+plot.gbm(dp.BRT, i.var=c(16)) 
+plot.gbm(dp.BRT, i.var=c(17)) 
+plot.gbm(dp.BRT, i.var=c(18)) 
+plot.gbm(dp.BRT, i.var=c(19)) 
+plot.gbm(dp.BRT, i.var=c(10)) 
+plot.gbm(dp.BRT, i.var=c(21)) 
+plot.gbm(dp.BRT, i.var=c(22)) 
+plot.gbm(dp.BRT, i.var=c(23)) 
+
+
+# par(mfrow=c(1,1)) 
+# plot.gbm(dp.BRT, i.var=c(1:24)) ## doesnt like vector 
+# gbm.plot.fits(dp.BRT)
+# 
+# 
+# i.var <- c(1:23)
+# ylab <- c("TripNum", "SiteNum", "numYear", "Month", "Side", "Resident",
+#                                    "ResnBoatDaysYr", "nTimesLast12m","exDecMedianTime",
+#                                    "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+#                                    "UseLong","FishingType", "BaitLure", "DecFishingHr","MaxHook",
+#                                    "exYrs", "jBRAvid", "BoatLength", "LunarPhase")
+# 
+# grid2 <- cbind(i.var, ylab)
+# 
+# for(i in nrow(grid2)) {
+#   plot.gbm(dp.BRT, i.var=grid2[i, "i.var"] ,ylab=grid2[i, "ylab"]) 
+# }
+
 ```
 
-To do list: 
 
-* run code again and get proximity to infrastructure variables to save 
-* make sure all varibales of interets are in factor or numeric format
-* in rumDP select new relavant variables 
+```{r}
+spDPdat <- st_read(paste(s.dir, "spNing.shp", sep = '/')) %>%
+  st_transform(crs = 3112)
 
-BRTs
-* Add new variables to BRT
-* Understand BRTs and outputs
+spNing_Lam <- as.ppp(spNing_Lam)
+spNingkm_Lam <- rescale(spNing_Lam, 1000, "km")
+
+spNingkm_Lam$KernalDensity <- density(spNingkm_Lam, sigma = 5) # Using the default bandwidth
+kdens <- plot(spNingkm_Lam$KernalDensity, main=NULL, las=1)
+contour(spNingkm_Lam$KernalDensity, add=TRUE)
+```
 
 
-* Add plots to general summaries
-
-Variable for BRT
-nDP ~ SiteNum + Side + Resident + ResnBoatDaysYr + + nTimesLast12m + exDecMedianTime + DecFishingHr +MaxHook + nHooked (if cant get as offset) + exYrs + jBRAvid + BoatLength + LunarPhase + Depth + Habitat + DistNearesBR + DistNearestInfra + fivekm
-
-TripJulianDay as random factor

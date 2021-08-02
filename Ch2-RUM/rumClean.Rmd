@@ -17,7 +17,7 @@ library(nngeo)
 ```
 
 ```{r dir, echo = FALSE}
-w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Agent-lobster"
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
 d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
 s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
 r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
@@ -1157,13 +1157,16 @@ What side of the cape was the activity on - based on survey location for now . T
 Ning <- Ning %>%
   mutate(Side = ifelse(Transect == "Tantabiddi"|Transect == "Bundegi", "West", "East")) %>%
   mutate(Side = ifelse(Site == "BundegiBR"|Site=="BundegiBeach", "East", Side)) %>%
+  mutate(Side = as.factor(Side)) %>%
   relocate(Side, .after = Site)
+  
 ```
 
 ## Lunar Phase
 ```{r lunar phase}
 Ning <- Ning %>%
-  mutate(LunarPhase = lunar.phase(Date, name = TRUE))
+  mutate(LunarPhase = lunar.phase(Date, name = TRUE)) %>%
+  mutate(LunarPhase = as.factor(LunarPhase))
 ```
 
 ```{r csv}
@@ -1339,7 +1342,7 @@ n <- st_nn(spNing, BR, returnDist = TRUE, sparse = FALSE) # Calculate distance t
 DistNearestBRm = sapply(n[[2]], "[", 1) # Name distance
 DistNearestBRkm = DistNearestBRm/1000 # Convert to km
 
-spNing <- spNing %>%
+Ning <- spNing %>%
   mutate(DistNearestWellkm = DistNearestWellkm) %>%
   mutate(DistNearestPipekm = DistNearestPipekm) %>%
   mutate(DistArtReefkm = DistArtReefkm) %>%
@@ -1351,12 +1354,18 @@ spNing <- spNing %>%
   mutate(DistNearestInfra = min(DistNearestWellkm, DistNearestPipekm, DistArtReefkm)) %>%
   relocate(DistNearestBRkm, DistNearestWellkm, DistNearestPipekm, DistArtReefkm, DistNearestInfra, Depth,
            Habitat, GridID, UseLat, UseLong, .before = geometry) %>%
-  ungroup()
+  ungroup() 
+```
+
+```{r save as shape file}
+st_write(Ning, paste(s.dir, "spNing.shp", sep = '/'), append = FALSE)
 ```
 
 ```{r csv}
-write.csv(spNing, "rumIgnore/Ning_v2.csv")
-st_write(spNing, paste(s.dir, "spNing.shp", sep = '/'), append = FALSE)
+Ning <- Ning %>%
+  dplyr::select(-geometry)
+
+write.csv(Ning, paste(d.dir, "Ning_v2.csv", sep = "/"))
 ```
 
 

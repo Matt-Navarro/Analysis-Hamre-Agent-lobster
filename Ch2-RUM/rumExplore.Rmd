@@ -277,6 +277,7 @@ avCR <- ggplot(CR) +
 avCR
 ggsave(paste(rumPlots, "avCR.png", sep='/'), width = 8, height = 4)
 ```
+
 ```{r}
 nDP <- ggplot(exdat1) +
   aes(x = nDP) +
@@ -716,19 +717,19 @@ spNing$DistNearestBRkm = DistNearestBRkm # Bind distances
 #   stat_density2d(aes(fill = ..level..), h = .02, n = 300,
 #                  geom = "polygon", data = Ning1) +
 #   scale_fill_viridis_c()
-#   
+# 
 # rm(Ning1)
-# 
-# ## Using denisty from spatstat
-# spNing_Lam <- st_read(paste(s.dir, "spNing.shp", sep = '/')) %>%
-#   st_transform(crs = 3112)
-# 
-# spNing_Lam <- as.ppp(spNing_Lam)
-# spNingkm_Lam <- rescale(spNing_Lam, 1000, "km")
-# 
-# spNingkm_Lam$KernalDensity <- density(spNingkm_Lam, sigma = 5) # Using the default bandwidth
-# kdens <- plot(spNingkm_Lam$KernalDensity, main=NULL, las=1)
-# contour(spNingkm_Lam$KernalDensity, add=TRUE)
+
+## Using denisty from spatstat
+spNing_Lam <- st_read(paste(s.dir, "spNing.shp", sep = '/')) %>%
+  st_transform(crs = 3112)
+
+spNing_Lam <- as.ppp(spNing_Lam)
+spNingkm_Lam <- rescale(spNing_Lam, 1000, "km")
+
+spNingkm_Lam$KernalDensity <- density(spNingkm_Lam, sigma = 5) # Using the default bandwidth
+kdens <- plot(spNingkm_Lam$KernalDensity, main=NULL, las=1)
+contour(spNingkm_Lam$KernalDensity, add=TRUE)
 ```
 
 ```{r}
@@ -743,4 +744,26 @@ ggplot() +
   geom_sf(data = Pipes, lwd = 0.1) +
   geom_sf(data = ArtInf, lwd = 0.1) 
 ```
+
+To do list: 
+
+* Finish draft of methods
+
+* Add plots to general summaries
+
+Variables to fix
+* KDE fishing pressure
+* Add number of boats in 5km within a day
+* Side - need to go beyond boat ramps and do it spatial 
+* Site type - consider how you can isolate shore based activities from boat based activities - do you need a shore grid??
+* Agreement is incorrect - how to isolate those that have agreed 
+* local avidity - nTimes24months
+* Species - make species suites
+* Avidity variables
+* BoatType
+
+Model 
+* Add fisher ID and Julian Day as random effects/startfified
+* Get offset to wokr in gbm.step
+
 
