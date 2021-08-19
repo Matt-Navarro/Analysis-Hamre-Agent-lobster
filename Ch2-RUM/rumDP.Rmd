@@ -16,7 +16,7 @@ knitr::opts_chunk$set(fig.align = "center",
                       fig.width = 7, 
                       fig.height = 5, 
                       dev = "png",
-                      cache = TRUE,
+                      cache = FALSE,
                       warning = FALSE,
                       message = FALSE)
 ```
@@ -350,13 +350,14 @@ grid
                                    "UseLong","FishingType", "BaitLure", "DecFishingHr","MaxHook",
                                    "exYrs", "jBRAvid", "BoatLength", "LunarPhase"), ## explanatory
                            gbm.y=c(46),## response - number of fish depredated
-                           offset=c("nHooked"), ## adds offset 
+                           offset=c(44), ## adds offset 
                            ##fold.vector=dat$folds, 
                            lr=0.1, ## ref to grid 
                            tc=3, ## ref to grid 
                            step.size=50,
                            family="poisson", ## distribution family
                            bag.fraction=0.9)
+
 ```
 
 ```{r output of dp.step}
@@ -371,13 +372,12 @@ ggInfluence(dp.step, show.signif = TRUE) ## better influence summary - used gbm.
 # ggPD(dp.step,rug = T, smooth = T, predictor = grid[i, "vars"])
 # }## plots PDP for fitted functions  no CI for every variable in a matrix
 
-ggPD(dp.step, predictor = 2, rug = T, smooth = T)
+ggPD(dp.step, rug = T, smooth = T, n.plots = 8)
      
 # ggsave(paste(rumPlots, "dpPD.step.png", sep='/'), width = 8, height = 4)
-ggPDfit(dp.step) ## plots PDPs for fitted value no CI for evey variable in a matrix 
-ggInteract_list(dp.step,index = T) ## shows table of interactions-only showing baittype?
+ggPDfit(dp.step, n.plot = 8, smooth = T, se = T) ## plots PDPs for fitted value no CI for evey variable in a matrix 
 
-
+ggInteract_list(dp.step, index = F) ## shows table of interactions-only showing baittype?
 
 ```
 
@@ -387,7 +387,7 @@ dp.step_prerun<- plot.gbm.4list(dp.step)
 dp.step_boot <- gbm.bootstrap.functions(dp.step, list.predictors=dp.step_prerun, n.reps=100)
 
 dp.step_PDboot<-ggPD_boot(dp.step, list.4.preds=dp.step_prerun, 
-                booted.preds=dp.step_boot$function.preds, type.ci="ribbon", rug=T)
+                booted.preds=dp.step_boot$function.preds, type.ci="ribbon", rug=T, n.plot = 8)
 ```
 
 

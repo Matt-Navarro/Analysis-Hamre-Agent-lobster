@@ -69,7 +69,7 @@ rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
 
 # Functions 
 ```{r functions}
-
+allmissingbutmeta <- Ning$PersonID %in% c("173", "174", "229", "232", "327", "668", "517", "530", "581", "764", "488")
 ```
 
 ```{r readData, echo = FALSE}
