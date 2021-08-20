@@ -429,11 +429,12 @@ Ning <- Ning %>%
 
 ```{r nexStop}
 Ning <- Ning %>%
-  mutate(TimeOfDay = ifelse(str_detect(nexStop, "pm"), "pm",
+  dplyr::mutate(TimeOfDay = ifelse(str_detect(nexStop, "pm"), "pm",
                               ifelse(str_detect(nexStop, "am"), "am", NA))) %>%
-   mutate(nexStop = ifelse(str_detect(nexStop, "[S, s]till|Hasn’t ended"), "StillThere", nexStop)) %>%
-   mutate(StillThere = ifelse(nexStop %in% "StillThere", 1, 0)) %>%
-   mutate(nexStop = ifelse(nexStop %in% "StillThere", NA, nexStop)) 
+  dplyr::mutate(nexStop = ifelse(str_detect(nexStop, "[S, s]till|Hasn’t ended"), "StillThere", nexStop)) %>%
+  dplyr::mutate(StillThere = ifelse(nexStop %in% "StillThere", 1, 0)) %>%
+  dplyr::mutate(nexStop = ifelse(nexStop %in% "StillThere", NA, nexStop)) %>%
+  dplyr::select(-TimeOfDay)
 
 # Need to finish this section
   # mutate(nexStop = ifelse(str_detect(nexStop, "houts"), "16:00", nexStop))%>% 
@@ -1321,6 +1322,7 @@ Ning <- Ning%>%
   mutate(exYrs = ifelse(str_detect(exYrs, "No|Not|None|Zero"), 0, exYrs))%>%
   mutate(exYrs = gsub("[a-zA-Z]|[ ]|[-]|[,]|[’]","",exYrs))%>%
   mutate(exYrs = ifelse(exYrs!="", exYrs, NA)) %>%
+  relocate(FishLife, FishOcc, .after = nTimesFished) %>%
   dplyr::select(-c(jexYrs)) #Remove John's column
 ```
 
@@ -1407,19 +1409,6 @@ Ning <- Ning %>%
 
 
 # 28 site type NAs that have agreed to participate are extractive
-
-
-c <- which(is.na(Ning$SiteType) & !is.na(Ning$UseLat) & Ning$Agreement %in% "Yes")
-
-N6[c, ]
-
-a <- which(is.na(Ning$UseLat) & Ning$Agreement == "Yes")
-Ning[a,]
-
-c <- N6 %>%
-  filter(is.na(SiteType) & !is.na(N6$UseLat) & N6$Agreement %in% "Yes" & N6$ActivityType %in% c("Extractive", "Both"))
-
-
 ```
 
 ## Side
@@ -1553,13 +1542,12 @@ LagoonGrid <- st_read(paste(s.dir, "LagoonGrid.gpkg", sep = '/')) %>%
 ```
 
 ```{r checking habitat grids}
-ggplot() +
+HabitatMap <- ggplot() +
   theme_void() +
-  # geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat)) +
-  # scale_fill_manual(values=c("aquamarine", "light blue", "coral", "pink")) +
-  geom_sf(data = NWS) +
-  geom_sf(data = spNing1, size = 0.05, aes(colour=SiteType)) 
-  
+  geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat)) +
+  scale_fill_manual(values=c("aquamarine", "light blue", "coral", "pink"))
+
+ggsave(paste(rumPlots, "HabitatMap.png", sep='/'), width = 8, height = 4)
 ```
 
 ```{r Extracting Depth}
@@ -1593,60 +1581,19 @@ spNing <- spNing %>%
 
 ```
 
-```{r spSiteType}
-spNing1 <- spNing %>%
-  filter(is.na(SiteType) & Agreement %in% "Yes")
-  mutate(SiteType2 = ifelse(st_intersects(spNing, NWS), "Shore", SiteType)) %>%
-    
-    
-  mutate(SiteType = ifelse(is.na(SiteType) & Agreement %in% "Yes", SiteType2, SiteType))
+```{r SiteType2}
+spNing <- spNing %>%
+  dplyr::mutate(NWSIntersect = st_intersects(spNing, NWS, sparse = FALSE)) %>%
+  dplyr::mutate(SiteType = ifelse(NWSIntersect %in% "TRUE" & is.na(SiteType), "Shore", SiteType)) %>%
+  dplyr::relocate(SiteType, .after = Site) %>%
+  dplyr::select(-NWSIntersect)
 
-
-spNing1[c, c("SiteType", "SiteType2")]
-which(is.na(spNing1$SiteType) & spNing1$Agreement == "Yes")
-
-
+ggplot() + 
+  theme_void() +
+  geom_sf(data = NWS) +
+  geom_sf(data = spNing, size = 0.05, aes(colour=SiteType))
 ```
 
-```{r 5km}
-spNing1 <- st_buffer(spNing, )
-
-
-```
-
-```{r Kernal Density}
-
-## Using denisty from spatstat
-spNing_Lam <- st_transform(spNing, crs = 3112)
-
-spNing_Lam <- as.ppp(spNing_Lam)
-spNingkm_Lam <- rescale(spNing_Lam, 1000, "km")
-
-spNingkm_Lam$KernalDensity <- density(spNingkm_Lam, sigma = 5) # Using the default bandwidth
-kdens <- plot(spNingkm_Lam$KernalDensity, main=NULL, las=1)
-contour(spNingkm_Lam$KernalDensity, add=TRUE)
-
-# Turn the KDE points into a raster
-Ningraster <- spNingkm_Lam$KernalDensity
-Ningraster <- rescale(Ningraster, 1/1000) #Need to rescale so the coords match up with the original ones from the dataset
-Ningraster <- raster(Ningraster) #Conver to raster
-
-Points <- st_as_sf(spNing$geometry) #Convert your dataframe points in a simple shape file
-
-#Check they plot over the top of each other and therefore that the coordinates are the same
-plot(Ningraster)
-plot(Points, add=T) #If you want to plot this on top you need to run this line and the above line in the consol as RMarkdown won't let you plot one on top of the other 
-
-# Extract the value in the raster where your points are 
-KDEPoints <- raster::extract(Ningraster, Points, fun=max)
-
-#Add the KDE to a dataframe where you've already removed the NAs (Otherwise you'll get the wrong KDE associated with the points because of the missing values)
-spNing$KDE.Points <- KDEPoints
-
-#Join the KDE to the original dataframe preserving where you have NA geomtry and therefore NA KDE
-NingKDE <- left_join(Ning, spNing)
-
-```
 
 Proximity to artificial infrastructure 
 ```{r Artificial infrastructure and BR}
@@ -1680,7 +1627,7 @@ n <- st_nn(spNing, BR, returnDist = TRUE, sparse = FALSE) # Calculate distance t
 DistNearestBRm = sapply(n[[2]], "[", 1) # Name distance
 DistNearestBRkm = DistNearestBRm/1000 # Convert to km
 
-Ning <- spNing %>%
+spNing <- spNing %>%
   mutate(DistNearestWellkm = DistNearestWellkm) %>%
   mutate(DistNearestPipekm = DistNearestPipekm) %>%
   mutate(DistArtReefkm = DistArtReefkm) %>%
@@ -1690,21 +1637,105 @@ Ning <- spNing %>%
   mutate(Depth = Depth*-1) %>%
   rowwise() %>%
   mutate(DistNearestInfra = min(DistNearestWellkm, DistNearestPipekm, DistArtReefkm)) %>%
-  relocate(DistNearestBRkm, DistNearestWellkm, DistNearestPipekm, DistArtReefkm, DistNearestInfra, Depth,
-           Habitat, GridID, UseLat, UseLong, .before = geometry) %>%
-  ungroup()
+  ungroup() %>%
+  relocate(GridID, DistNearestBRkm, DistNearestWellkm, DistNearestPipekm, DistArtReefkm, DistNearestInfra, Depth, Habitat, LunarPhase, UseLat, UseLong, .before = geometry) 
 ```
 
 ```{r save as shape file}
-st_write(Ning, paste(s.dir, "spNing.gpkg", sep = '/'), append = FALSE)
+st_write(spNing, paste(s.dir, "spNing.gpkg", sep = '/'), append = FALSE)
 ```
 
 ```{r csv}
-Ning <- Ning %>%
+spNing <- spNing %>%
   dplyr::select(-geometry)
 
-write.csv(Ning, paste(d.dir, "Ning_v2.csv", sep = "/"))
+write.csv(spNing, paste(d.dir, "Ning_v2.csv", sep = "/"))
 ```
 
+I opened this CSV in QGIS and checked the location of the rogue site types and noted the which unique IDs have site types that need need edited, and edit them below. SiteTypes have been alloacted depending on spatial location and infomration provided in attrbutes eg. boat access. The rest of the spatial variables that need added need to be filtered by site type so this step needs to be incorporated in the workflow. 
 
+Unique IDs to be designated as shore based: 1044, 1092, 471, 1225, 450, 955, 646, 678, 980, 788, 643, 538, 542, 524, 677, 1261,  1233, 754, 800, 836, 760, 755, 923, 871, 985, 673, 1296, 876, 878, 730, 725, 719, 1108, 1231
 
+Unique IDs to be designated as boat based: 1223, 1137, 942, 802, 940, 936, 648, 935, 971, 647, 1331, 1181, 414, 617, 1356, 653, 891, 894, 802, 942
+
+```{r SiteType}
+
+spNing <- spNing %>%
+  dplyr::mutate(SiteType = ifelse(ID %in% c("1044", "1092", "471", "1225", "450", "955", "646", "678", "980", "788", "643", "538", "542", "524", "677", "1261",  "1233", "754", "800", "836", "760", "755", "923", "871", "985", "673", "1296", "876", "878", "730", "725", "719", "1108", "1231", "1232", "798", "799", "758", "1254"), "Shore", SiteType)) %>%
+dplyr::mutate(SiteType = ifelse(ID %in% c("1223", "1137", "942", "802", "940", "936", "648", "935", "971", "647", "1331", "1181"," 414"," 617", "1356", "653", "891", "894", "802", "942", "1098", "895", "892", "617", "515", "511"), "Boat", SiteType))
+
+ggplot() + 
+  theme_void() +
+  geom_sf(data = NWS) +
+  geom_sf(data = spNing, size = 0.05, aes(colour=SiteType))
+```
+The next variables will be done for each subset of data:
+All activities (spNing)
+
+Fishing (f)
+Boat based fishing (bf)
+Shore based fishing (sf)
+
+Non-extractive activities (ne)
+Boat based non-extractive activities (bne)
+Shore based non-extractive activities (sne)
+
+```{r 5km}
+spNing_bf <- spNing %>%
+  filter(SiteType %in% "Boat", ActivityType %in% c("Extractive", "Both"))  # filtering by boat fishing
+
+pointBuffer_bf = st_buffer(spNing_bf, 5000)
+
+#  Checking buffer
+# ggplot() +
+#   geom_sf(data = NWS) +
+#   geom_sf(data = pointBuffer_bf) +
+#   geom_sf(data = spNing, size = 0.05)
+
+intersect_bf = st_intersects(spNing_bf, pointBuffer_bf) # how to filter this by date?
+
+bf5km = lengths(intersect_bf)
+
+# This would be final output for just a fishing data set - would it be better to ahve lots of separate ones or one big one?
+spNing_bf <- spNing_bf %>%
+  mutate(bf5km = bf5km)
+  
+# if you are going to have one big one how do you append it?
+spNing2 <- spNing %>%
+  mutate(bf5km = ifelse(spNing$ID == spNing_bf$ID, spNing_bf$bf5km, NA))
+  
+  st_join(spNing, spNing_bf, )
+```
+
+```{r Kernal Density}
+
+## Using denisty from spatstat
+spNing_Lam <- st_transform(spNing, crs = 3112)
+
+spNing_Lam <- as.ppp(spNing_Lam)
+spNingkm_Lam <- rescale(spNing_Lam, 1000, "km")
+
+spNingkm_Lam$KernalDensity <- density(spNingkm_Lam, sigma = 5) # Using the default bandwidth
+kdens <- plot(spNingkm_Lam$KernalDensity, main=NULL, las=1)
+contour(spNingkm_Lam$KernalDensity, add=TRUE)
+
+# Turn the KDE points into a raster
+Ningraster <- spNingkm_Lam$KernalDensity
+Ningraster <- rescale(Ningraster, 1/1000) #Need to rescale so the coords match up with the original ones from the dataset
+Ningraster <- raster(Ningraster) #Conver to raster
+
+Points <- st_as_sf(spNing$geometry) #Convert your dataframe points in a simple shape file
+
+#Check they plot over the top of each other and therefore that the coordinates are the same
+plot(Ningraster)
+plot(Points, add=T) #If you want to plot this on top you need to run this line and the above line in the consol as RMarkdown won't let you plot one on top of the other 
+
+# Extract the value in the raster where your points are 
+KDEPoints <- raster::extract(Ningraster, Points, fun=max)
+
+#Add the KDE to a dataframe where you've already removed the NAs (Otherwise you'll get the wrong KDE associated with the points because of the missing values)
+spNing$KDE.Points <- KDEPoints
+
+#Join the KDE to the original dataframe preserving where you have NA geomtry and therefore NA KDE
+NingKDE <- left_join(Ning, spNing)
+```
