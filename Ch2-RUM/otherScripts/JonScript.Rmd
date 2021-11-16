@@ -1,0 +1,1401 @@
+# Make the final Tweedie model for just the East side
+```{r East Side}
+# librarys----
+detach("package:plyr", unload=TRUE) #will error - no worries
+library(tidyr)
+library(dplyr)
+options(dplyr.width = Inf) #enables head() to display all coloums
+library(mgcv)
+library(MuMIn)
+library(car)
+library(doBy)
+library(gplots)
+library(RColorBrewer)
+library(doParallel)
+library(gamm4)
+
+
+rm(list=ls()) #clear memory/workspace
+study<-"Eastsidefinalmodel" # sets name of this workspace
+
+# Add you work dir here-
+work.dir=("C:\\Users\\21644425\\ownCloud\\Shared\\Jon data") # Owncloud
+
+# Then set the folders within the owncloud for the output files to go into
+tidy.data=paste(work.dir,"Data",sep="/") # Data folder
+plots=paste(work.dir,"Plots",sep="/") # plots folder
+script.dir=paste(work.dir,"Script",sep="/") # scripts folder
+model.out=paste(work.dir,"Model outputs",sep="/") # model outputs folder
+
+# Load full subset gam function----
+source("C:/Users/21644425/ownCloud/Shared/Jon data/Script/Final Ningaloo dataset/function_full_subsets_gam_v1.9.R") # source file
+# for the full subsets gam script made by Becky Fisher at AIMS
+
+
+# Read the final dataset CSV from my owncloud documents folder
+
+dat<-read.csv("ALL3TRIPSMASTERDATASETFEB22.csv",stringsAsFactors =T)%>%
+  #   renaming predictors to make names shorter
+  dplyr::rename(SST=SST..NOAA.data.)%>%
+  #   select predictor variables
+  dplyr::select(c(Julian.day,Decimal.Median.time,Decimal.fishing.hours,Boat.ramp,SST,Total.fish.hooked,Fishing.method,No..fish.lost.to.sharks,Max.hook..depth,Kernel.density,Month.Year,Lat,fivekm))%>%
+  #   Choose response variable
+  dplyr::rename(response=No..fish.lost.to.sharks)%>%
+  na.omit() #gets rid of NA's
+head(dat,3)# view first 3 rows of each column
+names(dat) # view the names of the columns
+str(dat) #check format 
+
+# Now need to subset the data into just demersal fishing
+
+dat <- subset(dat, Fishing.method%in%c("Bottom-bashing (drifting)", "Bottom-bashing (anchored)"))
+
+# Now subset again just for east side
+
+dat <- subset(dat, Boat.ramp%in%c("Bundegi", "Exmouth marina"))
+
+# Check levels of factors----
+table(dat$Boat.ramp) # Two boat ramps
+table(dat$Julian.day) # 20 Julian day values for the sampling days 
+
+# Set predictor variables for GAM---
+# First continuous predictors
+pred.vars=c("Max.hook..depth",
+            "SST",
+            "Decimal.fishing.hours",
+            "Decimal.Median.time",
+            "Kernel.density",
+            "fivekm",
+            "Lat")
+
+
+# now categorical factor variables 
+
+pred.vars.fact=c("Month.Year")
+
+
+# Check for correalation of predictor variables---
+round(cor(dat[,pred.vars]),2)
+
+Max.hook..depth   SST Decimal.fishing.hours Decimal.Median.time Kernel.density
+
+Max.hook..depth                  1.00  0.05                  0.50               -0.14          -0.15
+SST                              0.05  1.00                  0.03                0.05          -0.02
+Decimal.fishing.hours            0.50  0.03                  1.00               -0.20          -0.22
+Decimal.Median.time             -0.14  0.05                 -0.20                1.00           0.01
+Kernel.density                  -0.15 -0.02                 -0.22                0.01           1.00
+fivekm                          -0.21 -0.20                 -0.16                0.03           0.44
+Lat                              0.51  0.07                  0.34               -0.19           0.00
+fivekm   Lat
+Max.hook..depth        -0.21  0.51
+SST                    -0.20  0.07
+Decimal.fishing.hours  -0.16  0.34
+Decimal.Median.time     0.03 -0.19
+Kernel.density          0.44  0.00
+fivekm                  1.00 -0.16
+Lat                    -0.16  1.00
+
+# This produces table of all combinations of predictors. 
+# THe predictor vs itself is always 1 
+# THen it shows the relationship between all predictors, with the higher the number
+# indicating closer relationship
+# If values are >0.4 for combination of variables then is strong colinearity
+# None of my combinations show this which is good! 
+# Di and Tim paper on Pilbara fish abundance/distribution also used this 0.4 cutoff
+# There is only a strong correlation between Lat and long but this is to be expecited and is below 0.9 so is fine, it is common in the literatuere to see lat and long as seperate predictors so it is fine, plus I need it because it includes unexplained variance and for making a predictive spatial map of depredation. No other way round it as the full susbsets model doesn't allow interaction terms e.g. lat*long
+# Tim said that when the full subsets model runs it automatically excludes any variables with correlation greater than 0.28 anyway, so no model will include both of them anyway, so is fine.  
+
+
+
+# Check the distribution of the predcitors----
+
+# The code below sets the format for creating plots for each predictor variable
+# It saves them as pdf files with the title and date
+pdf(file=paste(file=paste(Sys.Date(),study,"predictor_plots.pdf",sep = "_")),onefile=T)
+for(p in 1:length(pred.vars)){
+  par(mfrow=c(2,1)) # sets it so that there is 2 plots next to each other 
+  plot.dat=dat
+  hist(plot.dat[,pred.vars[p]],main=pred.vars[p]) # For creating histograms of predictors
+  plot(plot.dat[,pred.vars[p]]) # For creating scatter plots of predictors
+}
+dev.off() # Means that the plots don't show deviance
+
+# Review of individual predictors - we have to make sure they have an even distribution---
+# If the data are skewed to low numbers try sqrt>log+1 or if skewed to high numbers 
+# try ^2 or ^3
+# Plot each predictor individually with histogram and scatter plot side by side
+
+par(mfrow=c(2,1))
+
+# First plot the response - no. fish lost per hour
+
+hist((dat$response)) 
+plot((dat$response))
+
+# Now the offset 
+
+hist((dat$Total.fish.hooked))
+plot((dat$Total.fish.hooked))
+
+# Low skewed and huge range of values so needs log + 1 transforming
+
+# Now look at the distribution of the random factor Julian day
+
+hist((dat$Julian.day)) 
+plot((dat$Julian.day))
+
+# Now depth
+
+hist((dat$Max.hook..depth))
+plot((dat$Max.hook..depth)) # low skewed
+
+# Very interesting - shows that the vast majority of fishing is in 0-50m and almost 
+# all between 0-100m
+
+# Now SST
+
+hist((dat$SST))
+plot((dat$SST)) # Looks reasonable - fairly close to normal distribution
+
+# This shows interesting temperature range between 21 - 30 degrees
+
+# Now decimal median time
+
+hist((dat$Decimal.Median.time))
+plot((dat$Decimal.Median.time)) # Looks pretty good - close to normal
+
+# Now Kernel density
+
+hist((dat$Kernel.density))
+plot((dat$Kernel.density)) # Looks pretty good - close to normal
+
+# Now decimal fishing hours
+
+hist((dat$Decimal.fishing.hours))
+plot((dat$Decimal.fishing.hours))
+
+# Now fivekm
+
+hist((dat$fivekm))
+plot((dat$fivekm))
+
+# Now Lat
+
+hist((dat$Lat))
+plot((dat$Lat))
+
+# NOw have a look at the dsitribution of the factor - month/year
+
+hist((dat$Month.Year))
+plot((dat$Month.Year))
+
+
+# So now done histograms and plots for all the continuous predictor variables
+
+# So from the results of plots and histograms only need to transform offset
+dat<-dat%>%
+  mutate(log.Total.fish.hooked=log(Total.fish.hooked+1))%>% # use log + 1
+  mutate(Location="All")
+head(dat,3)
+
+# Now look at distribution of log + 1 offset
+
+hist(dat$log.Total.fish.hooked)
+plot(dat$log.Total.fish.hooked) # Much better with a much smaller range of values and better overall distribution
+
+# Duplicate the data by location - so we can run models at multiple spatial scales-----
+table(dat$Boat.ramp)
+Bundegi<-dat%>%
+  filter(Boat.ramp=="Bundegi")%>%
+  mutate(Location="Bundegi")
+Exmouth.marina<-dat%>%
+  filter(Boat.ramp=="Exmouth marina")%>%
+  mutate(Location="Exmouth.marina")
+
+
+
+# Now put them all together in a table
+dat<-dat%>%
+  mutate(Location="All")%>%
+  bind_rows(Bundegi,Exmouth.marina)
+head(dat,3)
+table(dat$Location) # Tells you the sample size for each of the individual locations
+str(dat) # shows the data in string format
+
+# now fix a formatting issue - I have no idea why we have to do this - it is a 
+# dplyr() issue - have to write and then read csv
+write.csv(dat,"dat.csv")
+dat<-read.csv("dat.csv")
+
+
+# Re-set the now transformed continuous predictors---
+pred.vars=c("Max.hook..depth",
+            "SST",
+            "Decimal.fishing.hours",
+            "Decimal.Median.time",
+            "Kernel.density",
+            "fivekm",
+            "Lat")
+
+# Now categorical factor predictor variables
+
+pred.vars.fact=c("Month.Year")
+
+
+
+# Run the full subset model selection---
+# This looks at all the possible combinations of predictor variables and shows
+# the AIC, BIC and Rsqaured for each model
+# Set the working directory so it saves the outputs into the owncloud folder 
+setwd("C:\\Users\\21644425\\ownCloud\\Shared\\Jon data\\Model outputs")
+
+
+
+# Check response variables-- Locations in this case!
+unique.vars=unique(as.character(dat$Location))
+unique.vars.use=character()
+for(i in 1:length(unique.vars)){
+  temp.dat=dat[which(dat$Location==unique.vars[i]),]
+  if(length(which(temp.dat$response==0))/nrow(temp.dat)<0.8){
+    unique.vars.use=c(unique.vars.use,unique.vars[i])}
+}
+
+unique.vars.use # Shows all the different locations - i.e. each boat ramp and the
+# overll east model
+
+
+# Full-subset models---
+head(dat,3) # shows the top three rows of the data for all variables in the model
+use.dat=dat 
+resp.vars=unique.vars.use # THis splits it up into different location datasets
+out.all=list() # This commands it to print a list of all model outputs
+var.imp=list() # THis commands it to print a list of the importance of each variable
+
+for(i in 1:length(resp.vars)){
+  png(file=paste(study,resp.vars[i],"mod_fits.png",sep="_")) # THis tells it to make
+  # a png image file of the model fits output
+  use.dat=dat[which(dat$Location==resp.vars[i]),]
+  
+  
+  # To start with just put a single continuous predictor in the model (MAX HOOK DEPTH)             #and the random factor (Julian day) and then the full subsets adds 
+  # in all the other predictors as it tries all the other combinations of 
+  # predictor variables
+  
+  Model1=gam(response~s(Max.hook..depth, k=3, bs="cr") + s(Julian.day,bs="re"),
+             offset=log.Total.fish.hooked, 
+             family=tw(),  
+             data=use.dat)
+  
+  out.list=full.subsets.gam(use.dat=use.dat, 
+                            test.fit=Model1, # Uses the GAM above
+                            pred.vars.cont=pred.vars, # Continuous predictors 
+                            pred.vars.fact=pred.vars.fact, # Factors predictors
+                            smooth.interactions=NA, # stops it running interactions
+                            parallel=T,
+                            s.re="s(Julian.day,bs='re')") # Julian day as rnd fator
+  names(out.list) # Shows the names of the models
+  
+  # examine the list of failed models
+  out.list$failed.models
+  
+  # look at the model selection table
+  mod.table=out.list$mod.data.out
+  mod.table=mod.table[order(mod.table$AICc),] # Tells it to order models by AIC,
+  out.i=(mod.table)
+  out.all=c(out.all,list(out.i))
+  var.imp=c(var.imp,list(out.list$variable.importance$aic$variable.weights.r2.scaled))
+  #write.csv(mod.table,"test_out_modfits_mgcv.csv")
+  
+  # plot the best model
+  all.less.2AICc=mod.table[which(mod.table$delta.AICc<2),] # plots the best AIC model
+  best.model.name=as.character(all.less.2AICc$modname[which.min(all.less.2AICc$edf)])
+  if(best.model.name!="null"){
+    par(mfrow=c(3,1),mar=c(9,4,3,1))
+    best.model=out.list$success.models[[as.character(mod.table$modname[1])]]
+    # plot(best.model$gam,all.terms=T,pages=1,residuals=T,pch=16) #change if you change the gam function
+    plot(best.model,all.terms=T,pages=1,residuals=T,pch=16) # Tells is to plot best model with residuals
+    mtext(side=2,text=resp.vars[i],outer=F)}
+  dev.off()
+}
+
+# Model fits and importance---
+names(out.all)=resp.vars
+names(var.imp)=resp.vars
+all.mod.fits=do.call("rbind",out.all)
+all.var.imp=do.call("rbind",var.imp)
+write.csv(all.mod.fits,file=paste(Sys.Date(),study,"all.mod.fits.csv",sep="_"))
+# Creates the csv for all the models fitted by the full subsets gam
+write.csv(all.var.imp,file=paste(Sys.Date(),study,"all.var.imp.csv",sep="_"))
+# Creates the csv showing the importance of each predictor variable
+
+# Predictor variable importance plots (heatmaps)
+# pdf(file=paste(name,"var_importance_heatmap.pdf",sep="_"),onefile=T)
+png(file=paste(study,"var_importance_heatmap.png",sep="_")) # Creates a png heatmap
+
+heatmap.2(all.var.imp,notecex=0.4,  dendrogram ="none",
+          col=colorRampPalette(c("white","yellow","red"))(10),
+          trace="none",key.title = "",keysize=2,
+          notecol="black",key=T,
+          sepcolor = "black",margins=c(12,8), lhei=c(4,15),Rowv=FALSE,Colv=FALSE)
+dev.off()
+
+
+# Now run each the east side, Bundegi and Exmouth marina models seperately to find out there % deviance explained and residual plots
+
+# Need to re-subset the 'dat' dataframe so that it includes the values with 'All' i.e. both boat ramps together
+
+bothramps <- subset(dat, Location%in%c("All"))
+
+# Now run the best mode for bothramps
+
+modelbothramps=gam(response~s(Kernel.density, k=5, bs="cr") + s(Lat, k=5, bs="cr") 
+                   + s(Julian.day,bs="re"), 
+                   offset=log.Total.fish.hooked, # log transformed total fish hooked
+                   family=tw(),  
+                   data=bothramps)
+
+# Now look at summary of this to get % deviance explained
+
+summary(modelbothramps)
+
+
+Family: Tweedie(p=1.233) 
+Link function: log 
+
+Formula:
+  response ~ s(Kernel.density, k = 5, bs = "cr") + s(Lat, k = 5, 
+                                                     bs = "cr") + s(Julian.day, bs = "re")
+
+Parametric coefficients:
+  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  -2.3129     0.1354  -17.08   <2e-16 ***
+  ---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+  edf Ref.df      F  p-value    
+s(Kernel.density) 1.641e+00  2.017  1.512    0.224    
+s(Lat)            1.000e+00  1.001 19.693 1.97e-05 ***
+  s(Julian.day)     4.215e-06  1.000  0.000    0.610    
+---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.572   Deviance explained = 54.9%
+-REML = 201.25  Scale est. = 2.656     n = 123
+
+
+# Now look at gam.check to see fit of model from residual plots
+
+gam.check(modelbothramps)
+
+Method: REML   Optimizer: outer newton
+full convergence after 9 iterations.
+Gradient range [-9.035326e-05,5.939132e-05]
+(score 201.2548 & scale 2.656032).
+Hessian positive definite, eigenvalue range [1.562753e-06,124.2674].
+Model rank =  10 / 10 
+
+Basis dimension (k) checking results. Low p-value (k-index<1) may
+indicate that k is too low, especially if edf is close to k'.
+
+k'      edf  k-index p-value
+s(Kernel.density) 4.00e+00 1.64e+00 1.05e+00    0.98
+s(Lat)            4.00e+00 1.00e+00 8.80e-01    0.46
+s(Julian.day)     1.00e+00 4.21e-06 7.50e-01    0.04
+
+
+
+# Now just Bundegi model
+
+modelBundegi=gam(response~s(SST, k=5, bs="cr") + s(Kernel.density, k=5, bs="cr")
+                    + s(Julian.day,bs="re"), 
+                    offset=log.Total.fish.hooked, # log transformed total fish hooked
+                    family=tw(),  
+                    data=Bundegi)
+
+# Summary
+
+summary(modelBundegi)
+
+
+Family: Tweedie(p=1.175) 
+Link function: log 
+
+Formula:
+  response ~ s(SST, k = 5, bs = "cr") + s(Kernel.density, k = 5, 
+                                          bs = "cr") + s(Julian.day, bs = "re")
+
+Parametric coefficients:
+  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  -1.9042     0.1419  -13.42   <2e-16 ***
+  ---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+  edf Ref.df     F p-value   
+s(SST)            1.031e+00  1.062 2.528 0.11409   
+s(Kernel.density) 2.562e+00  2.891 5.403 0.00273 **
+  s(Julian.day)     1.975e-05  1.000 0.000 0.89636   
+---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.737   Deviance explained =   61%
+-REML = 126.99  Scale est. = 2.3933    n = 63
+
+
+
+# gam.check
+
+gam.check(modelBundegi)
+
+Method: REML   Optimizer: outer newton
+full convergence after 8 iterations.
+Gradient range [-3.561343e-05,0.0004431287]
+(score 126.9916 & scale 2.393266).
+Hessian positive definite, eigenvalue range [9.163442e-06,88.62258].
+Model rank =  10 / 10 
+
+Basis dimension (k) checking results. Low p-value (k-index<1) may
+indicate that k is too low, especially if edf is close to k'.
+
+k'      edf  k-index p-value
+s(SST)            4.00e+00 1.03e+00 1.02e+00    0.80
+s(Kernel.density) 4.00e+00 2.56e+00 1.02e+00    0.74
+s(Julian.day)     1.00e+00 1.98e-05 1.00e+00    0.74
+
+
+
+# Now Exmouth marina model
+
+modelExmouthmarina=gam(response~s(SST, k=5, bs="cr") + s(Decimal.Median.time, k=5, bs="cr") 
+                  + s(fivekm, k=5, bs="cr") + s(Julian.day,bs="re"), 
+                  offset=log.Total.fish.hooked, # log transformed total fish hooked
+                  family=tw(),  
+                  data=Exmouth.marina)
+
+# Summary
+
+summary(modelExmouthmarina)
+
+
+Family: Tweedie(p=1.161) 
+Link function: log 
+
+Formula:
+  response ~ s(SST, k = 5, bs = "cr") + s(Decimal.Median.time, 
+                                          k = 5, bs = "cr") + s(fivekm, k = 5, bs = "cr") + s(Julian.day, 
+                                                                                              bs = "re")
+
+Parametric coefficients:
+  Estimate Std. Error t value Pr(>|t|)  
+(Intercept)   -4.399      2.372  -1.855   0.0692 .
+---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+  edf Ref.df     F p-value  
+s(SST)                 3.319e+00  3.745 3.790  0.0103 *
+  s(Decimal.Median.time) 1.000e+00  1.000 4.164  0.0462 *
+  s(fivekm)              1.802e+00  1.974 1.280  0.2849  
+s(Julian.day)          6.516e-07  1.000 0.000  0.5104  
+---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.646   Deviance explained =   66%
+-REML = 65.033  Scale est. = 1.9795    n = 60
+
+# Now gam.check
+
+gam.check(modelExmouthmarina)
+
+
+Method: REML   Optimizer: outer newton
+full convergence after 14 iterations.
+Gradient range [-1.500012e-05,2.216642e-06]
+(score 65.03282 & scale 1.979517).
+Hessian positive definite, eigenvalue range [2.158888e-07,56.88294].
+Model rank =  14 / 14 
+
+Basis dimension (k) checking results. Low p-value (k-index<1) may
+indicate that k is too low, especially if edf is close to k'.
+
+k'      edf  k-index p-value
+s(SST)                 4.00e+00 3.32e+00 9.79e-01    0.84
+s(Decimal.Median.time) 4.00e+00 1.00e+00 8.93e-01    0.52
+s(fivekm)              4.00e+00 1.80e+00 9.19e-01    0.62
+s(Julian.day)          1.00e+00 6.52e-07 9.36e-01    0.66
+
+
+
+
+# NOw make plots for each predictor of each model individually
+
+# Use code from script named "Tim predictor plots code" 
+
+# Extra packages to load
+
+library(ggplot2)
+library(broom)
+library(reshape) #can use dplyr() and tidyr() instead
+library(png)
+library(jpeg)
+library(gridExtra)
+library(raster)
+library(rgdal)
+library(devtools)
+
+
+# First set the format and presentation of the plots to make them individually, i.e. one plot per page
+
+name <- "Eastsidefinalmodel"
+
+tiff(filename=paste(study,name,'.tiff'),units="cm",width = 10, height = 12,res=700) 
+
+par(mfrow = c(1, 1),     # 1 x 1 layout 
+    oma = c(2, 3, 0, 0.5), # two rows of text at the outer left and bottom margin
+    mar = c(0.5,0.7,0.25,0.25), # space for one row of text at ticks and to separate plot #bottom,left,top,right
+    mgp = c(1.5, 1.2, 0),   # axis label at 1 rows distance, tick labels at 1 row # location of: x,y labels, tick-mark labels, tick-marks
+    xpd = NA)            # allow content to protrude into outer margin (and beyond)
+
+# SO now the format and appearance of the plot is set, lets make them - first of all the bothrampsmodel then Bundegi then Exmouth marina
+
+# To avoid plotting the Gaussian qauntiles/random effect - you have to select each variable - do this by typing select = 1 or select = 2 etc in the code below - for the number of predictors in the best model - in the case of the both ramps model there is two - kernel density and Lat
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Fishing pressure", xaxt='n', yaxt='n', ylim=c(-3,3), xlim= c(0,2.5),select=1)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip", cex.lab = 0.8, xlab="Latitude ()", xaxt='n', yaxt='n', ylim=c(-3.5,3), select=2) 
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+
+# Now plot predictors for Bundegi model - SST and Kernel density
+
+
+plot.gam(modelBundegi,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Sea Surface Temperature (C)", xaxt='n', yaxt='n',select=1)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+plot.gam(modelBundegi,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Fishing pressure", xaxt='n', yaxt='n',ylim=c(-2,3),select=2)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+
+# Now plot predictors for Exmouth marina model - SST, Decimal median time and no. boats within 5km
+
+
+plot.gam(modelExmouthmarina,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Sea Surface Temperature (C)", xaxt='n', yaxt='n',select=1)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+plot.gam(modelExmouthmarina,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip", cex.lab = 0.8, xlab="Time of day", xaxt='n', yaxt='n',select=2) 
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+plot.gam(modelExmouthmarina,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip", cex.lab = 0.8, xlab="No. of boats within 5km", xaxt='n', yaxt='n',select=3) 
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+# Now make a combined plot of all predictors for the both ramps model with 2 plots in a vertical column for use in the paper - but add a dummy column so that the plots aren't stretched really wide across just one column
+
+# USe the same code as above, just alter the format so that can fit 2 plots on the page
+
+name <- "Eastsidefinalmodel"
+
+tiff(filename=paste(study,name,'.tiff'),units="cm",width = 14, height = 16,res=400) 
+
+
+par(mfrow = c(3, 2),     # 2 x 2 layout 
+    oma = c(1.5, 3, 2, 0.5), # order goes bottom, left, top, right, so 0.5 = 1 line space at bottom of plots, 3 lines at left, 2 at top and 1 at right
+    mar = c(2.5,2,1.2,0.25), # space for one row of text at ticks and to separate plot #bottom,left,top,right
+    mgp = c(1.7, 1.1, 0),   # axis label at 1.7 rows distance, tick labels at 1.1 rows # location of: x,y labels, tick-mark labels, tick-marks
+    xpd = NA)            # allow content to protrude into outer margin (and beyond)
+
+# SO now the format and appearance of the plot is set, lets make them - first fishing pressure, then latitude
+  
+
+# predictor 1 - Kernel density (Fishing pressure)
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.4,pch=9,ylab="",cex.lab = 1.1,xlab="Fishing pressure", xaxt='n', yaxt='n', ylim=c(-3,3), xlim= c(0,2.35),select=1)
+axis(1, padj=-1,cex.axis=1.0,tck=-0.015)
+axis(2, padj=1.1,cex.axis=1.0,tck=-0.015)
+
+# Now dummy plot as it makes the plots from left to right for both columns
+
+plot(0,xaxt='n',yaxt='n',bty='n',pch='',ylab='',xlab='')
+
+# Now predictor 2 - Latitude
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.4,pch=9,ylab="", cex.lab = 1.1, xlab="Latitude ()", xaxt='n', yaxt='n', ylim=c(-4,4), select=2) 
+axis(1, padj=-1,cex.axis=1.0,tck=-0.015)
+axis(2, padj=1.1,cex.axis=1.0,tck=-0.015)
+
+
+# Now add the labels to label the top showing that it is the EG boat ramps model - don't need a y axis label because I am going to join this plot up with the NMP boat ramps model plot in the paper - so they can share the common y axis label for that
+
+mtext(text="Exmouth Gulf boat ramps",side=3,line=0.1,outer=TRUE,cex=0.9,adj=0.16) # Label to show which spatial model it is 
+
+
+dev.off()
+
+# The dev.off() function here combined with the tiff function higher up saves the plot into the working directory directly (the model outputs folder in this case), at a resolution and size specified in the tiff function. Do this instead of exporting the plot from the plots panel on the bottom right. The journal MEPS wanted high res figures above 300dpi, and in .tiff format
+
+# If you want to find a particular value in the predictor plots, e.g. the depth at which depredation peaks between 50-100m, then just run the function "predict.gam(modelbothramps, type="terms")" which gives you a list of all the model fitted values for each predictor variable. You can then look down the columns for each predictor variable, find the highest value and then see which row number it is on. You can then find this row number in the original dataframe used for the GAMM, in this case "bothramps" and then find this row number and it will tell you the depth value that this highest model fitted value corresponds to. 
+
+
+
+
+# Now, to make a better plot of the variable improtance - put together the var imp values from this NMP model and the Ex Gulf model and make a bar plot with variable importance on the y axis and each of the 8 predictors as bars on the x axis and then have NMP as a dark bar and EG as a light bar - this will look better visually as it won't be so squashed together. 
+
+# Read in the csv with the variable importance data for both spatial areas
+
+varimp <- read.csv("C:/Users/21644425/ownCloud/Shared/Jon data/Model outputs/Eastsidefinalmodel/Both spatial areas variable importance.csv")
+
+# Now make the plot
+
+# First set the order of the bars, otherwise it defaults to alphabetical
+
+predictororder <- c("Latitude", "Max. hook depth", "SST", "Fishing effort", "Fishing pressure", "No. boats within 5km", "Month/Year", "Time of day")
+
+# Now need to melt the data using the predictor variable column in the varimp dataframe
+
+library(ggplot2)
+library(reshape)
+
+varimp <- melt(varimp)
+
+# SO this has created a dataframe with all the variable importance scores for the NMP model, then all the variable importance scores for the EG model below
+
+# Now make the plot with the x axis as the predictor variable, y axis as the value column and the fill as the variable column i.e. the spatial area, so that the bar plot has two bars - one for each predictor variable
+
+ggplot(data=varimp, aes(x=Predictor.variable , y=value, fill=variable)) + geom_bar(stat="identity", width=0.5, position="dodge") + xlab("Predictor Variable\n") + scale_fill_manual(values=c("gray50","gray80")) + ylab("Importance\n") + theme(axis.text.x = element_text(angle=30, hjust=1)) +  theme(axis.title.x = element_text(size=rel(1.5))) + theme(axis.title.y = element_text(size=rel(1.5))) + theme(axis.text.x = element_text(size=15, color="black")) + theme(axis.text.y = element_text(size=rel(1.75), color="black")) + theme(axis.title.y = element_text(margin=margin(15))) + theme(axis.title.x = element_text(margin=margin(15))) + theme(panel.background = element_rect(fill="white"), panel.grid.major.y = element_blank(), panel.grid.major.x=element_blank(),axis.ticks.x=element_line(size=1)) + theme(panel.border = element_rect(linetype = "solid", color="black", fill=NA)) + ylim(c(0,0.6)) + scale_y_continuous(breaks=seq(0,0.6,0.1),limits=c(0,0.6), expand=c(0.01,0)) + scale_x_discrete(limits = predictororder) + theme(legend.position=c(0.8,0.9)) + theme(legend.title = element_blank()) + theme(legend.text = element_text(size=16)) 
+
+# Now make a nice heatplot of this
+
+library(grid)
+library(gridExtra)
+
+# Theme for plotting 
+Theme1 <-
+  theme( # use theme_get() to see available options
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    legend.background = element_rect(fill="white"),
+    legend.key = element_blank(), # switch off the rectangle around symbols in the legend
+    legend.text = element_text(size=10),
+    legend.title = element_text(size=10, face="bold", vjust=0.1),
+    legend.position = "top",
+    legend.direction="horizontal",
+    text=element_text(size=12),
+    strip.text.y = element_text(size = 10,angle = 0),
+    axis.title.x=element_text(vjust=0.3, size=14),
+    axis.title.y=element_text(vjust=0.6, angle=90, size=12),
+    axis.text.x=element_text(size=12,angle = 30, hjust=1,vjust=1.05),
+    axis.text.y=element_text(size=12),
+    axis.line.x=element_line(colour="black", size=0.5,linetype='solid'),
+    axis.line.y=element_line(colour="black", size=0.5,linetype='solid'),
+    strip.background = element_blank())
+
+# set colour ramps
+
+library(RColorBrewer)
+library(colorRamps)
+
+re <- colorRampPalette(c("mistyrose", "red2","darkred"))(200)
+
+unique(varimp$Predictor.variable)
+
+# Put in P labels for the predictor variables in the best models, with the P standing for most Parsimonious
+
+varimplabel<-varimp%>% 
+  mutate(label=NA)%>%
+  mutate(label=ifelse(Predictor.variable=="Max. hook depth"&variable=="NMP.boat.ramps","X",  ifelse(Predictor.variable=="No. boats within 5km"&variable=="NMP.boat.ramps","X", ifelse(Predictor.variable=="Month/Year"&variable=="NMP.boat.ramps","X",label))))%>%
+  mutate(label=ifelse(Predictor.variable=="Fishing pressure"&variable=="EG.boat.ramps","X", ifelse(Predictor.variable=="Latitude"&variable=="EG.boat.ramps","X",label)))
+
+head(varimplabel,3)
+
+# Set the legend title
+
+legend_title<-"Relative Importance"
+
+# Now make the plot
+
+ggimportancevalues <- ggplot(varimplabel, aes(x=Predictor.variable,y=variable,fill=value))+ 
+  geom_tile(show.legend=T) + 
+  scale_fill_gradientn(legend_title,colours=c("white", re), na.value = "grey98",
+  limits = c(0.0, 0.6),labels=c("0.0", "0.2", "0.4", "0.6"), breaks=c(0.0, 0.2, 0.4, 0.6))+
+  scale_x_discrete(limits=c(
+    "Latitude",
+    "Max. hook depth",
+    "SST",
+    "Fishing effort",
+    "Fishing pressure",
+    "No. boats within 5km",
+    "Month/Year",
+    "Time of day"),
+    labels=c(
+      "Latitude",
+      "Max. hook depth",
+      "SST",
+      "Fishing effort",
+      "Fishing pressure",
+      "No. boats within 5 km",
+      "Survey period",
+      "Time of day"))+
+  scale_y_discrete(labels=c("West coast boat ramps","EG coast boat ramps"), 
+                   breaks=c("NMP.boat.ramps","EG.boat.ramps"))+
+  xlab("Predictor Variable\n")+
+  ylab(NULL)+
+  theme_classic()+
+  Theme1+
+  geom_text(aes(label=label))
+
+ggimportancevalues
+
+  
+# Now save the plot
+
+```
+# Run the final Tweedie model for just the west side
+```{r West Side}
+
+# librarys----
+detach("package:plyr", unload=TRUE) #will error - no worries
+library(tidyr)
+library(dplyr)
+options(dplyr.width = Inf) #enables head() to display all coloums
+library(mgcv)
+library(MuMIn)
+library(car)
+library(doBy)
+library(gplots)
+library(RColorBrewer)
+library(doParallel)
+library(gamm4)
+
+
+rm(list=ls()) #cle ar memory/workspace
+study<-"Westsidefinalmodel" # sets name of this workspace
+
+# Add you work dir here-
+work.dir=("C:\\Users\\21644425\\ownCloud\\Shared\\Jon data") # Owncloud
+
+# Then set the folders within the owncloud for the output files to go into
+tidy.data=paste(work.dir,"Data",sep="/") # Data folder
+plots=paste(work.dir,"Plots",sep="/") # plots folder
+script.dir=paste(work.dir,"Script",sep="/") # scripts folder
+model.out=paste(work.dir,"Model outputs",sep="/") # model outputs folder
+
+# Load full subset gam function----
+source("C:/Users/21644425/ownCloud/Shared/Jon data/Script/Final Ningaloo dataset/function_full_subsets_gam_v1.9.R") # source file
+# for the full subsets gam script made by Becky Fisher at AIMS
+
+
+# Read the final dataset CSV from my owncloud documents folder
+
+dat<-read.csv("ALL3TRIPSMASTERDATASETFEB22.csv",stringsAsFactors =T)%>%
+  #   renaming predictors to make names shorter
+  rename(SST=SST..NOAA.data.)%>%
+  #   select predictor variables
+  dplyr::select(c(Julian.day,Decimal.Median.time,Decimal.fishing.hours,Boat.ramp,SST,Total.fish.hooked,Fishing.method,No..fish.lost.to.sharks,Max.hook..depth,Kernel.density,Month.Year,Lat.bins,fivekm))%>%
+  #   Choose response variable
+  rename(response=No..fish.lost.to.sharks)%>%
+  na.omit() #gets rid of NA's
+head(dat,3)# view first 3 rows of each column
+names(dat) # view the names of the columns
+str(dat) #check format 
+
+# Now need to subset the data into just demersal fishing
+
+dat <- subset(dat, Fishing.method%in%c("Bottom-bashing (drifting)", "Bottom-bashing (anchored)"))
+
+# Now subset again just for west side
+
+dat <- subset(dat, Boat.ramp%in%c("Tantabiddi", "Coral Bay"))
+
+# Check levels of factors----
+table(dat$Boat.ramp) # Two boat ramps
+table(dat$Julian.day) # 18 Julian day values for the sample days - should be 
+# 20 but not as 2 days were lost as the data was unusable due to repeat interviews
+# or nothing hooked etc. 
+
+# Set predictor variables for GAM---
+# First continuous predictors
+pred.vars=c("Max.hook..depth",
+            "SST",
+            "Decimal.fishing.hours",
+            "Decimal.Median.time",
+            "Kernel.density",
+            "fivekm")
+
+
+# now categorical factor variables 
+
+pred.vars.fact=c("Lat.bins",
+                 "Month.Year")
+
+
+# Check for correalation of predictor variables---
+round(cor(dat[,pred.vars]),2)
+
+Max.hook..depth   SST Decimal.fishing.hours Decimal.Median.time Kernel.density fivekm
+Max.hook..depth                  1.00 -0.04                  0.31               -0.01          -0.38  -0.16
+SST                             -0.04  1.00                 -0.21                0.10           0.25   0.16
+Decimal.fishing.hours            0.31 -0.21                  1.00                0.03          -0.17  -0.03
+Decimal.Median.time             -0.01  0.10                  0.03                1.00          -0.02   0.02
+Kernel.density                  -0.38  0.25                 -0.17               -0.02           1.00   0.59
+fivekm                          -0.16  0.16                 -0.03                0.02           0.59   1.00
+
+# This produces table of all combinations of predictors. 
+# THe predictor vs itself is always 1 
+# THen it shows the relationship between all predictors, with the higher the number
+# indicating closer relationship
+# If values are >0.4 for combination of variables then is strong colinearity
+# None of my combinations show this which is good! 
+# Di and Tim paper on Pilbara fish abundance/distribution also used this 0.4 cutoff
+# There is only a strong correlation between Lat and long but this is to be expecited and is below 0.9 so is fine, it is common in the literatuere to see lat and long as seperate predictors so it is fine, plus I need it because it includes unexplained variance and for making a predictive spatial map of depredation. No other way round it as the full susbsets model doesn't allow interaction terms e.g. lat*long
+# Tim said that when the full subsets model runs it automatically excludes any variables with correlation greater than 0.28 anyway, so no model will include both of them anyway, so is fine.  
+
+
+
+# Check the distribution of the predcitors----
+
+# The code below sets the format for creating plots for each predictor variable
+# It saves them as pdf files with the title and date
+pdf(file=paste(file=paste(Sys.Date(),study,"predictor_plots.pdf",sep = "_")),onefile=T)
+for(p in 1:length(pred.vars)){
+  par(mfrow=c(2,1)) # sets it so that there is 2 plots next to each other 
+  plot.dat=dat
+  hist(plot.dat[,pred.vars[p]],main=pred.vars[p]) # For creating histograms of predictors
+  plot(plot.dat[,pred.vars[p]]) # For creating scatter plots of predictors
+}
+dev.off() # Means that the plots don't show deviance
+
+# Review of individual predictors - we have to make sure they have an even distribution---
+# If the data are skewed to low numbers try sqrt>log+1 or if skewed to high numbers 
+# try ^2 or ^3
+# Plot each predictor individually with histogram and scatter plot side by side
+
+par(mfrow=c(2,1))
+
+# First plot the response - no. fish lost per hour
+
+hist((dat$response)) 
+plot((dat$response))
+
+# Now the offset 
+
+hist((dat$Total.fish.hooked))
+plot((dat$Total.fish.hooked))
+
+# Low skewed and huge range of values so needs log + 1 transforming
+
+# Now look at the distribution of the random factor Julian day
+
+hist((dat$Julian.day)) 
+plot((dat$Julian.day))
+
+# Now depth
+
+hist((dat$Max.hook..depth))
+plot((dat$Max.hook..depth)) # low skewed
+
+# Very interesting - shows that the vast majority of fishing is in 0-50m and almost 
+# all between 0-100m
+
+# Now SST
+
+hist((dat$SST))
+plot((dat$SST)) # Looks reasonable - fairly close to normal distribution
+
+# This shows interesting temperature range between 21 - 30 degrees
+
+# Now decimal median time
+
+hist((dat$Decimal.Median.time))
+plot((dat$Decimal.Median.time)) # Looks pretty good - close to normal
+
+# Now Kernel density
+
+hist((dat$Kernel.density))
+plot((dat$Kernel.density)) # Looks pretty good - close to normal
+
+# Now decimal fishing hours
+
+hist((dat$Decimal.fishing.hours))
+plot((dat$Decimal.fishing.hours))
+
+# Now fivekm
+
+hist((dat$fivekm))
+plot((dat$fivekm))
+
+# NOw have a look at the dsitribution of the factors - first the latitude bins
+
+plot((dat$Lat.bins))
+
+# Now month/year
+
+hist((dat$Month.Year))
+plot((dat$Month.Year))
+
+
+# So now done histograms and plots for all the continuous predictor variables
+
+# So from the results of plots and histograms only need to transform offset
+dat<-dat%>%
+  mutate(log.Total.fish.hooked=log(Total.fish.hooked+1))%>% # use log + 1
+  mutate(Location="All")
+head(dat,3)
+
+# Now look at distribution of log + 1 offset
+
+hist(dat$log.Total.fish.hooked)
+plot(dat$log.Total.fish.hooked) # Much better with a much smaller range of values and better overall distribution
+
+# Duplicate the data by location - so we can run models at multiple spatial scales-----
+table(dat$Boat.ramp)
+Coral.Bay<-dat%>%
+  filter(Boat.ramp=="Coral Bay")%>%
+  mutate(Location="Coral.Bay")
+Tantabiddi<-dat%>%
+  filter(Boat.ramp=="Tantabiddi")%>%
+  mutate(Location="Tantabiddi")
+
+
+
+# Now put them all together in a table
+dat<-dat%>%
+  mutate(Location="All")%>%
+  bind_rows(Coral.Bay,Tantabiddi)
+head(dat,3)
+table(dat$Location) # Tells you the sample size for each of the individual locations
+str(dat) # shows the data in string format
+
+# now fix a formatting issue - I have no idea why we have to do this - it is a 
+# dplyr() issue - have to write and then read csv
+write.csv(dat,"dat.csv")
+dat<-read.csv("dat.csv")
+
+
+# Re-set the now transformed continuous predictors---
+pred.vars=c("Max.hook..depth",
+            "SST",
+            "Decimal.fishing.hours",
+            "Decimal.Median.time",
+            "Kernel.density",
+            "fivekm")
+
+# Now categorical factor predictor variables
+
+pred.vars.fact=c("Lat.bins",
+                 "Month.Year")
+
+
+
+# Run the full subset model selection---
+# This looks at all the possible combinations of predictor variables and shows
+# the AIC, BIC and Rsqaured for each model
+# Set the working directory so it saves the outputs into the owncloud folder 
+setwd("C:\\Users\\21644425\\ownCloud\\Shared\\Jon data\\Model outputs")
+
+
+
+# Check response variables-- Locations in this case!
+unique.vars=unique(as.character(dat$Location))
+unique.vars.use=character()
+for(i in 1:length(unique.vars)){
+  temp.dat=dat[which(dat$Location==unique.vars[i]),]
+  if(length(which(temp.dat$response==0))/nrow(temp.dat)<0.8){
+    unique.vars.use=c(unique.vars.use,unique.vars[i])}
+}
+
+unique.vars.use # Shows all the different locations - i.e. each boat ramp and the
+# overall west side model
+
+# Full-subset models---
+head(dat,3) # shows the top three rows of the data for all variables in the model
+use.dat=dat 
+resp.vars=unique.vars.use # THis splits it up into different location datasets
+out.all=list() # This commands it to print a list of all model outputs
+var.imp=list() # THis commands it to print a list of the importance of each variable
+
+for(i in 1:length(resp.vars)){
+  png(file=paste(study,resp.vars[i],"mod_fits.png",sep="_")) # THis tells it to make
+  # a png image file of the model fits output
+  use.dat=dat[which(dat$Location==resp.vars[i]),]
+  
+  
+  # To start with just put a single continuous predictor in the model (MAX HOOK DEPTH)        #and the random factor (Julian day) and then the full subsets adds 
+  # in all the other predictors as it tries all the other combinations of 
+  # predictor variables
+  
+  Model1=gam(response~s(Max.hook..depth, k=3, bs="cr") + s(Julian.day,bs="re"),
+             offset=log.Total.fish.hooked, 
+             family=tw(),  
+             data=use.dat)
+  
+  out.list=full.subsets.gam(use.dat=use.dat, 
+                            test.fit=Model1, # Uses the GAM above
+                            pred.vars.cont=pred.vars, # Continuous predictors 
+                            pred.vars.fact=pred.vars.fact, # Factors predictors
+                            smooth.interactions=NA, # stops it running interactions
+                            parallel=T,
+                            s.re="s(Julian.day,bs='re')") # Julian day as rnd fator
+  names(out.list) # Shows the names of the models
+  
+  # examine the list of failed models
+  out.list$failed.models
+  
+  # look at the model selection table
+  mod.table=out.list$mod.data.out
+  mod.table=mod.table[order(mod.table$AICc),] # Tells it to order models by AIC,
+  out.i=(mod.table)
+  out.all=c(out.all,list(out.i))
+  var.imp=c(var.imp,list(out.list$variable.importance$aic$variable.weights.r2.scaled))
+  #write.csv(mod.table,"test_out_modfits_mgcv.csv")
+  
+  # plot the best model
+  all.less.2AICc=mod.table[which(mod.table$delta.AICc<2),] # plots the best AIC model
+  best.model.name=as.character(all.less.2AICc$modname[which.min(all.less.2AICc$edf)])
+  if(best.model.name!="null"){
+    par(mfrow=c(3,1),mar=c(9,4,3,1))
+    best.model=out.list$success.models[[as.character(mod.table$modname[1])]]
+    # plot(best.model$gam,all.terms=T,pages=1,residuals=T,pch=16) #change if you change the gam function
+    plot(best.model,all.terms=T,pages=1,residuals=T,pch=16) # Tells is to plot best model with residuals
+    mtext(side=2,text=resp.vars[i],outer=F)}
+  dev.off()
+}
+
+# Model fits and importance---
+names(out.all)=resp.vars
+names(var.imp)=resp.vars
+all.mod.fits=do.call("rbind",out.all)
+all.var.imp=do.call("rbind",var.imp)
+write.csv(all.mod.fits,file=paste(Sys.Date(),study,"all.mod.fits.csv",sep="_"))
+# Creates the csv for all the models fitted by the full subsets gam
+write.csv(all.var.imp,file=paste(Sys.Date(),study,"all.var.imp.csv",sep="_"))
+# Creates the csv showing the importance of each predictor variable
+
+# Predictor variable importance plots (heatmaps)
+# pdf(file=paste(name,"var_importance_heatmap.pdf",sep="_"),onefile=T)
+png(file=paste(study,"var_importance_heatmap.png",sep="_")) # Creates a png heatmap
+
+heatmap.2(all.var.imp,notecex=0.4,  dendrogram ="none",
+          col=colorRampPalette(c("white","yellow","red"))(10),
+          trace="none",key.title = "",keysize=2,
+          notecol="black",key=T,
+          sepcolor = "black",margins=c(12,8), lhei=c(4,15),Rowv=FALSE,Colv=FALSE)
+dev.off()
+
+
+# Now run each the west side, coral bay and tantabiddi models seperately to find out there % deviance explained and residual plots
+
+# Need to re-subset the 'dat' dataframe so that it includes the values with 'All' i.e. both boat ramps together
+
+bothramps <- subset(dat, Location%in%c("All"))
+
+# Now run the best mode for bothramps
+
+modelbothramps=gam(response~s(Max.hook..depth, k=5, bs="cr") + s(fivekm, k=5, bs="cr") + Month.Year-1
+                   + s(Julian.day,bs="re"), 
+                   offset=log.Total.fish.hooked, # log transformed total fish hooked
+                   family=tw(),  
+                   data=bothramps)
+
+# I have added the -1 after month.year to exclude the intercept, so that when it is plotted later on in this script it looks better and has confidence intervals for April 2016 as well as July/Aug 2015 and Sept/Oct 2015 - this was suggested to me by Franz Meuter who was the editor for MEPS who dealt with my paper. 
+
+# Now look at summary of this to get % deviance explained
+
+summary(modelbothramps)
+
+Family: Tweedie(p=1.24) 
+Link function: log 
+
+Formula:
+  response ~ s(Max.hook..depth, k = 5, bs = "cr") + s(fivekm, k = 5, 
+                                                      bs = "cr") + Month.Year - 1 + s(Julian.day, bs = "re")
+
+Parametric coefficients:
+  Estimate Std. Error t value Pr(>|t|)    
+Month.YearApril 2016     -2.5025     0.2848  -8.787 2.12e-15 ***
+  Month.YearJul/Aug 2015   -2.1382     0.2722  -7.854 5.23e-13 ***
+  Month.YearSept/Oct 2015  -1.4596     0.3465  -4.213 4.17e-05 ***
+  ---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+  edf Ref.df     F p-value   
+s(Max.hook..depth) 3.636e+00   3.91 4.643 0.00159 **
+  s(fivekm)          1.364e+00   1.63 2.598 0.08646 . 
+s(Julian.day)      2.424e-07   1.00 0.000 0.02142 * 
+  ---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =   0.42   Deviance explained = 36.6%
+-REML = 266.25  Scale est. = 2.8434    n = 170
+
+# Now look at gam.check to see fit of model from residual plots
+
+gam.check(modelbothramps)
+
+Method: REML   Optimizer: outer newton
+full convergence after 9 iterations.
+Gradient range [-8.137172e-06,7.46782e-06]
+(score 266.2511 & scale 2.84343).
+eigenvalue range [-5.358527e-07,168.3496].
+Model rank =  12 / 12 
+
+Basis dimension (k) checking results. Low p-value (k-index<1) may
+indicate that k is too low, especially if edf is close to k'.
+
+k'      edf  k-index p-value
+s(Max.hook..depth) 4.00e+00 3.64e+00 9.16e-01    0.63
+s(fivekm)          4.00e+00 1.36e+00 7.80e-01    0.04
+s(Julian.day)      1.00e+00 2.42e-07 8.72e-01    0.31
+
+# Now just tantabiddi model
+
+modelTantabiddi=gam(response~s(Max.hook..depth, k=5, bs="cr") + s(Julian.day,bs="re"), 
+                   offset=log.Total.fish.hooked, # log transformed total fish hooked
+                   family=tw(),  
+                   data=Tantabiddi)
+
+# Summary
+
+summary(modelTantabiddi)
+
+
+Family: Tweedie(p=1.237) 
+Link function: log 
+
+Formula:
+  response ~ s(Max.hook..depth, k = 5, bs = "cr") + s(Julian.day, 
+                                                      bs = "re")
+
+Parametric coefficients:
+  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  -1.9596     0.1465  -13.38   <2e-16 ***
+  ---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+  edf Ref.df     F p-value   
+s(Max.hook..depth) 1.001e+00  1.002 8.107 0.00556 **
+  s(Julian.day)      1.621e-05  1.000 0.000 0.58213   
+---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.0769   Deviance explained = 19.1%
+-REML = 146.08  Scale est. = 2.8404    n = 82
+
+
+# gam.check
+
+gam.check(modelTantabiddi)
+                   
+
+Method: REML   Optimizer: outer newton
+full convergence after 11 iterations.
+Gradient range [-2.656822e-05,0.0003017529]
+(score 146.0803 & scale 2.840358).
+Hessian positive definite, eigenvalue range [5.624433e-06,79.42232].
+Model rank =  6 / 6 
+
+Basis dimension (k) checking results. Low p-value (k-index<1) may
+indicate that k is too low, especially if edf is close to k'.
+
+k'      edf  k-index p-value
+s(Max.hook..depth) 4.00e+00 1.00e+00 9.79e-01    0.60
+s(Julian.day)      1.00e+00 1.62e-05 9.95e-01    0.66
+
+
+# Now Coral Bay model
+
+modelCoralBay=gam(response~s(Max.hook..depth, k=5, bs="cr") + s(SST, k=5, bs="cr") 
+                    + s(Julian.day,bs="re"), 
+                    offset=log.Total.fish.hooked, # log transformed total fish hooked
+                    family=tw(),  
+                    data=Coral.Bay)
+
+# Summary
+
+summary(modelCoralBay)
+
+Family: Tweedie(p=1.232) 
+Link function: log 
+
+Formula:
+  response ~ s(Max.hook..depth, k = 5, bs = "cr") + s(SST, k = 5, 
+                                                      bs = "cr") + s(Julian.day, bs = "re")
+
+Parametric coefficients:
+  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  -2.7054     0.2219  -12.19   <2e-16 ***
+  ---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+  edf Ref.df     F p-value   
+s(Max.hook..depth) 3.688e+00  3.929 3.744 0.00792 **
+  s(SST)             1.171e+00  1.324 6.573 0.00767 **
+  s(Julian.day)      1.383e-05  1.000 0.000 0.64839   
+---
+  Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =   0.51   Deviance explained = 51.9%
+-REML = 116.19  Scale est. = 2.7092    n = 88
+
+
+# Now gam.check
+
+gam.check(modelCoralBay)
+
+Method: REML   Optimizer: outer newton
+full convergence after 7 iterations.
+Gradient range [-5.451867e-05,0.0001426258]
+(score 116.1872 & scale 2.709156).
+Hessian positive definite, eigenvalue range [4.84298e-06,87.83036].
+Model rank =  10 / 10 
+
+Basis dimension (k) checking results. Low p-value (k-index<1) may
+indicate that k is too low, especially if edf is close to k'.
+
+k'      edf  k-index p-value
+s(Max.hook..depth) 4.00e+00 3.69e+00 9.67e-01    0.79
+s(SST)             4.00e+00 1.17e+00 9.56e-01    0.76
+s(Julian.day)      1.00e+00 1.38e-05 8.89e-01    0.46
+
+
+# NOw make plots for each predictor of each model individually
+
+# Use code from script named "Tim predictor plots code" 
+
+# Extra packages to load
+
+library(ggplot2)
+library(broom)
+library(reshape) #can use dplyr() and tidyr() instead
+library(png)
+library(jpeg)
+library(gridExtra)
+library(raster)
+library(rgdal)
+library(devtools)
+
+
+
+# First set the format and presentation of the plots to make them individually, i.e. one plot per page
+
+name <- "Westsidefinalmodel"
+
+tiff(filename=paste(study,name,'.tiff'),units="cm",width = 10, height = 12,res=700) 
+
+par(mfrow = c(1, 1),     # 1 x 1 layout 
+    oma = c(2, 3, 0, 0.5), # two rows of text at the outer left and bottom margin
+    mar = c(0.5,0.7,0.25,0.25), # space for one row of text at ticks and to separate plot #bottom,left,top,right
+    mgp = c(1.5, 1.2, 0),   # axis label at 1 rows distance, tick labels at 1 row # location of: x,y labels, tick-mark labels, tick-marks
+    xpd = NA)            # allow content to protrude into outer margin (and beyond)
+
+# SO now the format and appearance of the plot is set, lets make them - first of all the bothrampsmodel then Tantabiddi then Coral Bay 
+
+# To avoid plotting the Gaussian qauntiles/random effect - you have to select each variable - do this by typing select = 1 or select = 2 etc in the code below - for the number of predictors in the best model - in the case of the both ramps model there is three - max hook depth, no. boats within 5km and month/year
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Max. hook depth (m)", xaxt='n', yaxt='n',select=1)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip", cex.lab = 0.8, xlab="No. of boats within 5km", xaxt='n', yaxt='n',select=2) 
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+# The third predictor month.year has to be plotted differently as it is a factor not a continuous predictor - use termplot instead of plot.gam
+
+
+termplot(modelbothramps, rug=TRUE, se=T, xlabs="Month/Year", ylabs="Effect on no. fish depredated per fishing trip", ylim=c(-2,3), ask=F, col.term = 1, col.se = 1, use.factor.levels=TRUE)
+
+# Now plot predictors for Tantabiddi model - Max hook depth
+
+
+plot.gam(modelTantabiddi,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Max. hook depth (m)", xaxt='n', yaxt='n',select=1)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+
+# Now plot predictors for Coral Bay model - Max hook depth and SST
+
+
+plot.gam(modelCoralBay,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip",cex.lab = 0.8,xlab="Max. hook depth (m)", xaxt='n', yaxt='n',select=1)
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+plot.gam(modelCoralBay,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="Effect on no. fish depredated per fishing trip", cex.lab = 0.8, xlab="Sea Surface Temperature (C)", xaxt='n', yaxt='n',select=2) 
+axis(1, padj=-2,cex.axis=0.7,tck=-0.02)
+axis(2, padj=1.3,cex.axis=0.7,tck=-0.015)
+
+
+# Now make a combined plot of all predictors for the both ramps model with 3 plots in a vertical column for use in the paper - but add a dummy column so that the plots aren't stretched really wide across just one column
+
+# USe the same code as above, just alter the format so that can fit 3 plots on the page
+
+
+name <- "Westsidefinalmodel"
+
+tiff(filename=paste(study,name,'.tiff'),units="cm",width = 14, height = 16,res=400) 
+
+
+par(mfrow = c(3, 2),     # 3 x 2 layout 
+    oma = c(1.5, 3, 2, 0.5), # order goes bottom, left, top, right, so 0.5 = 1 line space at bottom of plots, 3 lines at left, 2 at top and 1 at right
+    mar = c(2.5,2,1.2,0.25), # space for one row of text at ticks and to separate plot #bottom,left,top,right
+    mgp = c(1.8, 1.1, 0),   # axis label at 1.8 rows distance, tick labels at 1.1 rows # location of: x,y labels, tick-mark labels, tick-marks
+    xpd = NA)            # allow content to protrude into outer margin (and beyond)
+
+# SO now the format and appearance of the plot is set, lets make them - first of all max hook depth, then five km then month.year
+
+
+# predictor 1 - max hook depth
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="",cex.lab = 1.1,xlab="Max. hook depth (m)", xaxt='n', yaxt='n',select=1)
+axis(1, padj=-1,cex.axis=1.0,tck=-0.015)
+axis(2, padj=1.1,cex.axis=1.0,tck=-0.015)
+
+# Now dummy plot as it makes the plots from left to right for both columns
+
+plot(0,xaxt='n',yaxt='n',bty='n',pch='',ylab='',xlab='')
+
+# Now predictor 2 - fivekm
+
+plot.gam(modelbothramps,residuals=T, shade=TRUE, cex=0.6,pch=16,ylab="",cex.lab = 1.1,xlab="No. boats within 5km", xaxt='n', yaxt='n',select=2)
+axis(1, padj=-1,cex.axis=1.0,tck=-0.015)
+axis(2, padj=1.1,cex.axis=1.0,tck=-0.015)
+
+# Now another dummy plot
+
+plot(0,xaxt='n',yaxt='n',bty='n',pch='',ylab='',xlab='')
+
+# Now predictor 3 - month.year
+
+termplot(modelbothramps, rug=TRUE, se=T, xlabs="", ylabs="", ylim=c(-4,3), yaxt='n', ask=F, col.term = 1, col.se = 1, use.factor.levels=TRUE)
+axis(2, padj=1.1,cex.axis=1.0,tck=-0.015)
+  
+# Now add the labels to label the top showing that it is the NMP model and to put a single y axis title for all 3 plots
+
+mtext(text="Effect on no. fish depredated per fishing trip",side=2,line=0.8,outer=TRUE,cex=0.9,adj=0.5) # Y axis label for all plots
+mtext(text="West coast boat ramps",side=3,line=0.1,outer=TRUE,cex=0.9,adj=0.18) # Label to show which spatial model it is 
+mtext(text="Survey period",side=1, line=0.4, outer=TRUE, cex=0.7, adj=0.25) # Label for bottom plot x axis
+
+dev.off()
+
+# The dev.off() function here combined with the tiff function higher up saves the plot into the working directory directly (the model outputs folder in this case), at a resolution and size specified in the tiff function. Do this instead of exporting the plot from the plots panel on the bottom right. The journal MEPS wanted high res figures above 300dpi, and in .tiff format
+
+# If you want to find a particular value in the predictor plots, e.g. the depth at which depredation peaks between 50-100m, then just run the function "predict.gam(modelbothramps, type="terms")" which gives you a list of all the model fitted values for each predictor variable. You can then look down the columns for each predictor variable, find the highest value and then see which row number it is on. You can then find this row number in the original dataframe used for the GAMM, in this case "bothramps" and then find this row number and it will tell you the depth value that this highest model fitted value corresponds to. 
+
+
+# To make a good plot of the variable importance - put together the var imp values from this NMP model and the Ex Gulf model and make a bar plot with variable importance on the y axis and each of the 8 predictors as bars on the x axis and then have Ex Gulf as a dark bar and NMP as a light bar - this will look good visually as it won't be squashed together. See the end of the Ex Gulf boat ramps model script for this plot. 
+
+
+
+
+```
+

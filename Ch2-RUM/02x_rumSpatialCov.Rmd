@@ -1,0 +1,156 @@
+# Set Up
+```{r libs, include = FALSE}
+# install.packages('tidyverse')
+# install.packages('dplyr')
+# install.packages('ggplot2')
+# install.packages('sp')
+# install.packages('raster')
+# install.packages('leaflet')
+# install.packages('rgeos')
+# install.packages('rgdal')
+# install.packages('sf') # select no
+# install.packages('ggsn')
+# install.packages('nngeo')
+# install.packages('spatstat')
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(sp)
+library(raster)
+library(leaflet)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(ggsn)
+library(nngeo)
+library(spatstat)
+```
+
+```{r dir, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
+d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+f.dir <- paste(w.dir, "Ch2-RUM/rumFunc", sep = '/')
+rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
+```
+
+# Spatial variables
+
+Main unprojected crs = 4283 (GDA94), units = m 
+Main projected crs = 3112 (Australian Lambert) 
+Raster extraction crs = 4326 (WGS84)
+
+## Creating layers
+Everything in the following chunk only needs to be done once - then only needs read. 
+```{r Creating layers}
+# Adding coast
+WA <- st_read(paste(s.dir, "waCoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+# Making bbox
+StudySite = st_as_sfc(st_bbox(c(xmin = 112.5, ymin = -24.03353, xmax = 115.00, ymax = -20.5), crs = 4283))
+ st_write(StudySite, paste(s.dir, "StudySite.gpkg", sep = '/'), append = F)
+
+# Cropping coast to study site
+NWS <- st_crop(WA, StudySite)
+NWS <- st_union(NWS)
+st_write(NWS, paste(s.dir, "NWScoast.gpkg", sep = '/'), append = F)
+
+# Cropping commonwealth mp areas
+ncmp1 <- st_read(paste(s.dir, "ausStateCommonSplit.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ncmp1.1 <- st_crop(ncmp1, site) 
+st_write(ncmp1.1, paste(s.dir, "ncmpSplit.gpkg", sep = '/'), append = F)
+
+
+ncmp2 <- st_read(paste(s.dir, "ausStateSanc.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+ncmp2.1 <- st_make_valid(ncmp2)
+ncmp2.1 <- st_crop(ncmp2.1, site)
+
+st_write(ncmp2.1, paste(s.dir, "ncmpSZ.gpkg", sep = '/'), append = F)
+
+## Adding habitat layers
+Pelagic <- st_read(paste(s.dir, "PelagicHabitat.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+Rockyreef <- st_read(paste(s.dir, "RockyreefHabitat.gpkg", sep = '/')) %>%
+   st_transform(crs = 4283)
+Rockyreef <- st_make_valid(Rockyreef)
+
+Reef <- st_read(paste(s.dir, "ReefHabitat.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+Lagoon <- st_read(paste(s.dir, "LagoonHabitat.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283) %>%
+  st_crop(StudySite)
+
+# Check layers all line up.
+ggplot() +
+  geom_sf(data = Rockyreef, fill = "pink", lwd = 0.1) +
+  geom_sf(data = Reef, fill = "orange",  lwd = 0.1) +
+  geom_sf(data = Lagoon, fill = "aquamarine",  lwd = 0.1) +
+  geom_sf(data = Pelagic, fill = "light blue",  lwd = 0.1)
+```
+
+## Creating Habitat Grids
+If you need to change size of grids adapt below code. 
+When you make these they will be large sfc - when you write, and thenm read them again theyw ill become an sf object ready to append habitat data.
+
+```{r Creating habitat grids}
+
+PelagicGrid <- Pelagic %>%
+  st_make_grid(cellsize = 0.05, square = FALSE, crs=4283) %>%
+  st_intersection(Pelagic)
+ st_write(PelagicGrid, paste(s.dir, "PelagicGrid.gpkg", sep = '/'), append = FALSE)
+
+RockyreefGrid <- Rockyreef %>%
+  st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+  st_intersection(Rockyreef)
+st_write(RockyreefGrid, paste(s.dir, "RockyreefGrid.gpkg", sep = '/'), append = FALSE)
+
+ ReefGrid <- Reef %>%
+   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+   st_intersection(Reef)
+ st_write(ReefGrid, paste(s.dir, "ReefGrid.gpkg", sep = '/'), append = FALSE)
+
+LagoonGrid <- Lagoon %>%
+  st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+  st_intersection(Lagoon)
+st_write(LagoonGrid, paste(s.dir, "LagoonGrid.gpkg", sep = '/'), append = FALSE)
+
+```
+
+### Making unified habitat grid
+If manipulating the gridd sizes in chunk above you need to read in those layers after writing them to turn them from sfc to sf - which will then allow you to append habitat information. 
+```{r Grid}
+PelagicGrid <- st_read(paste(s.dir, "PelagicGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+RockyreefGrid <- st_read(paste(s.dir, "RockyreefGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+ReefGrid <- st_read(paste(s.dir, "ReefGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+LagoonGrid <- st_read(paste(s.dir, "LagoonGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+## Adding habitat variable to Grids
+PelagicGrid$Habitat <- c("Pelagic")
+RockyreefGrid$Habitat <- c("Rocky reef")
+ReefGrid$Habitat <- c(" Coral Reef")
+LagoonGrid$Habitat <- c("Lagoon")
+
+## Joining Grids
+Grid <- rbind(PelagicGrid, RockyreefGrid, ReefGrid, LagoonGrid)
+
+## Giveing each grid individual ID
+Grid <- Grid %>%
+  mutate(GridID = row_number())
+
+st_write(Grid, paste(s.dir, "Grid.gpkg", sep = '/'), append = FALSE)
+```

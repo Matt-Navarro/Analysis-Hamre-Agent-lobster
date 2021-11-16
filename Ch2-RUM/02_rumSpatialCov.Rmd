@@ -1,0 +1,380 @@
+# Set Up
+```{r libs, include = FALSE}
+# install.packages('tidyverse')
+# install.packages('dplyr')
+# install.packages('ggplot2')
+# install.packages('sp')
+# install.packages('raster')
+# install.packages('rgeos')
+# install.packages('rgdal')
+# install.packages('sf') # select no
+# install.packages('ggsn')
+# install.packages('nngeo')
+# install.packages('spatstat')
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(sp)
+library(raster)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(ggsn)
+library(nngeo)
+library(spatstat)
+```
+
+```{r dir, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
+d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+f.dir <- paste(w.dir, "Ch2-RUM/rumFunc", sep = '/')
+rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
+```
+
+```{r functions}
+source(paste(f.dir, "spatialFunc.R", sep = '/'))
+```
+
+```{r read data}
+Ning <- read.csv(paste(d.dir, "Ning_v1.csv", sep='/'))
+```
+
+# Spatial variables
+
+Main unprojected crs = 4283 (GDA94), units = m 
+Main projected crs = 3112 (Australian Lambert) 
+Raster extraction crs = 4326 (WGS84)
+
+## Reading Final Layers 
+Assuming you don't have to manipulate any of the psatial layers you can rea dthe finalised spatial layers in directly here and run rest of the code. 
+```{r Reading spatial layers}
+NWS <- st_read(paste(s.dir, "NWScoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+NWS_Lam <- st_transform(NWS, crs = 3112) 
+
+StudySite <- st_read(paste(s.dir, "StudySite.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+GridExtent <- st_read(paste(s.dir, "GridExtent.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+Grid <- st_read(paste(s.dir, "Grid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+PelagicGrid <- st_read(paste(s.dir, "PelagicGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+RockyreefGrid <- st_read(paste(s.dir, "RockyreefGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+ReefGrid <- st_read(paste(s.dir, "ReefGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+LagoonGrid <- st_read(paste(s.dir, "LagoonGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+```
+
+ ## Checking habitat grid
+```{r checking habitat grids}
+HabitatMap <- ggplot() +
+  theme_void() +
+  geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat)) +
+  scale_fill_manual(values=c("coral", "aquamarine", "light blue", "pink"))
+
+ggsave(paste(rumPlots, "HabitatMap.png", sep='/'), width = 8, height = 4)
+
+HabitatMap
+```
+
+## Extracting Depth
+```{r Extracting Depth, message=FALSE, warning=FALSE}
+# Adding depth
+# Bathy <- raster(paste(r.dir, "NWSbathy.tif", sep = '/'))
+# crs(Bathy)  # 4362
+# 
+# Grid_wgs84<-st_transform(Grid, 4326)
+# 
+# # Extracting depth
+# Grid_wgs84<-extract_mean_from_raster(Bathy, Grid_wgs84)
+# Grid_wgs84$Depth<-(Grid_wgs84$mean)*-1
+# 
+# # convert back to 4283
+# Grid <- st_transform(Grid_wgs84, 4283)
+# 
+# # save as gpkg
+# st_write(Grid, paste(s.dir, "Grid.gpkg", sep = '/'), append = FALSE)
+```
+
+## Creating sf from data
+This sf object (spNing) is to be used for making spatial plots and getting spatial variables - those spatial variables all need to be appended to the Ning df which i will have no geometry. This is becuase some functions ar incompatible with sf objects so good to have all the info in a df. 
+```{r spNing}
+spNing <- Ning %>%
+  filter(UseLat < -21.25) # defo a mistake in the survey
+
+spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283)
+```
+
+## Allocating Sites
+```{r Allocating sites}
+spNing <- spNing %>%
+  st_join(Grid[ , c("GridID")], left = T, join = st_intersects) %>%
+  st_join(Grid[ , c("Depth")], left = T, join = st_intersects) %>%
+  st_join(Grid[ , c("Habitat")], left = T, join = st_intersects)
+```
+
+## Site type 2
+```{r SiteType2}
+spNing <- spNing %>%
+  dplyr::mutate(NWSIntersect = st_intersects(spNing, NWS, sparse = FALSE)) %>%
+  dplyr::mutate(SiteType = ifelse(NWSIntersect %in% "TRUE" & is.na(SiteType), "Shore", SiteType)) %>%
+  dplyr::relocate(SiteType, .after = Site) %>%
+  dplyr::select(-NWSIntersect)
+```
+
+
+## Proximity to artificial infrastructure 
+```{r Artificial infrastructure and BR}
+# Add artificial infrastructure
+Pipes <- st_read(paste(s.dir, "Pipes.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+Wells <- st_read(paste(s.dir, "Wells.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+FADs <- st_read(paste(s.dir, "FADs.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+BR <- st_read(paste(s.dir, "NingBR.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+## note that some distance  that there is no argument to prevent distance from intersecting with land - however as we are just taking the proximity to nearest it doesn't matter
+
+nearest_well <- st_nn(spNing, Wells, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+DistNearestWellm <- sapply(nearest_well[[2]], "[", 1) # Name distance
+DistNearestWellkm <- DistNearestWellm/1000 # Convert to km
+
+nearest_pipe <- st_nn(spNing, Pipes, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+DistNearestPipem <- sapply(nearest_pipe[[2]], "[", 1) # Name distance
+DistNearestPipekm <- DistNearestPipem/1000 # Convert to km
+
+DistFADm <- st_distance(spNing, FADs)
+DistFADkm <- DistFADm/1000
+
+nearest_BR <- st_nn(spNing, BR, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+DistNearestBRm <- sapply(nearest_BR[[2]], "[", 1) # Name distance
+DistNearestBRkm <- DistNearestBRm/1000 # Convert to km
+
+spNing <- spNing %>%
+  mutate(DistNearestWellkm = DistNearestWellkm) %>%
+  mutate(DistNearestPipekm = DistNearestPipekm) %>%
+  mutate(DistFADkm = DistFADkm) %>%
+  mutate(DistNearestBRkm = DistNearestBRkm) %>%
+  mutate(UseLong = unlist(map(spNing$geometry,1)),
+         UseLat = unlist(map(spNing$geometry,2))) %>%
+  mutate(Depth = Depth*-1) %>%
+  rowwise() %>%
+  mutate(DistNearestInfra = min(DistNearestWellkm, DistNearestPipekm, DistFADkm)) %>%
+  ungroup() %>%
+  relocate(GridID, DistNearestBRkm, DistNearestWellkm, DistNearestPipekm, DistFADkm, DistNearestInfra, Depth, Habitat, LunarPhase, UseLat, UseLong, .before = geometry) 
+```
+
+## Site Type 3
+I opened this CSV in QGIS and checked the location of the rogue site types and noted the which unique IDs have site types that need need edited, and edit them below. SiteTypes have been alloacted depending on spatial location and infomration provided in attrbutes eg. boat access. The rest of the spatial variables that need added need to be filtered by site type so this step needs to be incorporated in the workflow. 
+
+Unique IDs to be designated as shore based: 1044, 1092, 471, 1225, 450, 955, 646, 678, 980, 788, 643, 538, 542, 524, 677, 1261,  1233, 754, 800, 836, 760, 755, 923, 871, 985, 673, 1296, 876, 878, 730, 725, 719, 1108, 1231
+
+Unique IDs to be designated as boat based: 1223, 1137, 942, 802, 940, 936, 648, 935, 971, 647, 1331, 1181, 414, 617, 1356, 653, 891, 894, 802, 942
+
+```{r SiteType}
+
+spNing <- spNing %>%
+  dplyr::mutate(SiteType = ifelse(ID %in% c("1044", "1092", "471", "1225", "450", "955", "646", "678", "980", "788", "643", "538", "542", "524", "677", "1261",  "1233", "754", "800", "836", "760", "755", "923", "871", "985", "673", "1296", "876", "878", "730", "725", "719", "1108", "1231", "1232", "798", "799", "758", "1254", "1392"), "Shore", SiteType)) %>%
+dplyr::mutate(SiteType = ifelse(ID %in% c("1223", "1137", "942", "802", "940", "936", "648", "935", "971", "647", "1331", "1181"," 414"," 617", "1356", "653", "891", "894", "802", "942", "1098", "895", "892", "617", "515", "511"), "Boat", SiteType))
+
+ggplot() + 
+  theme_void() +
+  geom_sf(data = NWS) +
+  geom_sf(data = spNing, size = 0.05, aes(colour=SiteType))
+
+# a <- which(is.na(spNing$SiteType) & spNing$Agreement == "Yes")
+# 
+# b <- spNing[a, ]
+# 
+# 
+# ggplot() + 
+#   theme_void() +
+#   geom_sf(data = NWS) +
+#   geom_sf(data = b, size = 1, colour = 'red')
+# 
+# 
+# spNing[a, ]
+# 1392
+```
+## SST 
+
+```{r sst}
+# spNing <- spNing %>%
+#   mutate(Date = as.Date(Date)) %>%
+#   st_transform(crs = 4283)
+# 
+# sst <- get_sst(spNing$Date, spNing$UseLong, spNing$UseLat)
+```
+
+```{r hs and ws}
+# hsws <- get_hs_ws_day(spNing$Date, spNing$UseLong, spNing$UseLat)
+```
+
+
+## Join the spatial variables in spNing to the master dataset Ning. 
+```{r Join}
+Ning <- left_join(Ning, spNing, by = "ID", suffix = c("", ".y")) %>%
+  mutate(Depth = Depth) %>% 
+ select_at(vars(-ends_with(".y"))) 
+```
+
+## Data subsets
+
+The next variables will be done for each subset of data, which will have the following prefixes. 
+
+Boat based recreation (b)
+Boat based fishing (bf)
+Shore based recreation (s) - consider what size grids would be appropriate for shore based recreation ansd extend to this variable. Maybe 1 km is a better measure. 
+
+### Number of boats in 5km
+```{r 5km}
+## Number of boats within 5km grouped by TripJulianDay
+b_spNing <- spNing %>% filter(SiteType %in% "Boat" & !is.na(TripJulianDay)) # filtering by boat fishing
+
+b_tjd.split <- b_spNing %>%
+  group_by(TripJulianDay) # groups by TripJulianDay
+
+b_tjd.split <- group_split(b_tjd.split) # splits groups into individual data frames
+
+
+b_5km <- numeric() # make empty vector
+for(i in 1:length(b_tjd.split)) {
+  b_5km = c(b_5km, lengths(st_is_within_distance(b_tjd.split[[i]], dist = 5000))) # loops through groups getting number of boats in 5km
+} 
+
+b_spNing <- b_spNing%>%
+  mutate(b_5km = b_5km) # Appends to b_spNing
+
+# Join to Ning
+Ning <- left_join(Ning, b_spNing, by = "ID", suffix = c("", ".y")) %>%
+ select_at(vars(-ends_with(".y"))) 
+
+##### Boat fishing boats
+## Number of boats within 5km grouped by TripJulianDay
+bf_spNing <- spNing %>% filter(SiteType %in% "Boat", ActivityType %in% c("Extractive", "Both"),  !is.na(TripJulianDay)) # filtering by boat fishing
+
+bf_tjd.split <- bf_spNing %>%
+  group_by(TripJulianDay) # groups by TripJulianDay
+
+bf_tjd.split <- group_split(bf_tjd.split) # splits groups into individual data frames
+
+
+bf_5km <- numeric() # make empty vector
+for(i in 1:length(bf_tjd.split)) {
+  bf_5km = c(bf_5km, lengths(st_is_within_distance(bf_tjd.split[[i]], dist = 5000))) # loops through groups getting number of boats in 5km
+} 
+
+bf_spNing <- bf_spNing%>%
+  mutate(bf_5km = bf_5km) # Appends to b_spNing
+
+# Join to Ning
+Ning <- left_join(Ning, bf_spNing, by = "ID", suffix = c("", ".y")) %>%
+ select_at(vars(-ends_with(".y"))) 
+```
+
+### Kernal Density
+```{r Kernal Density}
+## Getting kernal densityfor boat based 
+## Using denisty from spatstat
+b_spNing_Lam <- st_transform(b_spNing, crs = 3112) # making lambert ass a ppp object can only be made from a projected crs
+
+b_spNing_ppp <- as.ppp(b_spNing_Lam)
+b_spNing_ppp.km <- rescale(b_spNing_ppp, 1000, "km")
+
+b_spNing_ppp.km$KernalDensity <- density(b_spNing_ppp.km, sigma = 5) # Using the default bandwidth
+b_kdens_plot <- plot(b_spNing_ppp.km$KernalDensity, main=NULL, las=1) 
+contour(b_spNing_ppp.km$KernalDensity, add=TRUE) # need to run this code with above to append to plot
+
+# Turn the KDE points into a raster
+b_kdraster <- b_spNing_ppp.km$KernalDensity
+b_kdraster <- rescale(b_kdraster, 0.001, "m") #Need to rescale so the coords match up with the original ones from the dataset
+
+b_kdraster <- raster(b_kdraster) #Conver to raster
+
+b_points <- st_as_sf(b_spNing_Lam$geometry) #Convert your dataframe points in a simple shape file
+
+#Check they plot over the top of each other and therefore that the coordinates are the same
+plot(b_kdraster)
+plot(b_points, add=T, cex = 0.05) #If you want to plot this on top you need to run this line and the above line in the consol as RMarkdown won't let you plot one on top of the other 
+
+# Extract the value in the raster where your points are 
+KDEPoints <- raster::extract(b_kdraster, b_points, fun=max)
+
+#Add the KDE to a dataframe where you've already removed the NAs (Otherwise you'll get the wrong KDE associated with the points because of the missing values)
+b_spNing <- b_spNing %>%
+  mutate(b_kdens = KDEPoints)
+
+# Join the KDE to the original dataframe preserving where you have NA geomtry and therefore NA KDE
+Ning <- left_join(Ning, b_spNing, by = "ID", suffix = c("", ".y")) %>%
+ select_at(vars(-ends_with(".y"))) 
+
+#### Getting kernal densityfor boat based fishing
+## Using denisty from spatstat
+bf_spNing_Lam <- st_transform(bf_spNing, crs = 3112) # making lambert ass a ppp object can only be made from a projected crs
+
+bf_spNing_ppp <- as.ppp(bf_spNing_Lam)
+bf_spNing_ppp.km <- rescale(bf_spNing_ppp, 1000, "km")
+
+bf_spNing_ppp.km$KernalDensity <- density(bf_spNing_ppp.km, sigma = 5) # Using the default bandwidth
+bf_kdens_plot <- plot(bf_spNing_ppp.km$KernalDensity, main=NULL, las=1)
+contour(bf_spNing_ppp.km$KernalDensity, add=TRUE)
+
+# Turn the KDE points into a raster
+bf_kdraster <- bf_spNing_ppp.km$KernalDensity
+bf_kdraster <- rescale(bf_kdraster, 0.001, "m") #Need to rescale so the coords match up with the original ones from the dataset
+
+bf_kdraster <- raster(bf_kdraster) #Convert to raster
+
+bf_points <- st_as_sf(bf_spNing_Lam$geometry) #Convert your dataframe points in a simple shape file
+
+#Check they plot over the top of each other and therefore that the coordinates are the same
+plot(bf_kdraster)
+plot(bf_points, add=T, cex = 0.05) #If you want to plot this on top you need to run this line and the above line in the consol as RMarkdown won't let you plot one on top of the other 
+
+# Extract the value in the raster where your points are 
+KDEPoints <- raster::extract(bf_kdraster, bf_points, fun=max)
+
+#Add the KDE to a dataframe where you've already removed the NAs (Otherwise you'll get the wrong KDE associated with the points because of the missing values)
+bf_spNing <- bf_spNing %>%
+  mutate(bf_kdens = KDEPoints)
+
+# Join the KDE to the original dataframe preserving where you have NA geomtry and therefore NA KDE
+Ning <- left_join(Ning, bf_spNing, by = "ID", suffix = c("", ".y")) %>%
+ select_at(vars(-ends_with(".y"))) 
+```
+## Check Point
+
+```{r csv}
+Ning <- Ning %>%
+  dplyr::relocate(SiteType, .after = Site) %>%
+  dplyr::relocate(GridID, .after = Comments) %>%
+  dplyr::select(-geometry)
+
+write.csv(Ning, paste(d.dir, "Ning_v2.csv", sep = "/"), row.names=F)
+```
+
+
+```{r gpkg}
+
+spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283)
+
+st_write(spNing, paste(s.dir, "spNing.gpkg", sep = '/'), append = FALSE, row.names=FALSE)
+```

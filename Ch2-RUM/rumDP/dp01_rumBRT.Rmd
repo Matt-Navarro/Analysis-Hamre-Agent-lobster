@@ -1,0 +1,456 @@
+```{r librarys}
+install.packages('mgcv')
+install.packages('MuMIn')
+install.packages('gamm4')
+
+
+library(ggBRT)
+library(gbm)
+library(dismo)
+library(MASS)
+library(dplyr)
+library(FSSgam)
+library(mgcv)
+library(MuMIn)
+library(gamm4)
+
+```
+
+```{r dir, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
+d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+f.dir <- paste(w.dir, "Ch2-RUM/rumFunc", sep = '/')
+dpPlots <- paste(w.dir, "Ch2-RUM/rumDP/dp_plots", sep='/')
+dpBRT_plots <- paste(dpPlots, "dpBRT_plots", sep='/')
+dpBRT_plots <- paste(dpPlots, "dpBRT_plots", sep='/')
+```
+
+
+```{r functions}
+source(paste(f.dir, "brtFunc.R", sep = '/'))
+```
+
+```{r read data}
+dpdat <- read.csv(paste(d.dir, "dpDat_v1.csv", sep='/'))
+```
+
+# BRT {.tabset}
+Boosted regression trees
+
+The BRT approach differs fundamentally from traditional regression methods that produce a single ‘best’ model, instead using the technique of boosting to combine large numbers of relatively simple tree models adaptively, to optimize predictive performance. 
+
+Learning rate (lr) determines the contribution of each tree to the growing model. Dedpeasing (slowing) lr indpeases the number of trees required, and in general a smaller lr (and larger nt) are preferable, conditional on the number of observations and time available for computation.
+
+Tree complexity (tc) controls whether interactions are fitted. A tc of 1 (single decision stump; two terminal nodes) fits an additive model, a tc of two fits a model with up to two-way interactions, and so on. For a given lr, fitting more complex trees leads to fewer trees being required for minimum error. So, as tc is indpeased, lr must be dedpeased if sufficient trees are to be fitted.
+
+As a general guide, lr needs to be dedpeased as tc indpeases, usually inversely: doubling tc should be matched with halving lr to give approximately the same nt. 
+
+Number of trees (nt), the lr and tc determine the number of trees (nt) required for optimal prediction.
+
+Bag fraction (bf), controls stochasticity that specifies the proportion of data to be selected at each step. The default bag fraction is 0·5, meaning that, at each iteration, 50% of the data are drawn at random, without replacement, from the full training set. In our experience, stochasticity improves model performance, and fractions in the range 0·5–0·75 have given best results for presence–absence responses. 
+
+Step size, is the number of trees added at each step. 
+
+Note that the data has to be in data.frame ONLY format - not a tibble or sf as well.
+
+```{r}
+# Making all character vars factors
+dpdat <- dpdat %>%
+  mutate_if(is.character, as.factor) %>% 
+  mutate(facYear = as.factor(facYear))
+```
+
+## GAMMs
+```{r GAMMs}
+ round(cor(dpdat[,c("numYear","nTimesLast24m","exDecMedianTime", "exnTimes12m",
+                                   "Depth", "DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "b_kdens", "b_5km")], use='complete.obs'), 2)
+ 
+
+ # rule out anything above 0.95
+ # 
+ 
+DPcov <- c("nTimesLast24m","exDecMedianTime",
+           "Depth","DistNearestBRkm", "DistNearestInfra", "UseLat",
+           "UseLong", "DecFishingHr","MaxHook",
+           "exYrs","BoatLength", "b_kdens", "b_5km")
+
+
+ ## looking to check for normal distribution and homoscedasity to find out which transformations are the best 
+
+par(mfrow=c(3,2))
+for(i in DPcov) {
+  x <- dpdat[,i]
+  x = as.numeric(unlist(x))
+  hist((x))
+  plot((x), main=paste(i))
+  hist(sqrt(x))
+  plot(sqrt(x))
+  hist(log(x+1))
+  plot(log(x+1))
+}
+
+# Dist to nearest boat as a log x+1
+# Dist to nearest infrastructure as sqrt
+
+par(mfrow=c(3,2))
+for(i in DPcov) {
+  x <- dpdat[,i]
+  x = as.numeric(unlist(x))
+  hist((x))
+  plot((x), main=paste(i))
+  hist((x)^2)
+  plot((x)^2)
+  hist((x)^3)
+  plot((x)^3)
+}
+
+## Transform variable into data set as new col
+## reset new predictor vraibkes with new names
+## check data doesnt have more than 80% 0s
+
+data.zeros <- dpdat %>% 
+  filter(nDP==0)
+
+## 60% zeros
+
+## setting up models
+## setv up model directory
+## 
+
+use.dat <- dpdat
+factor.vars <- c("Month", "Side", "facYear", "Resident", "Habitat", "lunarPhase", "FishingType")
+out.all <- list()
+var.imp <- list()
+
+# k is knows determines out wigglgying we allow the line to be 
+# cr is structure we give to n caught
+# re = random effect
+model1 <- gam(nDP~s(nHooked, k=5, bs='cr')+
+                s(PersonID, bs='re'), family='poisson', data = use.dat)
+
+model.set <- generate.model.set(use.dat = use.dat, test.fit = model1, pred.vars.cont = DPcov, pred.vars.fact = factor.vars, max.predictors = 5, k=5, null.terms = "s(nHooked, k=5, bs='cr')+
+                s(PersonID, bs='re')")
+
+out.list <- fit.model.set(model.set, max.models = 600, parallel = T)
+
+names(out.list)
+```
+
+## Depredation BRT
+### Data Prep 
+```{r data prep for BRTs}
+# making a grid for step.loop
+## make a res.dev variable to store in grid
+res.dev<-c() 
+dp_step.loop<-expand.grid(lr=c(0.1, 0.5, 0.01, 0.005, 0.0025, 0.001), tc=c(2, 3, 5, 7), bf=c(0.5, 0.75, 0.9), ss=c(5, 20, 30, 50)) ## make grid of lr, tc and bag.fraction that gbm.step will run through
+dp_step.loop$res.dev<-NA ## add res.dev to grid
+
+# define response
+nDP <- which(colnames(dpdat)=="nDP") 
+
+# defining covariates
+DPcov <- which(colnames(dpdat) %in% c("numYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "LunarPhase", "b_kdens", "b_5km"))
+
+# defining offset
+dp_offset = round(log(dpdat$nHooked +1))
+
+# dpeate fold vector 
+# n.folds = 10 same number in each fold 
+# need to automate how to find the number of groups that gives you an equal amount fo observations in each group
+# b <- numeric()
+# for(i in 1:10) {
+#    b[i] <- nrow(dpdat)/i
+# }
+# b
+# 
+# nrow(dpdat)/6
+# 6*97
+# 
+# First need to allocate people with multiple 
+
+# n.folds = 10
+
+# i want the number of groupd to be wahtever i need to get an even number of observations in both
+# spliteven_dpdat <- dpdat %>% 
+#    group_by((row_number()-1) %/% (n()/n.folds)) %>%
+#    nest %>% pull(data)# this splits into groups but only into number of groups defined above does not make them the same
+# 
+# 
+# for(i in 1:10) {
+#  groupsize <- nrow(spliteven_dpdat[[i]])
+#   }
+# groupsize
+
+# dpdat2 <- dpdat %>%
+#   group_by(PersonID) %>%
+#   mutate(Folds = , round(runif(1, min = 1, max = 10)))
+
+# groups <- rep(1:10, each = groupsize)
+# 
+# dpdat <- dpdat %>%
+#   group_by(PersonID) %>%
+#   mutate(Folds = sample(groups, 1, replace = FALSE)) %>%
+#   ungroup()
+# 
+# Folds <- which(colnames(dpdat)=="Folds") 
+# 
+# 
+# table(dpdat$Folds)
+# 
+# dpdat2[, c("ID", "PersonID", "Folds")]
+```
+
+
+```{r}
+res.dev<-c() 
+dp_step.loop<-expand.grid(lr=c(0.1, 0.5, 0.01), tc=c(2, 3, 5), bf=c(0.5, 0.75, 0.9), ss=c(20, 30, 50)) ## make grid of lr, tc and bag.fraction that gbm.step will run through
+dp_step.loop$res.dev<-NA ## add res.dev to grid
+dp_step.loop$nt<-NA ## add n.trees to grid
+
+# define response
+nDP <- which(colnames(dpdat)=="nDP") 
+
+# defining covariates
+DPcov <- which(colnames(dpdat) %in% c("numYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime", "exnTimes12m",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "LunarPhase", "b_kdens", "b_5km"))
+
+# defining offset
+dp_offset = log(dpdat$nHooked +1)
+```
+
+### gbm.step loop
+Loop which runs through several parameters 
+```{r dp.step loop, warning=FALSE}
+# This first gbm.step is looping through parameters so i can sleect the optimal model
+for(i in 1:nrow(dp_step.loop)) {
+  dp.step<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP, ## response - number of fish depredated
+                           offset = dp_offset,
+                           # fold.vector = Folds,
+                           # n.folds = n.folds,
+                           lr = dp_step.loop[i,"lr"], ## ref to step.loop
+                           tree.complexity = dp_step.loop[i,"tc"], ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction = dp_step.loop[i,"bf"],
+                           step.size = dp_step.loop[i, "ss"],
+                           plot.main = F)
+  dp_step.loop[i, "res.dev"] <-dp.step$self.statistics$mean.resid ### store res.dev in step.loop
+  dp_step.loop[i, "nt"] <-dp.step$n.trees} 
+```
+
+### Optimal parameters
+Optimal parameters  which minimise the residual devience as defined by outputs of gbm.step loop
+```{r optimal parameters, echo = FALSE}
+# Full loop data set if intere
+# dp_step.loop 
+dp_opt.resdev <- dp_step.loop[dp_step.loop$res.dev==min(dp_step.loop$res.dev, na.rm= T),]
+dp_opt.resdev <- dp_opt.resdev %>% drop_na()
+dp_opt.resdev
+dp_opt.nt <- dp_step.loop[dp_step.loop$nt==max(dp_step.loop$nt, na.rm= T),]
+dp_opt.nt <- dp_opt.nt %>% drop_na()
+dp_opt.nt
+
+dp_opt <- full_join(dp_opt.resdev, dp_opt.nt)
+dp_opt <- dp_opt %>% drop_na
+dp_opt
+```
+
+Running gbm.step with optimal parameters and extracting n.trees. 
+```{r dp.brt, warning=FALSE}
+
+dp.brt<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP,## response - number of fish depredated
+                           offset=dp_offset,
+                           # fold.vector = Folds,
+                           # n.folds = n.folds,
+                           learning.rate = dp_opt.nt$lr, ## ref to step.loop
+                           tree.complexity = dp_opt.nt$tc, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=dp_opt.nt$bf,
+                           step.size = dp_opt.nt$ss)
+
+dp.brt<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=c("perDP"),## response - number of fish depredated
+                           # offset=dp_offset,
+                           # fold.vector = Folds,
+                           # n.folds = n.folds,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+
+
+
+# nt <- dp.step$n.trees # adds number of trees to step param
+# dp_best$nt <- nt # defines nt for automation
+# dp_best$res.dev  <- dp.step$self.statistics$mean.resid # updates residual devience
+# dp_best
+```
+
+### Outputs
+#### Default outputs
+```{r dp.brt output}
+
+ggPerformance(dp.brt)
+
+dp.brt_influence <- ggInfluence(dp.brt, signif = TRUE, main = "Significant predictors on number of fish depredated") 
+ggsave(paste(dpBRT_plots, "dp.brt_Influence.png", sep='/'), width = 8, height = 4)
+dp.brt_influence
+
+for(i in 1:nrow(dp.brt_influence)) {
+dp.brt_PD <- ggPD(dp.brt, rug = T, smooth = T, predictor = i) 
+ggsave(dp.brt_PD, file = paste(dpBRT_plots, paste("dp.brt_PD", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(dp.brt_influence)) {
+dp.brt_PDFit <- ggPDfit(dp.brt, smooth = T, se = T, predictor = i) 
+ggsave(dp.brt_PDFit, file = paste(dpBRT_plots, paste("dp.brt_PDFit", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ dp_interaction <- ggInteract_list(dp.brt, index = F) 
+ 
+ dp_interaction
+```
+
+#### Bootstrapped cis
+```{r dp.bootstrap, include=FALSE}
+
+## This will not work if there is an offset.
+# Might need something ike the code below to get it to work - but maybe not worth using this code to plot if there is an offset  
+# dp.brt3$gbm.call$dataframe$nDP <- dp.brt3$gbm.call$dataframe$nDP + dp_offset[1:581]
+# dp.brt3$fitted <- dp.brt3$fitted + dp_offset[1:581]
+
+dp.brt_prerun<- plot.gbm.4list(dp.brt)
+
+dp.brt_boot <- gbm.bootstrap.functions(dp.brt, list.predictors=dp.brt_prerun, n.reps=100)
+
+for(i in 1:nrow(dp.brt_influence)) {
+dp.brt_PDboot<-ggPD_boot(dp.brt, list.4.preds=dp.brt_prerun,
+                booted.preds=dp.brt_boot$function.preds, type.ci="ribbon", rug=T, smooth = T, predictor = i)
+ggsave(dp.brt_PDboot, file = paste(dpBRT_plots, paste("dp.brt_PDboot", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+
+```
+
+
+## Catch rate BRT
+### Data Prep 
+```{r data prep for BRTs}
+# making a grid for step.loop
+## make a res.dev variable to store in grid
+res.dev<-c() 
+cr_step.loop<-expand.grid(lr=c(0.1, 0.01, 0.001), tc=c(2, 3, 5), bf=c(0.5, 0.75, 0.9), ss=c(20, 30, 50)) ## make grid of lr, tc and bag.fraction that gbm.step will run through
+cr_step.loop$res.dev<-NA ## add res.dev to grid
+cr_step.loop$nt <- NA
+
+# define response
+cr <- which(colnames(dpdat)=="CaughtUndam") 
+
+# defining covariates
+crcov <- which(colnames(dpdat) %in% c("numYear", "Month", "Side", "Resident",
+                                  "exDecMedianTime", "exnTimes12m",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "BaitLure", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "LunarPhase", "b_kdens", "b_5km"))
+
+# add number of times 12 months 
+
+```
+
+### gbm.step loop
+Loop which runs through several parameters 
+```{r cr.step loop, warning=FALSE}
+# This first gbm.step is looping through parameters so i can select the optimal model
+for(i in 1:nrow(cr_step.loop)) {
+  cr.step<-dismo::gbm.step(data=crdat,
+                           gbm.x=c(crcov),
+                           gbm.y=cr, ## response - number of fish caught undamaged
+                           lr = cr_step.loop[i,"lr"], ## ref to step.loop
+                           tree.complexity = cr_step.loop[i,"tc"], ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction = cr_step.loop[i,"bf"],
+                           step.size = cr_step.loop[i, "ss"],
+                           plot.main = F)
+  cr_step.loop[i, "res.dev"] <-cr.step$self.statistics$mean.resid ### store res.dev in step.loop
+  cr_step.loop[i, "nt"]<- cr.step$n.trees} ### store n.trees in step.loop
+```
+
+### Optimal parameters
+Optimal parameters  which minimise the residual devience as defined by outputs of gbm.step loop
+```{r step parameters, echo = FALSE}
+cr_step.loop # all gbm outputs
+cr_best1 <- cr_step.loop[cr_step.loop$res.dev==min(cr_step.loop$res.dev, na.rm= T),] # output with lowest residual devience
+cr_best2 <- cr_step.loop[cr_step.loop$nt==max(cr_step.loop$nt, na.rm = T),] # output with highets number of trees
+
+cr_best <-cr_best %>% drop_na
+cr_best
+```
+
+### Running catch rate BRT
+Running gbm.step with optimal parameters and extracting n.trees. 
+```{r cr.brt, warning=FALSE}
+
+cr.brt<-dismo::gbm.step(data=dpdat,
+                        gbm.x=c(crcov),
+                        gbm.y=cr,## response - number of fish caught undamaged
+                        learning.rate = 0.01, ## ref to step.loop
+                        tree.complexity = 2, ## ref to step.loop
+                        family="poisson", ## distribution family
+                        bag.fraction=0.9,
+                        step.size = 30)
+```
+### Outputs
+#### Default outputs
+```{r cr.step output}
+
+ggPerformance(cr.brt)
+
+cr.brt_influence <- ggInfluence(cr.brt, signif = TRUE, main = "Significant predictors for catch rate") 
+ggsave(paste(crBRT_plots, "cr.brt_Influence.png", sep='/'), width = 8, height = 4)
+cr.brt_influence
+
+for(i in 1:nrow(cr.brt_influence)) {
+cr.brt_PD <- ggPD(cr.brt, rug = T, smooth = T, predictor = i) 
+ggsave(cr.brt_PD, file = paste(crBRT_plots, paste("cr.brt_PD", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(cr.brt_influence)) {
+cr.brt_PDFit <- ggPDfit(cr.brt, smooth = T, se = T, predictor = i) 
+ggsave(cr.brt_PDFit, file = paste(crBRT_plots, paste("cr.brt_PDFit", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ggInteract_list(cr.brt, index = F) 
+```
+#### Boostrapped ci
+```{r cr.bootstrap, include=FALSE}
+
+cr.brt_prerun<- plot.gbm.4list(cr.brt)
+
+cr.brt_boot <- gbm.bootstrap.functions(cr.brt, list.predictors=cr.brt_prerun, n.reps=100)
+
+for(i in 1:nrow(cr.brt_influence)) {
+cr.brt_PDboot<-ggPD_boot(cr.brt, list.4.preds=cr.brt_prerun,
+                booted.preds=cr.brt_boot$function.preds, type.ci="ribbon", rug=T, smooth = T, col.smooth = "red", predictor = i)
+ggsave(cr.brt_PDboot, file = paste(crBRT_plots, paste("cr.brt_PDboot", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+
+
+# The above code doesnt produce plots for factor variables? 
+```

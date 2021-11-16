@@ -1,0 +1,406 @@
+---
+title: "Does shark depredation influence recreation fishers site choice?"
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    number_section: true
+---
+# Set up
+```{r setglobal, include = FALSE}
+knitr::opts_chunk$set(fig.align = "center",
+                      fig.width = 7, 
+                      fig.height = 5, 
+                      dev = "png",
+                      cache = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+## Libraries
+```{r packages, include = FALSE}
+# install.packages("tidyverse")
+# install.packages("devtools")
+# install.packages("remotes")
+# install.packages("sp")
+# install.packages("raster")
+# install.packages("ggplot2")
+# install.packages("leaflet")
+# install.packages("rgeos")
+# install.packages("rgdal")
+# install.packages("sf") # select no
+# install.packages('dismo', dependencies=TRUE) 
+# install.packages('gbm', dependencies=TRUE) 
+# devtools::install_github("JBjouffray/ggBRT") 
+# install.packages('ggpubr')
+# install.packages('ggdist')
+
+library(tidyverse)
+library(devtools)
+library(remotes)
+library(sp)
+library(raster)
+library(ggplot2)
+library(leaflet)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(dismo)
+library(gbm)
+library(ggBRT)
+library(ggpubr)
+library(ggdist)
+library(ggspatial)
+```
+## Directories
+```{r dir, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
+d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+f.dir <- paste(w.dir, "Ch2-RUM/rumFunc", sep = '/')
+dpPlots <- paste(w.dir, "Ch2-RUM/rumDP/dp_plots", sep='/')
+dpBRT_plots <- paste(dpPlots, "dpBRT_plots", sep='/')
+crBRT_plots <- paste(dpPlots, "crBRT_plots", sep='/')
+```
+
+## Plot specifications
+"cce2bc": Light green
+"#97c1a9": Darker green
+"#cce2cb": Light teal
+"#81caca": Darker teal 
+"#595959": Grey
+
+## Read data
+```{r readData, echo = FALSE}
+dpdat <- read.csv(paste(d.dir, "dpDat_v1.csv", sep = "/"))
+
+spNing <- st_read(paste(s.dir, "spNing.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+site <- st_read(paste(s.dir, "StudySite.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+NWS <- st_read(paste(s.dir, "NWScoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+BR <- st_read(paste(s.dir, "NingBR.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp1 <- st_read(paste(s.dir, "nmpConserve.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp2 <- st_read(paste(s.dir, "nmpGeneralUse.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp3 <- st_read(paste(s.dir, "nmpManage.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp4 <- st_read(paste(s.dir, "nmpOutline.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp5 <- st_read(paste(s.dir, "nmpRec.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp6 <- st_read(paste(s.dir, "nmpSanc.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp7 <- st_read(paste(s.dir, "nmpShoreFish.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp8 <- st_read(paste(s.dir, "nmpSpPurposeBenthic.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+nmp9 <- st_read(paste(s.dir, "nmpSpPurposeShore.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ncmp1 <- st_read(paste(s.dir, "ncmpSplit.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ncmp2 <- st_read(paste(s.dir, "ncmpSZ.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+```
+
+Hyp 1: Shark depredation will influence site choice for residents with familiar knowledge of the area.  
+Hyp 2:Shark depredation will not influence site choice for visitor, which will typically go for sites with a lower travel cost, therefore in areas with higher concentration of boat and in areas of depredation hotspots. 
+
+```{r map of study site}
+
+
+ggplot() +
+  # geom_tile(data = b_kdraster, aes(x, y, fill = value)) +
+  geom_sf(data = NWS, lwd = 0.1) +
+  # scale_color_distiller(palette = "YlGnBu", trans = "reverse") + # colour for discrete, fill for continuous
+  # scale_fill_continuous(trans = 'reverse') +
+  # labs(color = "Percentage\nDepredated") +
+  # guides(color = guide_colorbar(reverse = TRUE, 
+  #                               title.theme = element_text(size = 6.5, vjust = 15),
+  #                               label.theme = element_text(size = 6.5))) +
+  # annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+  #   annotation_north_arrow(location = "br", which_north = "true",
+  #       pad_x = unit(0.25, "cm"), pad_y = unit(0.5, "cm"),
+  #       style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+  #                                              fill = c("white", "Grey"), text_col = "grey"),
+  #       height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme_void()
+
+```
+
+```{r}
+Approached <- dpdat %>%
+  distinct(PersonID, .keep_all = TRUE)
+
+Part <- expand.grid(nParticipants=nrow(Approached), nUses=nrow(dpdat))
+
+Part
+```
+
+
+# Prevalence of depredation for diferent fishing types. 
+
+```{r FTyp_dp, echo = FALSE}
+dpdat %>% 
+  group_by(FishingType) %>%   
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") %>%
+  ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', fill = "#8fcaca") +
+  labs(x = paste("Fishing Type (n = ", nrow(b), ")", sep = ""), y = paste("Frequency (n = ", nrow(dpdat), ")", sep = "")) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+
+ggsave(paste(dpPlots, "dp_FType.png", sep='/'), width = 8, height = 4)
+
+dpFT <- exdat %>%
+  group_by(FishingType) %>%
+  summarise(tHooked = sum(nHooked),
+            tDP = sum(nDP),
+            tperDP = tDP/tHooked*100)
+
+dpFT <-dpFT %>% 
+  filter(!is.na(FishingType), tDP > 0) %>% 
+  mutate(tperDP = round(tperDP))
+
+pdpFT <- ggplot(dpFT) +
+  aes(x = reorder(FishingType, desc(FishingType)), y = tperDP) +
+  geom_col(fill = "#8fcaca") +
+    labs(x = paste("Fishing Type (n = ", length(na.omit(unique(dpFT$FishingType))), ")", sep=""), 
+         y = "Percentage depredation (%)") +
+  geom_text(aes(label= paste(tperDP, "%", sep="")), vjust = -0.5, size = 2.5)
+
+pdpFT
+
+ggsave(paste(dpPlots, "dp_perFType.png", sep='/'), width = 8, height = 4)
+```
+```{r echo=FALSE}
+# Preping data for histograms
+sumTot_dp <- dpdat %>% 
+  summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
+            TCaughtUndam = sum(CaughtUndam, na.rm = TRUE),
+                     TotalDP = sum(nDP, na.rm = TRUE),
+                     TotalperDP = (TotalDP/TotalHooked)*100)
+
+
+# Histogram of number of fish caught across sites (include those depredated)
+nHooked_hist <- ggplot(dpdat) +
+  aes(x = nHooked) +
+  geom_histogram(fill = "#8fcaca") +
+  labs(x = paste("Number of fish hooked (n = ", sumTot_dp$TotalHooked, ")", sep =""))
+
+nHooked_hist
+
+ggsave(paste(dpPlots, "nHooked_hist.png", sep='/'), width = 8, height = 4)
+
+# Histogram of number of fish retrieved to boat undamaged 
+CaughtUndam_hist <- ggplot(dpdat) +
+  aes(x = CaughtUndam) +
+  geom_histogram(fill = "#8fcaca") +
+  labs(x = paste("Number of fish caught undamaged (n = ", sumTot_dp$TCaughtUndam, ")", sep =""))
+
+CaughtUndam_hist
+
+ggsave(paste(dpPlots, "CaughtUndam_hist.png", sep='/'), width = 8, height = 4)
+
+# Histogram of number of fish depredated
+dp_hist <- ggplot(dpdat) +
+  aes(x = nDP) +
+  geom_histogram(fill = "#8fcaca") +
+  labs(x = paste("Number of fish depredated (n=", sumTot_dp$TotalDP, ")", sep=""))
+
+dp_hist
+
+ggsave(paste(dpPlots, "dp_hist.png", sep='/'), width = 8, height = 4)
+```
+# Broad Stats {.tabset}
+
+```{r}
+
+nCaughtVdp <- dpdat %>% 
+  group_by(facYear) %>% 
+  summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
+            TCaughtUndam = sum(CaughtUndam, na.rm = TRUE),
+                     TotalDP = sum(nDP, na.rm = TRUE),
+                     TotalperDP = (TotalDP/TotalHooked)*100) %>% 
+  gather(Total, Value, TCaughtUndam:TotalDP) %>% 
+  mutate(Total = ifelse(Total %in% "TCaughtUndam", "Caught Undamage", "Depredated")) %>% 
+  ggplot(aes(factor(1), y = Value, fill = reorder(Total, desc(Total)))) +
+   geom_bar(stat = "identity", position = position_dodge2(reverse = TRUE)) +
+  labs(y = "Number of fish", x="") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values=c("#97c1a9", "#81caca"), name = "") +
+   theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  geom_text(aes(label=Value), vjust = -0.5, size = 2.5, position = position_dodge2(.9, reverse = TRUE)) +
+  facet_grid(~facYear)
+
+nCaughtVdp
+
+ggsave(paste(dpPlots, "nCaughtVdp.png", sep='/'), width = 8, height = 4)
+
+avCaughtVdp <- dpdat %>%
+  group_by(facYear) %>%
+  summarise(AvCaughtUndam = round(mean(CaughtUndam, na.rm = TRUE)),
+            AvDP = round(mean(nDP, na.rm = TRUE))) %>%
+  gather(Average, Value, AvCaughtUndam:AvDP) %>%
+  mutate(Average = ifelse(Average %in% "AvCaughtUndam", "Caught Undamaged", Average)) %>%
+  mutate(Average = ifelse(Average %in% "AvDP", "Depredated", Average)) %>%
+  drop_na() %>%
+  ggplot(aes(x = factor(1), y = Value, fill = reorder(Average, desc(Average)))) +
+  geom_bar(stat = "identity", position = position_dodge2(reverse = TRUE)) +
+  labs(y = "Average number of fish", x="") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values=c("#97c1a9", "#81caca"), name = "") +
+   theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  geom_text(aes(label=Value), vjust = -0.5, size = 2.5, position = position_dodge2(.9, reverse = TRUE)) +
+  facet_grid(~facYear)
+
+avCaughtVdp
+
+ggsave(paste(dpPlots, "avCaughtVdp.png", sep='/'), width = 8, height = 4)
+```
+
+```{r toverall, echo=FALSE, message=FALSE, warning=FALSE, results=}
+# Pie chart of total percentage depredation
+ dp2 <- dpdat %>% 
+  summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
+            TotalDP = sum(nDP, na.rm = TRUE),
+            TotalperDP = (TotalDP/TotalHooked)*100,
+            sd_Hooked = sd(nHooked, na.rm = TRUE),
+            sd_DP = sd(nDP, na.rm = TRUE)) 
+
+dp2
+
+dp2 %>% 
+  gather(Total, Value, TotalHooked:TotalDP) %>% 
+  mutate(Total = as.factor(ifelse(Total %in% "TotalHooked", "Hooked", "Depredated")),
+         cumulative = cumsum(Value),
+         midpoint = cumulative - Value / 2,
+         label = ifelse(Total %in% "Depredated", paste(round(TotalperDP), "%", sep =" "), ""))%>%
+drop_na() %>% 
+  ggplot(aes(x = "", y = Value, fill = Total)) +
+  geom_bar(width = 1, stat = "identity", position = 'fill', colour = "white") +
+  coord_polar("y", start=0) +
+  theme_void() +
+  # geom_text(aes(x = 1.3, y = midpoint, label = label), size = 2.5) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values=c("#cce2cb", "#81caca"))
+
+ggsave(paste(dpPlots, "tperDP_pie.png", sep='/'), width = 8, height = 4)
+
+# Percentage depredated facetted by year
+dpdat %>% 
+  group_by(facYear) %>% # group_by(Side, facYear)
+  summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
+                     TotalDP = sum(nDP, na.rm = TRUE),
+            TotalperDP = (TotalDP/TotalHooked)*100) %>%
+  mutate(label = paste(round(TotalperDP), "%", sep =" "), "") %>%
+drop_na()  %>%
+  ggplot( 
+  aes(y = TotalperDP, x = "")) +
+  geom_col(fill = "#8fcaca") +
+  geom_text(aes(label=label), vjust = 1.5, size = 2) +
+  labs(x = "", y = "Percentage of fish depredated") +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  facet_grid(~facYear) # (Side~facYear)
+
+ggsave(paste(dpPlots, "perDP_yr.png", sep='/'), width = 8, height = 4)
+```
+# Relationship with nHooked
+```{r}
+ggplot() +
+  geom_point(data = dpdat, aes(x=nDP, y = nHooked), colour = "#8fcaca")
+```
+
+# Spatial distribution of shark depredation
+Spatial distribution of recreational fishing coloured by percentage of depredation at each site. 
+
+```{r}
+
+dp0_sp <- dpdat %>% 
+  filter(nDP == '0', !is.na(UseLat), !is.na(UseLong))
+dp0_sp <- st_as_sf(dp0_sp, coords =c("UseLong", "UseLat"), crs = 4283)
+
+dp_sp <- dpdat %>% 
+  filter(nDP != '0', !is.na(UseLat), !is.na(UseLong))
+dp_sp <- st_as_sf(dp_sp, coords =c("UseLong", "UseLat"), crs = 4283)
+
+
+dp_spPlot <- ggplot() +
+  geom_sf(data = dp0_sp, shape = 1, size = 0.5, color= "grey") +
+  geom_sf(data = dp_sp, aes(color = perDP), size = 1) + # colour for discrete, fill for continuous
+  geom_sf(data = ncmp2, lwd = 0.1, fill = NA) +
+  geom_sf(data = NWS, lwd = 0.1) +
+  geom_sf(data = nmp1, lwd = 0.1, fill = NA) +
+  geom_sf(data = nmp2, lwd = 0.1, fill = NA) +
+  # geom_sf(data = nmp3) +
+  # geom_sf(data = nmp4) +
+  geom_sf(data = nmp5, lwd = 0.1, fill = NA) +
+  geom_sf(data = nmp6, lwd = 0.1, fill = NA) +
+  geom_sf(data = nmp8, lwd = 0.1, fill = NA) +
+  geom_sf(data = nmp9, lwd = 0.1, fill = NA) +
+  scale_color_distiller(palette = "YlGnBu", trans = "reverse") + # colour for discrete, fill for continuous
+  scale_fill_continuous(trans = 'reverse') +
+  labs(color = "Percentage\nDepredated") +
+  guides(color = guide_colorbar(reverse = TRUE,
+                                title.theme = element_text(size = 6.5, vjust = 15),
+                                label.theme = element_text(size = 6.5))) +
+  annotation_scale(location = "br", pad_y = unit(0.3, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c(" dark grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true",
+        pad_x = unit(0.5, "cm"), pad_y = unit(0.75, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "dark grey",
+                                               fill = c("white", "dark grey"), text_col = "dark grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme_void() 
+
+dp_spPlot 
+
+ggsave(paste(dpPlots, "dp_nmp.png", sep='/'), width = 8, height = 4)
+```
+### play area
+```{r}
+ggplot() +
+  geom_point(data = dpdat, aes(x=exYrs, y = BoatLength), colour = "#8fcaca")
+
+ggplot() +
+  geom_point(data = dpdat, aes(x=DecFishingHr, y = exYrs), colour = "#8fcaca")
+
+ggplot() +
+  geom_col(data = dpdat, aes(y=MaxHook, x = Habitat))
+
+install.packages("corrplot")
+library(corrplot)
+
+ dpcor <- cor(x=DPcov, y=DPcov)
+ dpcor
+ 
+ round(cor(dpdat[,c("numYear","nTimesLast24m","exDecMedianTime", "exnTimes12m",
+                                   "Depth", "DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "b_kdens", "b_5km")], use='complete.obs'), 2)
+ 
+
+ # rule out anything above 0.95
+ 
+if(dpdat$DecFishingHr > 6){
+  a<- mean(dpdat$CaughtUndam)
+  }
+  
+table(dpdat$DP)
+ 
+(226/356)*100
+
+```
+
+
