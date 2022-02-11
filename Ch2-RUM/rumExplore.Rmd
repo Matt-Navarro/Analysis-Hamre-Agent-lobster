@@ -22,7 +22,7 @@ library(ggspatial)
 ```{r}
 w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
 d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
-s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/')
 r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
 f.dir <- paste(w.dir, "Ch2-RUM/rumFunc", sep = '/')
 rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
@@ -30,11 +30,13 @@ rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
 ## Data reading
 ```{r read data and spatial files}
 # Data
-Ning <- read.csv(paste(d.dir, "Ning_v2.csv", sep='/'))
+Ning <- readRDS(paste(d.dir, "Ning_v2.csv", sep='/'))
 
 #Spatial Data
-# spNing <- st_read(paste(s.dir, "spNing.gpkg", sep = '/')) %>%
-#   st_transform(crs = 4283)
+spNing <- Ning %>% 
+  filter(!is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords = c("UseLong", "UseLat"), crs = 4283)
+
 NWS <- st_read(paste(s.dir, "NWScoast.gpkg", sep = '/')) %>%
   st_transform(crs = 4283)
 nmp1 <- st_read(paste(s.dir, "nmpConserve.gpkg", sep = '/')) %>%
@@ -80,28 +82,29 @@ ResponseStats
 ```
 # Subsetting data
 ```{r DataPrep}
-N <- Ning %>% 
+yes <- Ning %>% 
   filter(Agreement == "Yes") 
 # Extractive data
-exdat <- N %>%
+exdat <- yes %>%
   dplyr::filter(Activity == "Fishing")
 
 # Boat based extractive
-bf <- N %>% 
+bf <- yes %>% 
   dplyr::filter(SiteType == "Boat" & ActivityType %in% c("Extractive", "Both"))
 
 # Non-extractive data
-nexdat <- N %>%
+nexdat <- yes %>%
   dplyr::filter(Activity != "Fishing")
+
 ```
 
 ## Activity Type
 Histogram showing data collected of extractive and non-extractive activities and thier spatial distribution.
 ```{r ActTyp}
- ActTyp <- ggplot(N) +
+ ActTyp <- ggplot(yes) +
    aes(x = reorder(ActivityType, desc(ActivityType))) +
    geom_bar(fill = "#8fcaca") +
-   labs(x = "Activity Type", y = paste("Frequency (n = ", nrow(N), ")", sep = "")) +
+   labs(x = "Activity Type", y = paste("Frequency (n = ", nrow(yes), ")", sep = "")) +
    geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
  
  ActTyp
@@ -146,12 +149,12 @@ ggsave(paste(rumPlots, "ActType.png", sep='/'), width = 4, height = 6)
 Histogram showing of data collected across all activities captured and their spatila distribution.
 ```{r ActFreq, fig.dim = c(7, 7)}
 
-ActFreq <- N %>% 
+ActFreq <- yes %>% 
   group_by(Activity) %>%   
   mutate(count_name_occurr = n()) %>% 
   ggplot(aes(y=reorder(Activity,count_name_occurr))) +
   geom_bar(stat="count", fill = "#8fcaca") +
-  labs(x = paste("Activity (n = ", length(na.omit(unique(N$Activity))), ")", sep=""), y = paste("Frequency (n = ", nrow(N), ")", sep = "")) +
+  labs(x = paste("Activity (n = ", length(na.omit(unique(yes$Activity))), ")", sep=""), y = paste("Frequency (n = ", nrow(yes), ")", sep = "")) +
   geom_text(stat='count', aes(label=..count..), hjust = -0.5, size = 2.5)
   
 ActFreq
@@ -183,7 +186,7 @@ ggsave(paste(rumPlots, "spAct.png", sep='/'), width = 4, height = 6)
 
 ## Site Type
 ```{r SiteType}
- SiteTyp <- ggplot(N) +
+ SiteTyp <- ggplot(yes) +
    aes(x = SiteType) +
    geom_bar(fill = "#8fcaca") +
    labs(x = "Site Type", y = "Frequency") +
@@ -192,43 +195,31 @@ ggsave(paste(rumPlots, "spAct.png", sep='/'), width = 4, height = 6)
  SiteTyp
  ggsave(paste(rumPlots, "SiteTyp.png", sep='/'), width = 8, height = 4)
 
- # a <- which(is.na(N$SiteType))
- # N[a,]
+ # a <- which(is.na(yes$SiteType))
+ # yes[a,]
 ```
 
 # Extractive Activities {.tabset}
 ## Fishing Type
 Histogram showing data collected across all fishing types facetted by year. 
 ```{r FTyp}
-FTyp <- exdat %>% 
-  group_by(FishingType) %>%   
+FTyp <- exdat %>%
+  group_by(FishingType) %>%
   mutate(count_name_occurr = n()) %>%
-  filter(!is.na(FishingType), FishingType != "") %>% 
+  filter(!is.na(FishingType), FishingType != "") %>%
   ggplot(
-  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
-  geom_bar(stat='count', fill = "#8fcaca") +
+  aes(x=reorder(FishingType,-count_name_occurr), fill = SiteType)) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', position = position_dodge2(reverse = TRUE)) +
+    scale_fill_manual(labels = c("Boat", "Shore"), values = c("#81caca", "#97c1a9"), name = "Site Type") +
+  # scale_color_manual(labels = c("2015", "2016", "2020", "2021"), values = c("palevioletred1","lightskyblue", "lightsalmon","lightgreen"), name = "Year") +
   labs(x = paste("Fishing Type (n = ", length(na.omit(unique(exdat$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(exdat), ")", sep = "")) +
   # facet_wrap(. ~ numYear) +
   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
 
 FTyp
 
-ggsave(paste(rumPlots, "FTyp.png", sep='/'), width = 8, height = 4)
+ggsave(paste(rumPlots, "FishingType.png", sep='/'), width = 8, height = 4)
 
-bf_FTyp <- bf %>% 
-  group_by(FishingType) %>%   
-  mutate(count_name_occurr = n()) %>%
-  filter(!is.na(FishingType), FishingType != "") %>% 
-  ggplot(
-  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
-  geom_bar(stat='count', fill = "#8fcaca") +
-    labs(x = paste("Boat based fishing type (n = ", length(na.omit(unique(bf$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(bf), ")", sep = "")) +
-  # facet_wrap(. ~ numYear) +
-  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
-
-bf_FTyp
-
-ggsave(paste(rumPlots, "bf_FTyp.png", sep='/'), width = 8, height = 4)
 ```
 
 ## Fishing types relevant to depredation
@@ -258,9 +249,10 @@ pdpFT
 ## Depredation data set
 Given that the above plot shows what fishing types are applicable to fishing this will be subsetted from the bf (boat fishing) data set. 
 ```{r creating depredation data set}
-dpDat <- bf %>% 
+dpdat <- bf %>% 
   dplyr::filter(FishingType %in% c("Trolling", "Demersal"))
-write.csv(dpDat, paste(d.dir, "dpDat_v1.csv", sep = "/"), row.names = FALSE)
+
+saveRDS(dpdat, paste(d.dir, "dpdat_v1.csv", sep = "/"))
 ```
 
 # Non-extractive

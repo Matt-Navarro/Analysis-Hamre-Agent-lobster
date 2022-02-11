@@ -215,7 +215,7 @@ ggplot(aes(x = factor(1), y = Value, fill = Total)) +
   geom_text(aes(label=Value), position=position_dodge2(width=1, reverse = TRUE), vjust=-0.25, size = 2) +
   labs(x = "", y = "Number of fish") +
   theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank()) +
+        axis.text.x = element_blank()) 
   facet_grid(Side~facYear)
 ```
 ## Pie chart
@@ -227,8 +227,8 @@ Barplot showing the Average number of fish depredated per site facetted by year.
 avDPYr <- exdat %>%
   filter(!is.na(nHooked),  nHooked != "", !is.na(nDP), nDP != "") %>%
   group_by(facYear) %>%
-  summarise(ave = mean(nDP)) %>%
-  #mutate(numYear = as.character(Year)) %>%
+  summarise(ave = mean(nDP)) %>% 
+  # mutate(numYear = as.character(Year)) %>%
   ggplot( 
   aes(x = facYear, y = ave)) +
   geom_col(fill = "mediumaquamarine") +
@@ -244,7 +244,7 @@ Barplot showing the average catch rate per site facetted by year.
 CR <- exdat1 %>%
   group_by(facYear) %>%
   summarise(avCR = mean(CaughtUndam)) 
-
+%>% 
 CR
 
 # Hist of nDP
@@ -329,3 +329,193 @@ Capespexdp
 # 
 # ggsave(paste(rumPlots, "Capespexdp.png", sep='/'), width = 4, height = 6)
 ```
+
+```{r}
+ a <- st_read(paste(s.dir, "gpkg/FADs.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "FADs.shp", sep = '/'), append = F)
+
+ 
+  a <- st_read(paste(s.dir, "gpkg/ncmpSZ.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "ncmpSZ.shp", sep = '/'), append = F)
+ 
+   a <- st_read(paste(s.dir, "gpkg/NingBR.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "NingBR.shp", sep = '/'), append = F)
+ 
+ 
+    a <- st_read(paste(s.dir, "gpkg/nmpSpPurposeShore.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "nmpSpPurposeShore.shp", sep = '/'), append = F)
+ 
+     a <- st_read(paste(s.dir, "gpkg/NWScoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "NWScoast.shp", sep = '/'), append = F)
+ 
+  a <- st_read(paste(s.dir, "gpkg/NWScoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "NWScoast.shp", sep = '/'), append = F)
+ 
+  
+  a <- st_read(paste(s.dir, "gpkg/ReefHabitat.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "Reef.shp", sep = '/'), append = F)
+ 
+ 
+  a <- st_read(paste(s.dir, "gpkg/Wells.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "shp/Wells.shp", sep = '/'), append = F)
+ 
+   a <- st_read(paste(s.dir, "gpkg/Pipes.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "shp/Pipes.shp", sep = '/'), append = F)
+```
+
+```{r}
+FTyp <- exdat %>% 
+  group_by(FishingType) %>%   
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") %>% 
+  ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', fill = "#8fcaca") +
+  labs(x = paste("Fishing Type (n = ", length(na.omit(unique(exdat$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(exdat), ")", sep = "")) +
+  # facet_wrap(. ~ numYear) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+
+FTyp
+ggsave(paste(rumPlots, "FTyp.png", sep='/'), width = 8, height = 4)
+
+
+bf_FTyp <- bf %>% 
+  group_by(FishingType) %>%   
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") %>% 
+  ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', fill = "#8fcaca") +
+    labs(x = paste("Boat based fishing type (n = ", length(na.omit(unique(bf$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(bf), ")", sep = "")) +
+  # facet_wrap(. ~ numYear) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+
+bf_FTyp
+
+ggsave(paste(rumPlots, "bf_FTyp.png", sep='/'), width = 8, height = 4)
+
+```
+
+```{r}
+a <- dpdat %>%
+  group_by(PersonID, TripNum, facYear) %>% 
+  summarise(hookedTrip = sum(nHooked),
+            DPTrip = sum(nDP), 
+            per = DPTrip/hookedTrip*100, # percentage of depredation per trip 
+            bin = ifelse(per > 0, 1, 0),
+            bin = ifelse(hookedTrip == 0 & nDP == 0, 0, bin)) 
+
+perDPTrip <- a %>% 
+  group_by(facYear) %>% 
+  summarise(Percentage = sum(bin==1)/n()*100) %>% 
+  mutate(label = paste(round(Percentage, digits = 1), "%", sep =" "),
+         data = "Trips")
+
+
+perDPSite <- dpdat %>%
+  group_by(facYear) %>%
+  summarise(Percentage = (sum(DP == 1)/n())*100) %>% 
+    mutate(label = paste(round(Percentage, digits = 1), "%", sep =" "),
+           data = "Sites") 
+
+c <- bind_rows(perDPTrip, perDPSite) %>% 
+  ggplot(aes(factor(1), y = Percentage, fill = data)) +
+   geom_bar(stat = "identity", position = position_dodge2(reverse = TRUE)) +
+  labs(y = "Number of fish", x="") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values=c("#97c1a9", "#81caca"), name = "") +
+   theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  geom_text(aes(label=label), vjust = -0.5, size = 2.5, position = position_dodge2(.9, reverse = TRUE)) +
+  facet_grid(~facYear)
+c
+```
+
+```{r}
+var_names <- c('lat', 'lon', 'time', 'sea_surface_temperature', 'sst_dtime', 'dt_analysis', 'satellite_zenith_angle', 'l2p_flags')
+
+sst_f1 <- nc_open(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), write = TRUE)
+sst_f2 <- nc_open(paste(cdf.dir, 'SST_nc4_f2/IMOS_aggregation_20211209T025716Z.nc', sep = "/"), write = TRUE)
+sst_f3 <- nc_open(paste(cdf.dir, 'SST_nc4_f3/IMOS_aggregation_20211209T025817Z.nc', sep = "/"), write = TRUE)
+sst_f4 <- nc_open(paste(cdf.dir, 'SST_nc4_f4/IMOS_aggregation_20211209T030015Z.nc', sep = "/"), write = TRUE)
+sst_f5 <- nc_open(paste(cdf.dir, 'SST_nc4_f5/IMOS_aggregation_20211209T033329Z.nc', sep = "/"), write = TRUE)
+sst_f6 <- nc_open(paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/"), write = TRUE)
+# Just for one variable for now
+dat_new <- cbind(
+  ncvar_get(sst_f1, var_names),
+  ncvar_get(sst_f2, var_names),
+  ncvar_get(sst_f3, var_names),
+  ncvar_get(sst_f4, var_names),
+  ncvar_get(sst_f5, var_names),
+  ncvar_get(sst_f6, var_names))
+dim(dat_new)
+var <- sst_f1$var[var_names]$varnames
+
+# Create a new file
+file_new3 <- nc_create(
+  filename = 'sst_f2f6.nc',
+  # We need to define the variables here
+  vars = ncvar_def(
+    name = 'var_names',
+    units = var$units,
+    dim = dim(dat_new)))
+
+# And write to it
+ncvar_put(
+  nc = file_new,
+  varid = 'var_names',
+  vals = dat_new)
+
+# Finally, close the file
+nc_close(file_new)
+# 
+# 
+# 
+# 
+# 
+var_names <- c('lat', 'lon', 'time', 'sea_surface_temperature', 'sst_dtime', 'dt_analysis', 'satellite_zenith_angle', 'l2p_flags')
+
+for (var_name in var_names) {
+
+  # Create raster stack
+  x <- stack(
+    raster(sst_f1n, varname = var_name),
+    raster(sst_f2n, varname = var_name),
+    raster(sst_f3n, varname = var_name),
+    raster(sst_f4n, varname = var_name),
+    raster(sst_f5n, varname = var_name),
+    raster(sst_f6n, varname = var_name))
+
+  # Name each layer
+  names(x) <- c("f1", "f2", "f3", "f4", "f5", "f6")
+
+  writeRaster(x = x,
+              filename = paste0(var_name, '_out.nc'),
+              overwrite = TRUE,
+              format = 'CDF')
+}
+
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+gpkg.dir <- paste(w.dir, "spIgnore/gpkg", sep='/')
+
+Esp_ss <- st_read(paste(gpkg.dir, "Esp_StudySite.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+st_write(Esp_ss, paste(s.dir, "Esp_StudySite.shp", sep = '/'))
+```
+
+```{r}
+
+%in%
+
+```
+

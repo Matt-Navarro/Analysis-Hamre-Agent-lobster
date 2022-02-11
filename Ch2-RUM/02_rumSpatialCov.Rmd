@@ -11,6 +11,9 @@
 # install.packages('ggsn')
 # install.packages('nngeo')
 # install.packages('spatstat')
+# install.packages('matlab')
+# install.packages('ncdf4')
+
 
 library(tidyverse)
 library(dplyr)
@@ -23,13 +26,17 @@ library(sf)
 library(ggsn)
 library(nngeo)
 library(spatstat)
+library(RNetCDF)
+library(matlab)
+library(ncdf4)
 ```
 
 ```{r dir, echo = FALSE}
 w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
 d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
-s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/')
 r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+cdf.dir <- paste(w.dir, "spIgnore/NetCDF", sep = "/")
 f.dir <- paste(w.dir, "Ch2-RUM/rumFunc", sep = '/')
 rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
 ```
@@ -54,40 +61,18 @@ Assuming you don't have to manipulate any of the psatial layers you can rea dthe
 NWS <- st_read(paste(s.dir, "NWScoast.gpkg", sep = '/')) %>%
   st_transform(crs = 4283)
 
-NWS_Lam <- st_transform(NWS, crs = 3112) 
-
-StudySite <- st_read(paste(s.dir, "StudySite.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
-GridExtent <- st_read(paste(s.dir, "GridExtent.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
 Grid <- st_read(paste(s.dir, "Grid.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
-PelagicGrid <- st_read(paste(s.dir, "PelagicGrid.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
-RockyreefGrid <- st_read(paste(s.dir, "RockyreefGrid.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
-ReefGrid <- st_read(paste(s.dir, "ReefGrid.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
-LagoonGrid <- st_read(paste(s.dir, "LagoonGrid.gpkg", sep = '/')) %>%
   st_transform(crs = 4283)
 ```
 
  ## Checking habitat grid
 ```{r checking habitat grids}
-HabitatMap <- ggplot() +
+ggplot() +
   theme_void() +
   geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat)) +
   scale_fill_manual(values=c("coral", "aquamarine", "light blue", "pink"))
 
 ggsave(paste(rumPlots, "HabitatMap.png", sep='/'), width = 8, height = 4)
-
-HabitatMap
 ```
 
 ## Extracting Depth
@@ -115,7 +100,9 @@ This sf object (spNing) is to be used for making spatial plots and getting spati
 spNing <- Ning %>%
   filter(UseLat < -21.25) # defo a mistake in the survey
 
-spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283)
+spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283) # 130 with no geomtry
+
+# 131 difference between Ning and spNing
 ```
 
 ## Allocating Sites
@@ -124,6 +111,8 @@ spNing <- spNing %>%
   st_join(Grid[ , c("GridID")], left = T, join = st_intersects) %>%
   st_join(Grid[ , c("Depth")], left = T, join = st_intersects) %>%
   st_join(Grid[ , c("Habitat")], left = T, join = st_intersects)
+
+rm(Grid)
 ```
 
 ## Site type 2
@@ -139,47 +128,57 @@ spNing <- spNing %>%
 ## Proximity to artificial infrastructure 
 ```{r Artificial infrastructure and BR}
 # Add artificial infrastructure
-Pipes <- st_read(paste(s.dir, "Pipes.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
+# Pipes <- st_read(paste(s.dir, "Pipes.gpkg", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# Wells <- st_read(paste(s.dir, "Wells.gpkg", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# FADs <- st_read(paste(s.dir, "FADs.gpkg", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# BR <- st_read(paste(s.dir, "NingBR.gpkg", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# ## note that some distance  that there is no argument to prevent distance from intersecting with land - however as we are just taking the proximity to nearest it doesn't matter
+# 
+# nearest_well <- st_nn(spNing, Wells, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+# DistNearestWellm <- sapply(nearest_well[[2]], "[", 1) # Name distance
+# DistNearestWellkm <- DistNearestWellm/1000 # Convert to km
+# 
+# nearest_pipe <- st_nn(spNing, Pipes, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+# DistNearestPipem <- sapply(nearest_pipe[[2]], "[", 1) # Name distance
+# DistNearestPipekm <- DistNearestPipem/1000 # Convert to km
+# 
+# DistFADm <- st_distance(spNing, FADs)
+# DistFADkm <- DistFADm/1000
+# 
+# nearest_BR <- st_nn(spNing, BR, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
+# DistNearestBRm <- sapply(nearest_BR[[2]], "[", 1) # Name distance
+# DistNearestBRkm <- DistNearestBRm/1000 # Convert to km
+# 
+# spNing <- spNing %>%
+#   mutate(DistNearestWellkm = DistNearestWellkm) %>%
+#   mutate(DistNearestPipekm = DistNearestPipekm) %>%
+#   mutate(DistFADkm = DistFADkm) %>%
+#   mutate(DistNearestBRkm = DistNearestBRkm) %>%
+#   mutate(UseLong = unlist(map(spNing$geometry,1)),
+#          UseLat = unlist(map(spNing$geometry,2))) %>%
+#   rowwise() %>%
+#   mutate(DistNearestInfra = min(DistNearestWellkm, DistNearestPipekm, DistFADkm)) %>%
+#   ungroup() %>%
+#   relocate(GridID, DistNearestBRkm, DistNearestWellkm, DistNearestPipekm, DistFADkm, DistNearestInfra, Depth, Habitat, LunarPhase, UseLat, UseLong, .before = geometry) %>%
+#   st_drop_geometry() %>%
+#   as.data.frame()
 
-Wells <- st_read(paste(s.dir, "Wells.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
+# saveRDS(spNing, paste(d.dir, "Ning_w_DistDepth.csv", sep ="/"))
 
-FADs <- st_read(paste(s.dir, "FADs.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
+temp <- readRDS(paste(d.dir, "Ning_w_DistDepth.csv", sep='/'))
 
-BR <- st_read(paste(s.dir, "NingBR.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
+spNing <- left_join(spNing, temp, by = "ID", suffix = c("", ".y")) %>%
+ select_at(vars(-ends_with(".y"))) 
 
-## note that some distance  that there is no argument to prevent distance from intersecting with land - however as we are just taking the proximity to nearest it doesn't matter
-
-nearest_well <- st_nn(spNing, Wells, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
-DistNearestWellm <- sapply(nearest_well[[2]], "[", 1) # Name distance
-DistNearestWellkm <- DistNearestWellm/1000 # Convert to km
-
-nearest_pipe <- st_nn(spNing, Pipes, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
-DistNearestPipem <- sapply(nearest_pipe[[2]], "[", 1) # Name distance
-DistNearestPipekm <- DistNearestPipem/1000 # Convert to km
-
-DistFADm <- st_distance(spNing, FADs)
-DistFADkm <- DistFADm/1000
-
-nearest_BR <- st_nn(spNing, BR, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
-DistNearestBRm <- sapply(nearest_BR[[2]], "[", 1) # Name distance
-DistNearestBRkm <- DistNearestBRm/1000 # Convert to km
-
-spNing <- spNing %>%
-  mutate(DistNearestWellkm = DistNearestWellkm) %>%
-  mutate(DistNearestPipekm = DistNearestPipekm) %>%
-  mutate(DistFADkm = DistFADkm) %>%
-  mutate(DistNearestBRkm = DistNearestBRkm) %>%
-  mutate(UseLong = unlist(map(spNing$geometry,1)),
-         UseLat = unlist(map(spNing$geometry,2))) %>%
-  mutate(Depth = Depth*-1) %>%
-  rowwise() %>%
-  mutate(DistNearestInfra = min(DistNearestWellkm, DistNearestPipekm, DistFADkm)) %>%
-  ungroup() %>%
-  relocate(GridID, DistNearestBRkm, DistNearestWellkm, DistNearestPipekm, DistFADkm, DistNearestInfra, Depth, Habitat, LunarPhase, UseLat, UseLong, .before = geometry) 
+rm(temp)
 ```
 
 ## Site Type 3
@@ -192,48 +191,66 @@ Unique IDs to be designated as boat based: 1223, 1137, 942, 802, 940, 936, 648, 
 ```{r SiteType}
 
 spNing <- spNing %>%
-  dplyr::mutate(SiteType = ifelse(ID %in% c("1044", "1092", "471", "1225", "450", "955", "646", "678", "980", "788", "643", "538", "542", "524", "677", "1261",  "1233", "754", "800", "836", "760", "755", "923", "871", "985", "673", "1296", "876", "878", "730", "725", "719", "1108", "1231", "1232", "798", "799", "758", "1254", "1392"), "Shore", SiteType)) %>%
-dplyr::mutate(SiteType = ifelse(ID %in% c("1223", "1137", "942", "802", "940", "936", "648", "935", "971", "647", "1331", "1181"," 414"," 617", "1356", "653", "891", "894", "802", "942", "1098", "895", "892", "617", "515", "511"), "Boat", SiteType))
+  dplyr::mutate(SiteType = ifelse(ID %in% c("1044", "1092", "471", "1225", "450", "955", "646", "678", "980", "788", "643", "538", "542", "524", "677", "1261",  "1233", "754", "800", "836", "760", "755", "923", "871", "985", "673", "1296", "876", "878", "730", "725", "719", "1108", "1231", "1232", "798", "799", "758", "1254", "1392", "1554", "1465", "1525", "1462", "1464", "1359", "1600", "1598"), "Shore", SiteType)) %>%
+dplyr::mutate(SiteType = ifelse(ID %in% c("1223", "1137", "942", "802", "940", "936", "648", "935", "971", "647", "1331", "1181"," 414"," 617", "1356", "653", "891", "894", "802", "942", "1098", "895", "892", "617", "515", "511", "1716", "1544", "1423"), "Boat", SiteType))
 
 ggplot() + 
   theme_void() +
   geom_sf(data = NWS) +
   geom_sf(data = spNing, size = 0.05, aes(colour=SiteType))
-
-# a <- which(is.na(spNing$SiteType) & spNing$Agreement == "Yes")
-# 
-# b <- spNing[a, ]
-# 
-# 
-# ggplot() + 
-#   theme_void() +
-#   geom_sf(data = NWS) +
-#   geom_sf(data = b, size = 1, colour = 'red')
-# 
-# 
-# spNing[a, ]
-# 1392
 ```
-## SST 
 
-```{r sst}
+## Enviromental variables
+### SST
+```{r}
+NWS_Lam <- NWS %>%
+  st_transform(crs = 3112) # need land lambert shp file loaded
+# 
 # spNing <- spNing %>%
 #   mutate(Date = as.Date(Date)) %>%
 #   st_transform(crs = 4283)
 # 
-# sst <- get_sst(spNing$Date, spNing$UseLong, spNing$UseLat)
+# sst_kelvins <- get_sst(spNing$Date, spNing$UseLong, spNing$UseLat) # getting sst 
+# 
+# sst_celcius <- sst - 273.15 # convert to celcius
+# 
+# spNing_w_sst <- spNing %>%
+#   mutate(sst = sst_celcius)
+# 
+# saveRDS(spNing_w_sst, paste(d.dir, "spNing_w_sst.csv", sep = "/"))
+
+# spNing_w_sst <- readRDS(paste(d.dir, "spNing_w_sst.csv", sep = "/"))
+# # 
+# spNing_sst <- spNing_w_sst %>%
+#   as.data.frame() %>%
+#   left_join(spNing, spNing_sst, by = "ID", suffix = c("", ".y")) %>%
+#  select_at(vars(-ends_with(".y")))
 ```
 
+### Swell hieght and wind speed
 ```{r hs and ws}
-# hsws <- get_hs_ws_day(spNing$Date, spNing$UseLong, spNing$UseLat)
+# hsws <- get_hs_ws_day(spNing_sst$Date, spNing_sst$UseLong, spNing_sst$UseLat)
+
+# tranformatons
+
+# spNing_env <- spNing_w_sst %>% 
+#   mutate(wind = wind) %>% 
+#   mutate(wave = wave)
 ```
-
-
-## Join the spatial variables in spNing to the master dataset Ning. 
-```{r Join}
-Ning <- left_join(Ning, spNing, by = "ID", suffix = c("", ".y")) %>%
-  mutate(Depth = Depth) %>% 
- select_at(vars(-ends_with(".y"))) 
+### Save and read dataset
+```{r}
+# Ning_env <- spNing_w_sst %>% # change this to env when to have hs and ws
+#   st_drop_geometry() %>% 
+#   as.data.frame()
+# 
+# write.csv(Ning_env, paste(d.dir, "Ning_env.csv", sep = "/"), row.names=F)
+# 
+# Ning_env <- read.csv(Ning_env, paste(d.dir, "Ning_env.csv", sep = "/"))
+# 
+# duplicated(dimnames(Ning_env))
+# is.na(dimnames(Ning_env))
+# length(dimnames(Ning_env))
+# str(Ning_env)
 ```
 
 ## Data subsets
@@ -288,6 +305,8 @@ bf_spNing <- bf_spNing%>%
 # Join to Ning
 Ning <- left_join(Ning, bf_spNing, by = "ID", suffix = c("", ".y")) %>%
  select_at(vars(-ends_with(".y"))) 
+
+rm(b_tjd.split, bf_tjd.split, b_5km, bf_5km)
 ```
 
 ### Kernal Density
@@ -359,22 +378,546 @@ bf_spNing <- bf_spNing %>%
 # Join the KDE to the original dataframe preserving where you have NA geomtry and therefore NA KDE
 Ning <- left_join(Ning, bf_spNing, by = "ID", suffix = c("", ".y")) %>%
  select_at(vars(-ends_with(".y"))) 
+
+rm(b_kdraster, b_points, b_spNing, b_spNing_Lam, b_spNing_ppp, b_spNing_ppp.km, bf_kdraster, bf_points, bf_spNing, bf_spNing_Lam, bf_spNing_ppp, bf_spNing_ppp.km, b_kdens_plot, bf_kdens_plot, KDEPoints)
 ```
+
+## Join the spatial variables in spNing to the master dataset Ning. 
+```{r Join}
+# Ning <- left_join(Ning, spNing, by = "ID", suffix = c("", ".y")) %>%
+#  select_at(vars(-ends_with(".y"))) 
+
+# Ning <- left_join(Ning, Ning_env, by = "ID", suffix = c("", ".y")) %>%
+#  select_at(vars(-ends_with(".y"))) 
+```
+## Updating fishing types
+This had to be done after site type was fully specified. 
+Shore based fishing = casting
+Boat based, weighted rod with lure = casting -> only 38 so clumped with demersal
+Boat based weighted rod with bait = demersal
+
+```{r}
+Ning <- Ning %>% 
+  mutate(SiteType = ifelse(is.na(GridID), "Shore", SiteType)) %>% 
+  mutate(SiteType = ifelse(FishingType %in% "Demersal", "Boat", SiteType)) %>% 
+  mutate(SiteType = ifelse(PersonID %in% c("156", "510", "238"), "Boat", SiteType)) %>% 
+  mutate(SiteType = ifelse(PersonID %in% c("370") & Side %in% "West", "Boat", SiteType)) %>% 
+  mutate(SiteType = ifelse(is.na(SiteType), "Shore", SiteType)) %>% 
+  mutate(FishingType = ifelse(FishingType %in% "Casting" & SiteType %in% "Boat", "Demersal", FishingType)) %>% # weighted fishing with bait is demersal
+  mutate(FishingType = ifelse(is.na(FishingType) & SiteType %in% "Shore", "Casting", FishingType)) %>% 
+  mutate(BaitLure = ifelse(is.na(BaitLure) & FishingType %in% "Demersal", "Bait", BaitLure)) %>% 
+  mutate(SiteType = ifelse(FishingType %in% "Trolling", "Boat", SiteType)) %>% 
+  as.data.frame()
+```
+
+## SST
+```{r sst}
+# opening at NetCDF
+sst_f1n <- open.nc(paste(cdf.dir, 'SST_fieldtrip1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), write = TRUE)
+sst_f2n <- open.nc(paste(cdf.dir, 'SST_fieldtrip2/IMOS_aggregation_20211209T025716Z.nc', sep = "/"), write = TRUE)
+sst_f3n <- open.nc(paste(cdf.dir, 'SST_fieldtrip3/IMOS_aggregation_20211209T025817Z.nc', sep = "/"), write = TRUE)
+sst_f4n <- open.nc(paste(cdf.dir, 'SST_fieldtrip4/IMOS_aggregation_20211209T030015Z.nc', sep = "/"), write = TRUE)
+sst_f5n <- open.nc(paste(cdf.dir, 'SST_fieldtrip5/IMOS_aggregation_20211209T033329Z.nc', sep = "/"), write = TRUE)
+sst_f6n <- open.nc(paste(cdf.dir, 'SST_fieldtrip6/IMOS_aggregation_20211209T033413Z.nc', sep = "/"), write = TRUE)
+
+print.nc(sst_f1n)
+# dims: lat = 143; lon = 84 
+
+#NC_FLOAT sea_surface_temperature(lon, lat, time)
+time_sst_f1 <- var.get.nc(sst_f1n, 'time')  #NC_CHAR time:units = "seconds since 1981-01-01 00:00:00" 
+dates <-  as.Date(time_sst_f1, origin="1981-01-01")
+dates <- utcal.nc("seconds since 1981-01-01 00:00:00", time_sst_f1, type = "c")
+
+lat <- var.get.nc(sst_f1n, 'lat') 
+lats <-which(lat>=-24.1 & lat<=-21.2)
+lats1 <- lat[lats]
+lon <- var.get.nc(sst_f1n, 'lon')
+lons<- which(lon<114.7 & lon>113.0)
+# lons <- which(lon>= 100 & lon<= 120)
+lons1 <- lon[lons]
+sst_all <- var.get.nc(sst_f1n,'sea_surface_temperature');
+glimpse(sst_all) #3D 
+
+#use index - if all can skip this step, can do the same for time to get certain values of time
+sst_all <-(sst_all[lons,lats,])
+sst_celcius <- round(sst_all - 273.15, digits = 2) #from print.nc we know sst is in kelvin
+
+#plot map/check data 
+#choose random time step ie 200, 100
+timecheck <- 100
+time_map <- dates[timecheck]
+map_out_sst <- fliplr(sst_all[,,timecheck])
+
+Map <- map('world2Hires', regions='Australia', xlim=c(110,130), ylim=c(-40,-10), plot=F)
+
+filled.contour(x = lon[lons], y = rev(lat[lats]), map_out_sst, nlevels=20, col = sort(heat.colors(30, alpha = 1),T),
+  xlab = "Longitude", ylab="Latitude", main = paste(time_map),cex.axis=10, plot.axes ={axis(1);axis(2); lines(Map$x, Map$y)})
+
+
+# opening as ncd4
+sst_f1 <- nc_open(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), write = TRUE)
+sst_f2 <- nc_open(paste(cdf.dir, 'SST_nc4_f2/IMOS_aggregation_20211209T025716Z.nc', sep = "/"), write = TRUE)
+sst_f3 <- nc_open(paste(cdf.dir, 'SST_nc4_f3/IMOS_aggregation_20211209T025817Z.nc', sep = "/"), write = TRUE)
+sst_f4 <- nc_open(paste(cdf.dir, 'SST_nc4_f4/IMOS_aggregation_20211209T030015Z.nc', sep = "/"), write = TRUE)
+sst_f5 <- nc_open(paste(cdf.dir, 'SST_nc4_f5/IMOS_aggregation_20211209T033329Z.nc', sep = "/"), write = TRUE)
+sst_f6 <- nc_open(paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/"), write = TRUE)
+
+
+NWS_Lam <- NWS %>%
+  st_transform(crs = 3112) # need land lambert shp file loaded
+
+spNing <- spNing %>%
+  mutate(Date = as.Date(Date)) %>%
+  st_transform(crs = 4283)
+
+sst_kelvins <- get_sst.DOWNLOAD(spNing$Date, spNing$UseLong, spNing$UseLat, file= paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/")) # getting sst 
+sst_celcius <- round(sst_kelvins - 273.15, digits = 2) 
+test <- spNing %>% 
+  as.data.frame() %>% 
+  mutate(sst = sst_celcius)
+
+sst_kelvins2 <- get_sst.DOWNLOAD(spNing$Date, spNing$UseLong, spNing$UseLat, file= paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/")) # getting sst 
+sst_celcius2 <- round(sst_kelvins2 - 273.15, digits = 2) 
+test2 <- spNing %>% 
+  as.data.frame() %>% 
+  mutate(sst = sst_celcius)
+
+test[, c("Date", "sst", "UseLat", "UseLong")]
+test2[, c("Date", "sst", "UseLat", "UseLong")]
+spNing_sst[, c("Date", "sst", "UseLat", "UseLong")]
+
+
+Points<-tibble(Ning$Date, Ning$UseLong, Ning$UseLat) %>% 
+  filter(!is.na(Ning$UseLat)) %>% 
+  rename("Date" = `Ning$Date`) %>% 
+    sf::st_as_sf(coords = c("Ning$UseLong", "Ning$UseLat"), crs = 4283) %>% #only extract for points on this day
+    st_transform(3112) %>%
+    mutate(ID = row_number())
+  
+  #ggplot() +  geom_sf(data = NWS_Lam) + geom_sf(data = Points) 
+  
+  Points %<>% mutate(land = as.integer(sf::st_intersects(geometry, NWS_Lam))) #returns NA for water
+  
+  Points_extraction <- Points %>% filter(is.na(land))
+  Date_code <- as.character(Points_extraction$Date) %>%  unique()
+  #Date_code %<>% str_replace_all(., "-", "") %>% unique() 
+
+  dataset <- ncParse(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), variables = "sea_surface_temperature")
+   ## Extract data from variables and dimensions
+    lat <- dataset$dimensions$lat$data
+    lon <- dataset$dimensions$lon$data
+    temp <- dataset$variables$sea_surface_temperature$data
+    temp <- as.matrix(temp)
+    
+    ## Create a raster of longitude, latitude, and temperature data
+    dat1 <- list( )
+    dat1$x <- c( lon)
+    dat1$y <- c( lat)
+    dat1$z <- t( temp)
+    raster <- raster( dat1$z, xmn = range( dat1[[1]])[1], xmx = range( dat1[[1]])[2], ymn = range( dat1[[2]])[1], ymx = range( dat1[[2]])[2])
+    
+     crs(raster)<- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')#in WGS84
+    
+    #Get points ready
+    temp <- Points_extraction %>% filter(Date == (Date_code[1:3])) %>% st_transform(4326) #only extract for points on this day
+    
+    temp$sst.100<-raster::extract(raster, temp, buffer = 100, fun=mean)
+    temp$sst.10000<-raster::extract(raster, temp, buffer = 10000, fun=mean)
+    temp$sst.100000<-raster::extract(raster, temp, buffer = 100000, fun=mean)
+    temp$sst <-ifelse(is.na(temp$sst.100), ifelse(is.na(temp$sst.10000), temp$sst.100000, temp$sst.10000), temp$sst.100)
+    
+    if(i==1){points_extracted<-temp}else{ points_extracted<-rbind(temp,points_extracted)}
+  }
+  points_extracted %<>% st_drop_geometry()
+  if( any(is.na(points_extracted$sst))) warning('raster extract returned NA consider increasing bufffer size')
+  Points %<>% left_join(.,points_extracted[, c("ID", "sst")], by = c("ID" = "ID"))
+  Points$sst
+  
+  str(Points_extraction)
+  
+
+  library(ncdf4)
+data <- nc_open("obs1.nc")
+print(data) # check that dims are lon-lat-time
+
+# location of interest
+lon <- 6  # longitude of location
+lat <- 51 # latitude  of location
+
+# get dates
+obsdatadates <- as.Date(obsdata$dim$time$vals, origin = '1950-01-01')
+
+# get values at location lonlat
+obsoutput <- ncvar_get(obsdata, varid = 'tasmin',
+                  start= c(which.min(abs(obsdata$dim$longitude$vals - lon)), # look for closest long
+                           which.min(abs(obsdata$dim$latitude$vals - lat)),  # look for closest lat
+                           1),
+                  count = c(1,1,-1)) #count '-1' means 'all values along that dimension'that dimension'
+# create dataframe
+datafinal <- data.frame(dates= obsdatadates, obs = obsoutput)
+
+# Load and check data 
+sst_f1.b <- brick(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/")) # loads ncdf4 and makes it a raster brick
+sst_f1.b # take a look at the data 
+plot(sst_f1.b) # plot whole stack 
+plot(sst_f1.b[[1]]) # plot firstratser in brick 
+animate(sst_f1.b, pause = 0.5, n = 1) # If you put this in RmD you will get all the individual plots for all rasters with title - put in console to see it animate
+
+points <- st_as_sf(spNing$geometry) # creates sf object of geomtry only
+
+plot(sst_f1.b[[1]]) # plot this with in the console 
+plot(points, add=T, cex = 0.05) # then plot this in the console to make sure they overlay 
+
+
+
+
+extract.pts <- cbind(lon.pts,lat.pts)
+ext <- extract(r.crop,extract.pts,method="bilinear")
+ext
+
+
+points <- st_as_sf(spNing$geometry) 
+
+Points<-tibble(Ning$ID, Ning$Date, Ning$UseLong, Ning$UseLat) %>%  
+  filter(!is.na(Ning$UseLat)) %>% 
+  rename("Date" = `Ning$Date`,
+         "ID" = `Ning$ID`) %>% 
+    sf::st_as_sf(coords = c("Ning$UseLong", "Ning$UseLat"), crs = 4283) %>% #only extract for points on this day
+    st_transform(3112) 
+  
+#ggplot() +  geom_sf(data = NWS_Lam) + geom_sf(data = Points) 
+  
+  Points %<>% mutate(land = as.integer(sf::st_intersects(geometry, NWS_Lam))) #returns NA for water
+  
+  Points_extraction <- Points %>% filter(is.na(land))
+  Date_code <- as.character(Points_extraction$Date) %>% unique()
+  #Date_code %<>% str_replace_all(., "-", "") %>% unique() 
+
+  dataset <- ncParse(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), variables = "sea_surface_temperature")
+   ## Extract data from variables and dimensions
+    lat <- dataset$dimensions$lat$data
+    lon <- dataset$dimensions$lon$data
+    temp <- dataset$variables$sea_surface_temperature$data
+    temp <- as.matrix(temp)
+    
+    ## Create a raster of longitude, latitude, and temperature data
+    dat1 <- list( )
+    dat1$x <- c( lon)
+    dat1$y <- c( lat)
+    dat1$z <- t( temp)
+    raster <- raster( dat1$z, xmn = range( dat1[[1]])[1], xmx = range( dat1[[1]])[2], ymn = range( dat1[[2]])[1], ymx = range( dat1[[2]])[2])
+    
+     crs(raster)<- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')#in WGS84
+    
+    #Get points ready
+    temp <- Points_extraction %>% 
+      filter(Date == (Date_code)) %>% st_transform(4326) #only extract for points on this day
+    
+    temp$sst.100<-raster::extract(raster, temp, buffer = 100, fun=mean)
+    temp$sst.10000<-raster::extract(raster, temp, buffer = 10000, fun=mean)
+    temp$sst.100000<-raster::extract(raster, temp, buffer = 100000, fun=mean)
+    temp$sst <-ifelse(is.na(temp$sst.100), ifelse(is.na(temp$sst.10000), temp$sst.100000, temp$sst.10000), temp$sst.100)
+    
+    if(i==1){points_extracted<-temp}else{ points_extracted<-rbind(temp,points_extracted)}
+  }
+  points_extracted %<>% st_drop_geometry()
+  if( any(is.na(points_extracted$sst))) warning('raster extract returned NA consider increasing bufffer size')
+  Points %<>% left_join(.,points_extracted[, c("ID", "sst")], by = c("ID" = "ID"))
+  Points$sst
+  
+  str(Points_extraction)
+  str(Date_code)
+  
+a <- which(Ning$FieldTrip == 1)
+b <- Ning[a,]
+b
+ unique(b $ TripDate)
+ 
+ unique(Points_extraction $ Date)
+```
+
+
+```{r}
+#install.packages('ncdf4')
+library(ncdf4)
+library(raster)
+
+var_names <- c('Susceptible', 'Infected', 'Recovered', 'Inhabitable')
+
+for (var_name in var_names) {
+
+  # Create raster stack
+  x <- stack(
+    raster('England_aggr_GPW4_2000_0001.nc', varname = var_name),
+    raster('England_aggr_GPW4_2000_0002.nc', varname = var_name))
+
+  # Name each layer
+  names(x) <- c('01', '02') 
+
+  writeRaster(x = x, 
+              filename = paste0(var_name, '_out.nc'),
+              overwrite = TRUE, 
+              format = 'CDF')
+}
+
+# 
+var_names <- c('sea_surface_temperature', 'sst_dtime', 'dt_analysis', 'satellite_zenith_angle', 'l2p_flags', 'quality_level', 'sses_bias', 'sses_standard_deviation', 'sses_count')
+
+for (var_name in var_names) {
+
+  # Create raster stack
+  x <- stack(
+    raster(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), varname = var_name),
+    raster(paste(cdf.dir, 'SST_nc4_f2/IMOS_aggregation_20211209T025716Z.nc', sep = "/"), varname = var_name),
+    raster(paste(cdf.dir, 'SST_nc4_f3/IMOS_aggregation_20211209T025817Z.nc', sep = "/"), varname = var_name),
+    raster(paste(cdf.dir, 'SST_nc4_f4/IMOS_aggregation_20211209T030015Z.nc', sep = "/"), varname = var_name),
+    raster(paste(cdf.dir, 'SST_nc4_f5/IMOS_aggregation_20211209T033329Z.nc', sep = "/"), varname = var_name),
+    raster(paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/"), varname = var_name))
+
+  # Name each layer
+  names(x) <- c("f1", "f2", "f3", "f4", "f5", "f6")
+
+  writeRaster(x = x,
+              filename = paste(cdf.dir, var_name, sep="/"),
+              overwrite = TRUE,
+              format = 'CDF')
+}
+
+sst_all1 <- nc_open(paste(cdf.dir, 'sea_surface_temperature.nc', sep = "/"), write = TRUE)
+# sst_all2 <- open.nc(paste(cdf.dir, 'sea_surface_temperature.nc', sep = "/"), write = TRUE)
+print.nc(sst_all2)
+# dims: latitude = 143; longitude = 84 
+# 
+#NC_FLOAT sea_surface_temperature(lon, lat, time)
+time_sst <- var.get.nc(sst_all, 'time')  #NC_CHAR time:units = "seconds since 1981-01-01 00:00:00" 
+dates <-  as.Date(time_sst_f1, origin="1981-01-01")
+dates <- utcal.nc("seconds since 1981-01-01 00:00:00", time_sst_f1, type = "c")
+
+lat <- var.get.nc(sst_f1n, 'lat') 
+lats <-which(lat>=-24.1 & lat<=-21.2)
+lats1 <- lat[lats]
+lon <- var.get.nc(sst_f1n, 'lon')
+lons<- which(lon<114.7 & lon>113.0)
+# lons <- which(lon>= 100 & lon<= 120)
+lons1 <- lon[lons]
+sst_all <- var.get.nc(sst_f1n,'sea_surface_temperature');
+glimpse(sst_all) #3D 
+
+#use index - if all can skip this step, can do the same for time to get certain values of time
+sst_all <-(sst_all[lons,lats,])
+sst_celcius <- round(sst_all - 273.15, digits = 2) #from print.nc we know sst is in kelvin
+
+#plot map/check data 
+#choose random time step ie 200, 100
+timecheck <- 100
+time_map <- dates[timecheck]
+map_out_sst <- fliplr(sst_all[,,timecheck])
+
+Map <- map('world2Hires', regions='Australia', xlim=c(110,130), ylim=c(-40,-10), plot=F)
+
+filled.contour(x = lon[lons], y = rev(lat[lats]), map_out_sst, nlevels=20, col = sort(heat.colors(30, alpha = 1),T),
+  xlab = "Longitude", ylab="Latitude", main = paste(time_map),cex.axis=10, plot.axes ={axis(1);axis(2); lines(Map$x, Map$y)})
+
+
+sst_time <- open.nc(paste(cdf.dir, 'sst_dtime.nc', sep = "/"), write = TRUE)
+# sst_all2 <- open.nc(paste(cdf.dir, 'sea_surface_temperature.nc', sep = "/"), write = TRUE)
+print.nc(sst_time)
+# dims: latitude = 14
+
+var_names <- c('sea_surface_temperature', 'sst_dtime', 'dt_analysis', 'satellite_zenith_angle', 'l2p_flags', 'quality_level', 'sses_bias', 'sses_standard_deviation', 'sses_count')
+
+
+
+  # Create raster stack
+  x <- stack(
+    raster(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/")),
+    raster(paste(cdf.dir, 'SST_nc4_f2/IMOS_aggregation_20211209T025716Z.nc', sep = "/")),
+    raster(paste(cdf.dir, 'SST_nc4_f3/IMOS_aggregation_20211209T025817Z.nc', sep = "/")),
+    raster(paste(cdf.dir, 'SST_nc4_f4/IMOS_aggregation_20211209T030015Z.nc', sep = "/")),
+    raster(paste(cdf.dir, 'SST_nc4_f5/IMOS_aggregation_20211209T033329Z.nc', sep = "/")),
+    raster(paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/")))
+
+  # Name each layer
+  names(x) <- c("f1", "f2", "f3", "f4", "f5", "f6")
+
+  writeRaster(x = x,
+              filename = paste(cdf.dir, "sst_all.nc", sep="/"),
+              overwrite = TRUE,
+              format = 'CDF')
+
+  
+  sst_all <- open.nc(paste(cdf.dir, 'sst_all.nc', sep = "/"), write = TRUE)
+# sst_all2 <- open.nc(paste(cdf.dir, 'sea_surface_temperature.nc', sep = "/"), write = TRUE)
+print.nc(sst_all)
+```
+
+```{r}
+f1 <- Ning %>% 
+  filter(FieldTrip == 1)
+
+Points<-tibble(f1$ID, f1$Date, f1$UseLong, f1$UseLat) %>%  
+  filter(!is.na(f1$UseLat)) %>% 
+  rename("Date" = `f1$Date`,
+         "ID"= `f1$ID`) %>% 
+    sf::st_as_sf(coords = c("f1$UseLong", "f1$UseLat"), crs = 4283) %>% #only extract for points on this day
+    st_transform(3112) 
+  
+#ggplot() +  geom_sf(data = NWS_Lam) + geom_sf(data = Points) 
+  
+  Points %<>% mutate(land = as.integer(sf::st_intersects(geometry, NWS_Lam))) #returns NA for water
+  
+  Points_extraction <- Points %>% filter(is.na(land))
+  Date_code <- as.character(Points_extraction$Date) %>% unique()
+  #Date_code %<>% str_replace_all(., "-", "") %>% unique() 
+
+  dataset <- ncParse(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), variables = "sea_surface_temperature")
+   ## Extract data from variables and dimensions
+    lat <- dataset$dimensions$lat$data
+    lon <- dataset$dimensions$lon$data
+    temp <- dataset$variables$sea_surface_temperature$data
+    temp <- as.matrix(temp)
+    
+    ## Create a raster of longitude, latitude, and temperature data
+    dat1 <- list( )
+    dat1$x <- c( lon)
+    dat1$y <- c( lat)
+    dat1$z <- t( temp)
+    raster <- raster( dat1$z, xmn = range( dat1[[1]])[1], xmx = range( dat1[[1]])[2], ymn = range( dat1[[2]])[1], ymx = range( dat1[[2]])[2])
+    
+     crs(raster)<- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')#in WGS84
+    
+    #Get points ready
+    temp <- Points_extraction %>% 
+      filter(Date == (Date_code)) %>% st_transform(4326) #only extract for points on this day
+    
+    temp$sst.100<-raster::extract(raster, temp, buffer = 100, fun=mean)
+    temp$sst.10000<-raster::extract(raster, temp, buffer = 10000, fun=mean)
+    temp$sst.100000<-raster::extract(raster, temp, buffer = 100000, fun=mean)
+    temp$sst <-ifelse(is.na(temp$sst.100), ifelse(is.na(temp$sst.10000), temp$sst.100000, temp$sst.10000), temp$sst.100)
+    
+    if(i==1){points_extracted<-temp}else{ points_extracted<-rbind(temp,points_extracted)}
+  }
+  points_extracted %<>% st_drop_geometry()
+  if( any(is.na(points_extracted$sst))) warning('raster extract returned NA consider increasing bufffer size')
+  Points %<>% left_join(.,points_extracted[, c("ID", "sst")], by = c("ID" = "ID"))
+  Points$sst
+  
+```
+```{r}
+get_sst2<- function(ID, Dates, Long, Lat, file){
+  Points<-tibble(ID = ID, Dates = Date, Long = Long,  Lat = Lat) %>%  
+    filter(!is.na(Lat), !is.na(Long)) %>% 
+    sf::st_as_sf(coords = c("Long", "Lat"), crs = 4283) %>% #only extract for points on this day
+    st_transform(3112)
+  
+  #ggplot() +  geom_sf(data = NWS_Lam) + geom_sf(data = Points) 
+  
+  Points %<>% mutate(land = as.integer(sf::st_intersects(geometry, NWS_Lam))) #returns NA for water
+  
+  Points_extraction <- Points %>% filter(is.na(land))
+  Date_code <- as.character(Points_extraction$Dates)
+  
+  Date_code %<>% str_replace_all(., "-", "") %>% unique() #Extra Date codes for each day desired
+  
+  for(i in 1:length(Date_code)) { #loop through days download and extract data
+    print(i)
+    # file_URL<- paste0("http://thredds.aodn.org.au/thredds/dodsC/IMOS/SRS/SST/ghrsst/L3S-6d/dn/", 
+    #                   substr(Date_code[i], 1,4), "/", 
+    #                   Date_code[i], 
+    #                   "212000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-6d_dn.nc")
+    # 
+    dataset <- ncParse(file, variables = "sea_surface_temperature")
+    
+    ## Extract data from variables and dimensions
+    lat <- dataset$dimensions$lat$data
+    lon <- dataset$dimensions$lon$data
+    temp <- dataset$variables$sea_surface_temperature$data
+    temp <- as.matrix(temp)
+    
+    ## Create a raster of longitude, latitude, and temperature data
+    dat1 <- list( )
+    dat1$x <- c( lon)
+    dat1$y <- c( lat)
+    dat1$z <- t( temp)
+    raster <- raster( dat1$z, xmn = range( dat1[[1]])[1], xmx = range( dat1[[1]])[2], ymn = range( dat1[[2]])[1], ymx = range( dat1[[2]])[2])
+    
+    crs(raster)<- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')#in WGS84
+    
+    #Get points ready
+    temp <- Points_extraction %>% filter(Dates == ymd(Date_code[i])) %>% st_transform(4326) #only extract for points on this day
+    
+    temp$sst.100<-raster::extract(raster, temp, buffer = 100, fun=mean)
+    temp$sst.10000<-raster::extract(raster, temp, buffer = 10000, fun=mean)
+    temp$sst.100000<-raster::extract(raster, temp, buffer = 100000, fun=mean)
+    temp$sst <-ifelse(is.na(temp$sst.100), ifelse(is.na(temp$sst.10000), temp$sst.100000, temp$sst.10000), temp$sst.100)
+    
+    if(i==1){points_extracted<-temp}else{ points_extracted<-rbind(temp,points_extracted)}
+  }
+  points_extracted %<>% st_drop_geometry()
+  if( any(is.na(points_extracted$sst))) warning('raster extract returned NA consider increasing bufffer size')
+  Points %<>% left_join(.,points_extracted[, c("ID", "sst")], by = c("ID" = "ID"))
+  # Points$sst
+}
+
+ f1sst <- get_sst2(ID = f1$ID, Date = f1$Date, Long = f1$UseLong, Lat = f1$UseLat, file=paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"))
+
+ f1sst_cel <- round(f1sst - 273.15, digits = 2)
+ 
+ w_sst <- readRDS(paste(d.dir, "spNing_w_sst.csv", sep="/"))
+ 
+ w_sstf1 <- w_sst %>% 
+   filter(FieldTrip == 1) %>% 
+   select(ID, Date, UseLong, UseLat, sst) %>% 
+   as.data.frame()
+ 
+ identical(f1sst_cel, w_sstf1$sst)
+ 
+ test <- f1 %>% 
+   mutate(sst = f1sst_cel) %>% 
+   mutate(sst2 = w_sstf1$sst) %>% 
+   mutate(diff = sst2-sst) %>% 
+   select(ID, Date, UseLong, UseLat, sst, sst2, diff)
+ 
+ w_sstf1[,]
+ test[,]
+ 
+ summary(test$diff)
+ 
+ f6 <- spNing %>% 
+  filter(FieldTrip == 6)
+ 
+ unique(f6 $ Date)
+ 
+  f6sst <- get_sst2(ID = f6$ID, Date = f6$Date, Long = f6$UseLong, Lat = f6$UseLat, file=paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/"))
+  f6sst_cel <- f6sst %>% 
+    mutate(sst = round(sst - 273.15, digits = 2))
+  
+  f6 <- f6 %>% 
+    mutate(sst =  f6sst_cel)
+  
+ test2 <-  left_join(Ning, f6, by = "ID", suffix = c("", ".y")) %>% 
+ select_at(vars(-ends_with(".y")))
+ 
+ names(test2)
+ 
+f6[, c("ID", "FieldTrip","sst")]
+```
+
+
 ## Check Point
 
 ```{r csv}
 Ning <- Ning %>%
   dplyr::relocate(SiteType, .after = Site) %>%
-  dplyr::relocate(GridID, .after = Comments) %>%
-  dplyr::select(-geometry)
+  dplyr::relocate(GridID, .after = Comments)
 
-write.csv(Ning, paste(d.dir, "Ning_v2.csv", sep = "/"), row.names=F)
+saveRDS(Ning, paste(d.dir, "Ning_v2.csv", sep = "/"))
 ```
 
 
 ```{r gpkg}
-
-spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283)
-
-st_write(spNing, paste(s.dir, "spNing.gpkg", sep = '/'), append = FALSE, row.names=FALSE)
+# spNing <- st_as_sf(spNing, coords = c("UseLong", "UseLat"), crs = 4283)
+# 
+# st_write(spNing, paste(s.dir, "spNing.gpkg", sep = '/'), append = FALSE, row.names=FALSE)
 ```
+

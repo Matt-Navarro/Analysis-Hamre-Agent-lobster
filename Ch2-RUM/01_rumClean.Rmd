@@ -1,12 +1,5 @@
 # Set Up
 ```{r libs, include = FALSE}
-# install.packages('tidyverse')
-# install.packages('dplyr')
-# install.packages('lubridate')
-# install.packages('chron')
-# install.packages('lunar')
-# install.packages('ggplot2')
-
 library(tidyverse)
 library(dplyr)
 library(lubridate)
@@ -95,11 +88,11 @@ However, looking at number of observations in dfs, there will not be the same nu
 
 Test all joins and see which one is right
 ```{r  join}
-MetaUse <- full_join(meta, use, by = c("mGlobID" = "uGUID"), keep=T) 
-Ning0921 <- full_join(MetaUse, avidity, by = c("uGlobID" = "aGUID"), keep=T) %>%
+MetaUse <- full_join(meta, use, by = c("mGlobID" = "uGUID"), keep=T) # joining meta and use
+Ning0921 <- full_join(MetaUse, avidity, by = c("uGlobID" = "aGUID"), keep=T) %>% #joining metause with avidity
   rename(nDate = Date)
 
-Ning <- bind_rows(Ning0921, jon)
+Ning <- bind_rows(Ning0921, jon) # adding in jons data
 ```
 
 ```{r csv}
@@ -212,7 +205,7 @@ dplyr::rename(FieldTrip = "Trip.number",
               nBoys = "Number.of.boys",
               nGirls = "Number.of.girls") %>%
   
-  dplyr::select(PersonID, nDate, CreationDate.x,jDate, jTime, Interviewer, FieldTrip, BR, jBR, BRLat, BRLong, Site, Screen18,
+  dplyr::select(mGlobID, PersonID, nDate, CreationDate.x,jDate, jTime, Interviewer, FieldTrip, BR, jBR, BRLat, BRLong, Site, Screen18,
                 PrevInter, jPrevInter, Agreement, nDaysInArea, nDaysInArea_other, BoatAccess,
          nBoatDays, nBoatDays_other, nShoreDays, nShoreDays_other, nTimesLast12m,
          nTimesLast12m_other, nTimes19, nTimes19_other, Covid, SiteType, SurveyLat, SurveyLong,
@@ -229,8 +222,6 @@ dplyr::rename(FieldTrip = "Trip.number",
 
 Ning <- Ning %>%
   dplyr::filter(is.na(BR) | BR != "BeadonCreek")  # Getting rid of Onslow data
-
- names(Ning) # checking all vars have been renames and are where I expect them
 ```
 
 ## Temporal variables
@@ -241,23 +232,18 @@ Ning <- Ning %>%
   # getting date from creation date/apending jons and formatting
   dplyr::mutate(DateTime = ifelse(is.na(nDate), CreationDate.x, nDate)) %>% 
   dplyr::mutate(DateTime = parse_date_time(DateTime, c("mdY IMS p"))) %>%  # making POSIX
-  
-  
   dplyr::mutate(Date = as.Date(ifelse(!is.na(DateTime), as.character(as.Date(substr(DateTime, 1, 10), "%Y-%m-%d")),
                               as.character(as.Date(jDate, "%d/%m/%Y"))), "%Y-%m-%d")) %>% 
-  
-  #  check to see whethr you can make this work with the avidity stuff without jankying up the idsbut probably not so will have to redo the ids for avidity after you hav added this line in 
+  #  check to see whether you can make this work with the avidity stuff without jankying up the ids but probably not so will have to redo the ids for avidity after you have added this line in 
   # dplyr::mutate(Date = as.Date(ifelse(is.na(Date), as.character(as.Date(substr(CreationDate.x, 1, 10), "%Y-%m-%d")),
   #                             as.character(as.Date(Date, "%d/%m/%Y"))), "%Y-%m-%d")) %>% 
-                  
-                  
   dplyr::mutate(Date = as.Date(ifelse(str_detect(Date, "2020-09-01"), as.character(as.Date(Date + difftime("2020-10-01",
                                                                                                            "2020-09-01"))),
                         as.character(as.Date(Date))), "%Y-%m-%d")) %>% # This was input one month to early
   # calc year
-  dplyr::mutate(numYear = as.numeric(substr(Date, 1, 4))) %>%
+  dplyr::mutate(numYear = as.numeric(substr(Date, 1, 4))) %>% # substr take between the 1sta nd 4th digit in date column
   dplyr::mutate(facYear = as.factor(numYear)) %>% # Doing this after filter so 2018 is not a level
-  dplyr::mutate(DateTime = with_tz(DateTime, "Australia/Perth")) %>%
+  dplyr::mutate(DateTime = with_tz(DateTime, "Australia/Perth")) %>% # changing timezone
   dplyr::mutate(Time = ifelse(!is.na(DateTime), as.character(substr(DateTime, 12, 16)), as.character(jTime))) %>%
   dplyr::relocate(Date, numYear, facYear, Time, .after = PersonID) %>%
   dplyr::select(-c(nDate, CreationDate.x, jDate, jTime, DateTime)) %>%
@@ -272,18 +258,18 @@ Recall date for both extractive and non-extractive activities need to be done at
 ```{r ex Recall}
 Ning <- Ning %>%
   dplyr::mutate(DateTime = parse_date_time(exRecall, c("mdY IMS p"))) %>% # making POSIX
-  dplyr::mutate(exRecall = as.Date(substr(DateTime, 1, 10), "%Y-%m-%d")) %>%
+  dplyr::mutate(exRecall = as.Date(substr(DateTime, 1, 10), "%Y-%m-%d")) %>% # substringing from POSIX
   dplyr::select(-c(DateTime))
 ```
 
 ```{r nexRecall}
 Ning <- Ning %>%
   dplyr::mutate(DateTime = parse_date_time(nexRecall, c("mdY IMS p"))) %>% # making POSIX
-  dplyr::mutate(nexRecall = as.Date(substr(DateTime, 1, 10), "%Y-%m-%d")) %>%
+  dplyr::mutate(nexRecall = as.Date(substr(DateTime, 1, 10), "%Y-%m-%d")) %>% # substring from POSIX
   dplyr::select(-c(DateTime))
 ```
 
-The date of the trip. 
+The date of the trip - only applicable if there is a entry in recall date, if not trip date will be the same as the CreationDate
 ```{r TripDate}
 Ning <- Ning %>%
   dplyr::mutate(TripDate = as.Date(ifelse(!is.na(exRecall), as.character(as.Date(exRecall)), as.character(as.Date(nexRecall))))) %>%
@@ -294,7 +280,7 @@ Ning <- Ning %>%
 ```
 
 Julian Day for Trip Date
-Should be included as a random factor to account for any unexplained daily variation. 
+Should be included as a random factor to account for any unexplained daily variation (Jons)
 ```{r julian day}
 Ning <- Ning %>%
   dplyr::mutate(TripJulianDay = julian(TripDate)) %>%
@@ -305,7 +291,7 @@ Ning <- Ning %>%
 Binary recall column. 
 ```{r Recall}
 Ning <- Ning %>%
-  dplyr::mutate(Recall = ifelse(TripDate==Date, 0, 1)) %>%
+  dplyr::mutate(Recall = ifelse(TripDate==Date, 0, 1)) %>% # is it recall yay or nay 
   dplyr::mutate(Recall = as.factor(Recall)) %>%
   dplyr::relocate(Recall, .after = TripDate)
 ```
@@ -313,40 +299,40 @@ Ning <- Ning %>%
 The start time of extractive and non-extractive activities. 
 ```{r exStart}
 Ning <- Ning %>%
- mutate(exStart = ifelse(str_detect(exStart, "30 min,"), "13:10", exStart))%>%
-    mutate(TimeOfDay = ifelse(str_detect(exStart, "pm"), "pm",
-                              ifelse(str_detect(exStart, "am"), "am", NA)))%>%
-    mutate(exStart = gsub("[.]|[:]|[\\]|[a-zA-Z]|[ ]", "", exStart))%>%
+ mutate(exStart = ifelse(str_detect(exStart, "30 min,"), "13:10", exStart))%>% # individual case
+    mutate(TimeOfDay = ifelse(str_detect(exStart, "pm"), "pm", # detaching ams/pms
+                              ifelse(str_detect(exStart, "am"), "am", NA)))%>% 
+    mutate(exStart = gsub("[.]|[:]|[\\]|[a-zA-Z]|[ ]", "", exStart))%>% # Getting rid of all punctuction eg. substituting everything in square brackets with ""
     mutate_at(vars(exStart), funs(as.numeric))%>%
-    mutate(exStart = ifelse((str_detect(TimeOfDay, "pm") & (exStart<100)), exStart+12, exStart))%>%
+    mutate(exStart = ifelse((str_detect(TimeOfDay, "pm") & (exStart<100)), exStart+12, exStart))%>% # putting pm in 12 hour into 24 hour
     mutate(exStart=ifelse((str_extract(exStart, "\\d")>1&str_extract(exStart, "\\d")<=9), paste(0,exStart,sep=""), exStart))%>%
-    mutate(exStart=ifelse(str_detect(exStart, "0430"),"1630", exStart))%>%
+    mutate(exStart=ifelse(str_detect(exStart, "0430"),"1630", exStart))%>% # Check suspect times which could be am or pm; activity, end time, time of next activity, survey time, recall status etc. 
     mutate(exStart=ifelse(str_detect(exStart, "0220"), "1420", exStart))%>%
     mutate(exStart=ifelse(str_detect(exStart, "0230"), "1430", exStart))%>%
     mutate(exStart=ifelse(str_detect(exStart, "0520"), "1720", exStart))%>%
     mutate(exStart=ifelse(str_detect(exStart, "013:0"), "13:00", exStart))%>%
     mutate(exStart=ifelse(PersonID == 385, "1400", exStart)) %>%
-    mutate(exStart=ifelse((str_extract(exStart, "\\d$")!=0 & str_length(exStart)<4), str_c(exStart,"00"), exStart))%>%
+    mutate(exStart=ifelse((str_extract(exStart, "\\d$")!=0 & str_length(exStart)<4), str_c(exStart,"00"), exStart))%>% # adds "00 to end of exStart
     mutate(exStart=ifelse((str_detect(exStart, "10") & str_length(exStart)==2), str_c(exStart, "00"), exStart))%>%
     mutate(exStart=ifelse(str_detect(exStart, "\\b120\\b"), str_c(exStart, "0"), exStart))%>%
     mutate(exStart=gsub("^([0-9]{2})([0-9]+)$", "\\1:\\2", exStart))%>%
     mutate(exStart=ifelse(is.na(exStart), jexStart, exStart))%>%
-    mutate(exStart=ifelse(str_length(exStart)==4, str_c("0", exStart), exStart))%>%
+    mutate(exStart=ifelse(str_length(exStart)==4, str_c("0", exStart), exStart))%>% # add "0" to start of exStart
     dplyr::select(-TimeOfDay)%>%
     dplyr::select(-jexStart)
 ```
 
 ```{r nexStart}
 Ning <- Ning %>%
-  mutate(nexStart = ifelse(str_detect(nexStart, "Same as above "), "10", nexStart)) %>%
+  mutate(nexStart = ifelse(str_detect(nexStart, "Same as above "), "10", nexStart)) %>% # idividual cases
   mutate(nexStart = ifelse(str_detect(nexStart, "Half an hour ago"), "09:30", nexStart)) %>%
   mutate(TimeOfDay = ifelse(str_detect(nexStart, "pm"), "pm",
-                              ifelse(str_detect(nexStart, "am"), "am", NA))) %>%
-  mutate(nexStart = gsub("[.]|[:]|[\\]|[a-zA-Z]|[ ]", "", nexStart)) %>%
+                              ifelse(str_detect(nexStart, "am"), "am", NA))) %>% # detaching am/pm
+  mutate(nexStart = gsub("[.]|[:]|[\\]|[a-zA-Z]|[ ]", "", nexStart)) %>% # removing punctuation
   mutate_at(vars(nexStart), funs(as.numeric)) %>%
-  mutate(nexStart = ifelse((str_detect(TimeOfDay, "pm") & (nexStart<100)), nexStart+12, nexStart)) %>%
+  mutate(nexStart = ifelse((str_detect(TimeOfDay, "pm") & (nexStart<100)), nexStart+12, nexStart)) %>% # making pms in 12 hour 24 hour
   mutate(nexStart=ifelse((str_extract(nexStart, "\\d")>1&str_extract(nexStart, "\\d")<=9), paste(0,nexStart,sep=""), nexStart)) %>%
-  mutate(nexStart=ifelse(str_detect(nexStart, "0430"),"1630", nexStart)) %>%
+  mutate(nexStart=ifelse(str_detect(nexStart, "0430"),"1630", nexStart)) %>% # suspect times - see chunk above
   mutate(nexStart=ifelse(str_detect(nexStart, "0530"),"1730", nexStart)) %>%
   mutate(nexStart=ifelse(str_detect(nexStart, "0230"),"1430", nexStart)) %>%
   mutate(nexStart=ifelse(str_detect(nexStart, "0420"),"1620", nexStart)) %>%
@@ -433,7 +419,7 @@ Ning <- Ning %>%
 Month of activity
 ```{r month}
 Ning <- Ning %>%
-  mutate(Month = format(Date,"%B")) %>%
+  mutate(Month = format(Date,"%B")) %>% # generate month from date
   relocate(Month, .after = Date)
 ```
  Note: exMedian Time and number of hours doing activity needs to be done for non-extractive
@@ -493,6 +479,14 @@ Ning <- Ning %>%
 ```
 
 ```{r}
+
+# 1: 2015-07-21 - 2015-08-02
+# 2: 2015-09-23 - 2015-10-11
+# 3: 2016-04-06 - 2016-04-23
+# 4: 2020-09-25 - 2020-10-04
+# 5: 2021-03-27 - 2021-04-24
+# 6: 2021-09-19 - 2021-10-01
+
 Ning <- Ning %>%
   dplyr::mutate(FieldTrip = ifelse(Date %within% interval(ymd("2020-09-25"), ymd("2020-10-04")), "4",
                                      FieldTrip)) %>% 
@@ -514,7 +508,7 @@ Ning <- Ning %>%
   dplyr::mutate(ID = row_number()) %>%
   dplyr::arrange(PersonID, TripDate) %>%
   dplyr::mutate(PersonID = ifelse(is.na(PersonID), 0, PersonID)) %>%
-  dplyr::mutate(PersonID = ifelse(PersonID == 0, seq(from = (max(PersonID)+1), to = nrow(Ning)), PersonID)) %>%
+  dplyr::mutate(PersonID = ifelse(PersonID == 0, seq(from = (max(PersonID)+1), to = nrow(Ning)), PersonID)) %>% 
   dplyr::group_by(PersonID) %>%
   dplyr::arrange(StartTime) %>%
   dplyr::mutate(TripNum = as.numeric(as.factor(TripDate))) %>%
@@ -543,6 +537,7 @@ Ning <- Ning %>%
   dplyr::mutate(Agreement = ifelse(is.na(Agreement) & is.na(UseLat), "No", Agreement)) %>% # Agreement no if no associated use
   dplyr::mutate(Agreement = ifelse(is.na(Agreement) & !is.na(UseLat)|PersonID == c("143", "789", "50")|ID=="1317", "Yes", Agreement)) # changing mislabels nos to yes
 ```
+
 ## Filling avidity
 The avidity column is only associated with one uGlobID, therefore is not replicated across every observation of the same person, so needs to be filled across every identical PersonID. 
 
@@ -579,6 +574,7 @@ Ning <- Ning %>%
 # 
 # a <- which(Ning$Agreement == "Yes"& Ning$Interviewer %in% "Elle")
 # Ning[a,]
+# 
 ```
 
 ## Missing dates
@@ -626,7 +622,6 @@ Ning <- Ning %>%
                                      FieldTrip)) %>%
   dplyr::mutate(FieldTrip = as.numeric(FieldTrip)) 
 ```
-
 
 * BoatID
 * BoatName
@@ -856,6 +851,14 @@ Ning <- Ning %>%
 Ning <- Ning %>%
   dplyr::mutate(PrevInter = ifelse(numYear < 2020, jPrevInter, PrevInter)) %>%
   dplyr::select(-c("jBoatID", "jPrevInter")) 
+
+Ning <- Ning %>%
+  dplyr::group_by(PersonID) %>%
+  dplyr::arrange(TripDate, StartTime) %>%
+  dplyr::mutate(TripNum = as.numeric(as.factor(TripDate))) %>%
+  dplyr::mutate(SiteNum = sequence(rle(TripNum)$lengths)) %>%
+  dplyr::arrange(Date, Time, PersonID) %>%
+  dplyr::ungroup()
 ```
 
 ## Interviewer
@@ -873,7 +876,7 @@ All sites are not in site column including boat ramsp. Survey Lat and Long provi
 ```{r BR and Site}
 Ning <- Ning %>%
   dplyr::mutate(BR = ifelse(is.na(BR), jBR, BR)) %>% 
-  dplyr::mutate(BR = ifelse(str_detect(BR, "Coral"), "CoralBayBR", BR)) %>%
+  dplyr::mutate(BR = ifelse(str_detect(BR, "Coral"), "CoralBayBR", BR)) %>% # fixing spellings
   dplyr::mutate(BR = ifelse(str_detect(BR, "Exmouth"), "ExmouthBR", BR)) %>%
   dplyr::mutate(BR = ifelse(str_detect(BR, "Tantabiddi"), "TantabiddiBR", BR)) %>%
   dplyr::mutate(BR = ifelse(str_detect(BR, "Bundegi"), "BundegiBR", BR)) %>%
@@ -882,15 +885,18 @@ Ning <- Ning %>%
   dplyr::mutate(Site = ifelse(str_detect(Site, "Bills"), "BillsBay", Site)) %>%
   dplyr::mutate(Site = ifelse(str_detect(Site, "Pilg"), "Pilgramunna", Site)) %>%
   dplyr::mutate(Site = ifelse(str_detect(Site, "Mildura"), "MilduraWreck",Site)) %>%
+  dplyr::mutate(Site = ifelse(str_detect(Site, "Jaconbsz"), "Jacobz", Site)) %>%
+  dplyr::mutate(Site = ifelse(Site %in% "LHCorner", "Steps", Site)) %>%
+    dplyr::mutate(Site = ifelse(Site %in% "LHCornerOne", "StepsSouth", Site)) %>%
+  dplyr::mutate(Site = ifelse(str_detect(Site, "Trisel"), "Trail", Site)) %>%
   dplyr::mutate(Site = ifelse(str_detect(Site, "NTantabiddi"), NA, Site)) %>% 
   dplyr::mutate(Site = ifelse(is.na(Site), BR, Site)) %>%
-  
-  dplyr::mutate(Transect = ifelse(str_detect(Site,"Turquoise|Sandy|Oys|Osp|Lake|Kori|Tris|Mes|Yar|Tul|Neds|Pilg|SKurr|Tanta"),
-                                  "Tantabiddi"
+  dplyr::mutate(Transect = ifelse(str_detect(Site,"Turquoise|Sandy|Oys|Osp|Lake|Kori|Mes|Yar|Tul|Neds|Pilg|SKurr|Tanta"),
+                                  "Tantabiddi" 
                                   ,ifelse(str_detect(Site, "Yacht|Golf|Town|BundegiSouth|Pebble|Lear|ExmouthS|McL|ExmouthBR"),
                                           "Exmouth",
                                           ifelse(str_detect(Site, "Maud|Bill"), "CoralBay",
-                                                        ifelse(str_detect(Site,"LH|Wob|Dunes|Jan|BundegiBeach|Hunt|Mil|Bau|"),
+                                                        ifelse(str_detect(Site,"LH|Wob|Dunes|Jan|BundegiBeach|Hunt|Mil|Bau|Steps|Jac|Trail"),
                                                                "Bundegi", NA))))) %>%
   dplyr::mutate(SurveyLat = ifelse(!is.na(BRLat), BRLat, SurveyLat)) %>%
   dplyr::mutate(SurveyLong = ifelse(!is.na(BRLong), BRLong, SurveyLong)) %>%
@@ -905,7 +911,6 @@ Ning <- Ning %>%
 # d <- which(is.na(N$Site) & N$Agreement =="No")
 # N[d,] # 8 of which are refusals - however they only have 2 mObjID so have been multiplied by 4?? the first four are Nicole and pilgramunna, second is sam and tanatbiddi BR
 # #There are no is.na(site when agreement == NE)
-
 ```
 
 ## Binary Resident column
@@ -924,6 +929,7 @@ Ning <- Ning %>%
 ## Number of boat days 
 If a resident was asked they woudl tell us how often they would go out on boat in an average month to get metric on residnet boat avidity (ResnDaysBoatYr). 
 ```{r nBoatDays}
+# some nas
 Ning <- Ning %>%
   dplyr::mutate(nBoatDays = ifelse(nBoatDays == "All", nDaysInArea, nBoatDays)) %>% 
   dplyr::mutate(Resident = ifelse(nBoatDays %in% "Resident", "1", "0")) %>% 
@@ -955,6 +961,7 @@ Ning <- Ning %>%
   dplyr::mutate(BoatID = ifelse(nBoatDays_other %in% "#63499", "63499", BoatID)) %>%
   dplyr::mutate(nBoatDays_other = ifelse(str_detect(nBoatDays_other, "Half|wind|Maybe|ïoiiiio|Once|hrs|jet ski|Regularly|#63499"), NA, nBoatDays_other)) %>% 
   dplyr::rename(ResnBoatDaysYr = nBoatDays_other) %>% 
+  dplyr::mutate(nBoatDays = ifelse(BoatAccess %in% "No", 0, nBoatDays)) %>% 
   dplyr::mutate(Resident = ifelse(!is.na(ResnBoatDaysYr), "1", Resident)) %>% 
   dplyr::mutate(ResnBoatDaysYr = as.numeric(ResnBoatDaysYr)) %>%
   dplyr::relocate(ResnBoatDaysYr, .after = Resident)
@@ -1058,6 +1065,8 @@ Ning <- Ning %>%
 Ning <- Ning %>%
   dplyr::mutate(nTimesLast24m = nTimes19 + nTimesLast12m) %>%
   dplyr::mutate(nTimesLast24m = as.numeric(nTimesLast24m)) %>%
+  dplyr::mutate(nTimesLast24m_bin = ifelse(nTimesLast24m > 0, 1, 0)) %>% 
+  dplyr::mutate(nTimesLast24m_bin = ifelse(is.na(nTimesLast24m_bin), 0, nTimesLast24m_bin)) %>% 
   dplyr::relocate(nTimesLast24m, .after = nTimes19)
 ```
 
@@ -1086,6 +1095,7 @@ Every entry which had a location name had coordinates checked to see if they mat
 ```{r EXTRACTIVE}
 ## when you add in FADS ajust coordinate of FAD comment
 Ning <- Ning %>%
+  dplyr::mutate(Comments = ifelse(EXTRACTIVE %in% "Helby bank to northern FAD, then up and down reef? ", paste(EXTRACTIVE, Comments, sep = "|"), Comments)) %>% 
 #### UseLong ####
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% c("Shoals  cooper", "Coopers shoal", "They were squidding near the airport (the small local airport not learmonth he said)."), "114.2212", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% c("Artificial reef", "Kings redf"), "114.1870", UseLong)) %>%
@@ -1099,11 +1109,13 @@ Ning <- Ning %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Went out and trolled back and forth behind reef between north and south passage then came inside the reef to snorkel", "113.9194", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "100m line", "113.9239", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Helby bank", "114.0275", UseLong)) %>%
-  dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Helby bank to northern FAD, then up and down reef? ", "114.0275", UseLong)) %>%
+  dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Helby bank to northern FAD, then up and down reef? ", "113.9108", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "20 km south of the west side? He wouldn’t be more specific...", "114.0275", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Long Island", "114.6740", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Peak island", "114.5090", UseLong)) %>%
   dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Larked shoal", "114.3045", UseLong)) %>%
+  dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% c("Oil rigs", "Oil rigs = location?"), "114.0288", UseLong)) %>%
+  dplyr::mutate(UseLong = ifelse(EXTRACTIVE %in% "Two rocks", "114.1052", UseLong)) %>%
 #### UseLat ####
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% c("Shoals  cooper", "Coopers shoal"), "-22.0555", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "They were squidding near the airport (the small local airport not learmonth he said).", "-22.0555", UseLat)) %>%
@@ -1118,11 +1130,13 @@ Ning <- Ning %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Went out and trolled back and forth behind reef between north and south passage then came inside the reef to snorkel", "-21.9193", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "100m line", "-21.8559", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Helby bank", "-21.8100", UseLat)) %>%
-  dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Helby bank to northern FAD, then up and down reef? ", "-21.8100", UseLat)) %>%
+  dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Helby bank to northern FAD, then up and down reef? ", "-21.7168", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "20 km south of the west side? He wouldn’t be more specific...", "-21.8100", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Long Island", "-21.6144", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Peak island", "-21.6039", UseLat)) %>%
   dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Larked shoal", "-22.1142", UseLat)) %>%
+  dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% c("Oil rigs", "Oil rigs = location?"), "-21.5073", UseLat)) %>%
+  dplyr::mutate(UseLat = ifelse(EXTRACTIVE %in% "Two rocks", "-22.0128", UseLat)) %>%
 #### Rogue comments ####
   dplyr::mutate(YrBorn = ifelse(EXTRACTIVE %in% "6166 Perth residents born 1982 ", "1982", YrBorn)) %>%
   dplyr::mutate(Postcode = ifelse(EXTRACTIVE %in% "6166 Perth residents born 1982 ", "6166", Postcode)) %>%
@@ -1132,58 +1146,7 @@ Ning <- Ning %>%
   dplyr::mutate(SiteType = ifelse(EXTRACTIVE %in% c("Fishing off Exmouth boat ramp", "Fishing in little inlet, closed off at low tide", "Brought rods but hasn’t started fishing ", "Boat harbour", "Shore based"), "Shore", NA)) %>% 
   
   dplyr::mutate(EXTRACTIVE = ifelse(str_detect(EXTRACTIVE, "^Shoals  cooper$|^Coopers shoal$|airport|^Artificial reef$|^Kings redf$|^Marion $|^Exmouth reef$|^Five finger reef$|^10k of bay$|^South tanatabiddid passage $|^Ned’s camp, 2km off $|^100m line$|^Helby bank$|west side?|^Long Island$|^Peak island$|^Larked shoal$|^Bro you bank nation is$|nz|^The lady being interviewed is non extractive now but her family is extractive and she is telling me where they are going$|^She’s a school teacher at church lands-hence holiday in school holidays $|^I$|^1-15 miles south tang$|^22k north $|^6166 Perth residents born 1982 $|^Boat name BO 343$|^Both bait and lure$|^Don’t fish$|^Fishing off Exmouth boat ramp$|^Boat harbour$"), NA, EXTRACTIVE)) %>% 
-## IF you check at unique(Ning2 $ EXTRACTIVE) at this point, row 20-22 have to be attended to at some point - maybe 18, unessecary for now. 
-  
   dplyr::mutate(Comments = ifelse(!is.na(EXTRACTIVE), paste(EXTRACTIVE, Comments, sep = "|"), Comments)) 
-  # dplyr::select(-EXTRACTIVE)
-
-# a <- which(!is.na(Ning2$EXTRACTIVE))
-# Ning2[a, c("EXTRACTIVE", "Comments")]
-# b <- which(Ning2$EXTRACTIVE %in% c("Oil rigs", "FADs", "Helby bank to northern FAD, then up and down reef?", "Two rocks", "Oil rigs = location?"))
-# Ning2[b, c("UseLat", "UseLong", "FishingType", "MaxHook","EXTRACTIVE", "Site")]
-## Fix FADs, oil rigs and two rocks 
-## 
-## 
-## wave bouy fad - navionics, instead all opil rigs, yellow special marker weather marker
-## Pipeline onlsow to those rigs 
-## two rocks in front of induistrial area 
-```
-
-## Fishing type
-```{r FishingType}
-# think its good but would be good to double chcek if you ever find the time - can also be simplified
-Ning <- Ning %>%
-  dplyr::mutate(Comments = ifelse(FishingType_other %in% c("Did some trawling on the way to sight; then bottom bashing","Always come back with a feed, fishing from boat on average 25 times a year ","Going for squid","Bottom bashing and trolling","Squidding and bottom bashing","Occasional spearing and casting","Occasional line and squidding, but not recently","Also squidding, each weekend here or at town beach","Trolled on the way back","Trawling and spearing","Electric reel","Squiring, trolling","Marlin trawling","Marlin fishing","For. Arlin","Only just put hooks in -arrived yesterday so no other activities","Travelers 6nm trolling to this point", "Casting elswhere, halfway back", "All of the above except spearing", "And casting", "And bottom bashing", "Comments...annoying that people don’t listen to advice and then complain. ", "And whale watching"), paste(FishingType_other, Comments, sep = "|"), Comments)) %>%
-  
-  dplyr::mutate(BaitLure = ifelse(FishingType_other %in% c("Both bait lure ","Both lure and bait ","Both bait or Kur ","Bith","Both bait and lure","Both "), "Both", BaitLure)) %>%
-  dplyr::mutate(BaitLure = ifelse(FishingType_other %in% "Bait dropping", "Bait", BaitLure)) %>%
-  dplyr::mutate(BaitLure = ifelse(FishingType_other %in% "Lures", "Lure", BaitLure)) %>%
-  dplyr::mutate(MaxHook = ifelse(FishingType_other %in% "80 m", "80", MaxHook)) %>% 
-  dplyr::mutate(SiteType = ifelse(FishingType_other %in% c("Off jetty","Only just put hooks in -arrived yesterday so no other activities","From boat ramp"), "Shore", SiteType)) %>%
-  dplyr::mutate(Species = ifelse(FishingType_other %in% "Coral trout fly island ", paste("Coral trout", Species, sep = "|"), Species)) %>%
-  dplyr::mutate(UseLat = ifelse(FishingType_other %in% "Coral trout fly island ", "-21.8093", UseLat)) %>%
-  dplyr::mutate(UseLong = ifelse(FishingType_other %in% "Coral trout fly island ", "114.5551", UseLong)) %>%
-  
-  dplyr::mutate(FishingType_other = ifelse(str_detect(FishingType_other, "^Both bait lure $|^Both lure and bait $|^Both bait or Kur $|^Bith$|^Both bait and lure$|^Both $|^Bait dropping$|^Going for squid$|^Always come back with a feed, fishing from boat on average 25 times a year $|^Occasional spearing and casting$|^Occasional line and squidding, but not recently $|^Also squidding, each weekend here or at town beach$|^Trolled on the way back$|^Trawling and spearing$|^For. Arlin$|^Electric reel$|^Squiring, trolling$|^Marlin fishing$|^Travelers 6nm trolling to this point$|^Caught one cod w the lure but we’re just squidding$|^Off jetty$|^Only just put hooks in -arrived yesterday so no other activities$|^From boat ramp$|^80 m$|^Coral trout fly island $|^Casting elswhere, halfway back$|^All of the above except spearing|^And casting$|^And bottom bashing$|^And squidding$|^Trolled from marina to 1st site$|^Comments...annoying that people don’t listen to advice and then complain. $|^And whale watching$"), NA, FishingType_other)) %>% 
-  
-  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Lining ","Casting", "Casting w rods", "Line", "Fly fishing"), "Casting", FishingType)) %>%
-  dplyr::mutate(FishingType = ifelse(FishingType_other %in% "Prawning", "Prawning", FishingType)) %>%
-  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Drift","Bottom bashin","Drifting", "Bottom bashing and trolling", "Did some trawling on the way to sight; then bottom bashing", "Squidding and bottom bashing", "Bottom bashing", "Bottom fishing", "Drifted with sea anchor"), "Demersal", FishingType)) %>%
-  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Marlin trawling","Sports and game fishing", "Sports fishing", "Trawling", "Trolling"), "Trolling", FishingType)) %>%
-  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Squidding", "Jigging, stick baiting", "Squiding", "Trolling, squid"), "Squidding", FishingType)) %>% 
-  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Free diving; spearing", "Free dive", "Spearing", "Free Diving for crays ", "Spearing "), "Spearing", FishingType)) %>% 
-  
-  dplyr::mutate(FishingType = ifelse(numYear < "2020", jFishingType, FishingType)) %>%
-  dplyr::mutate(FishingType = ifelse(FishingType =="Other", "Trolling", FishingType)) %>%
-  dplyr::mutate(FishingType = ifelse(FishingType %in% c("Demersal ","Demersal","Bottom-bashing (drifting)","Bottom-bashing (anchored)"), "Demersal", FishingType)) %>%
-  dplyr::mutate(FishingType = as.factor(FishingType)) %>% 
-  dplyr::select(-c(FishingType_other, jFishingType))
-
-# Interropgate casting
-# a <- which(Ning$FishingType == "Casting")
-# Ning[a, c("MaxHook", "BaitLure")]
-
-# if therey on boat, using biat, demersal , if they on a boat they are using a lure they are casting, shore, based casting. 
 ```
 
 ## Bait or Lure
@@ -1195,8 +1158,39 @@ Ning <- Ning %>%
   dplyr::mutate(jBaitLure = ifelse(jBaitLure == "Lure:Artificial plastic lure"|
                                      jBaitLure == "Lure:Jig", "Lure", "Bait")) %>%
   dplyr::mutate(BaitLure = ifelse(numYear < "2020", jBaitLure, BaitLure)) %>% 
-  dplyr::mutate(BaitLure = as.factor(BaitLure)) %>%
   dplyr::select(-jBaitLure)
+```
+
+
+## Fishing type
+```{r FishingType}
+# think its good but would be good to double chcek if you ever find the time - can also be simplified
+Ning <- Ning %>%
+  dplyr::mutate(Comments = ifelse(FishingType_other %in% c("Did some trawling on the way to sight; then bottom bashing","Always come back with a feed, fishing from boat on average 25 times a year ","Going for squid","Bottom bashing and trolling","Squidding and bottom bashing","Occasional spearing and casting","Occasional line and squidding, but not recently","Also squidding, each weekend here or at town beach","Trolled on the way back","Trawling and spearing","Electric reel","Squiring, trolling","Marlin trawling","Marlin fishing","For. Arlin","Only just put hooks in -arrived yesterday so no other activities","Travelers 6nm trolling to this point", "Casting elswhere, halfway back", "All of the above except spearing", "And casting", "And bottom bashing", "Comments...annoying that people don’t listen to advice and then complain. ", "And whale watching"), paste(FishingType_other, Comments, sep = "|"), Comments)) %>% 
+  
+  dplyr::mutate(BaitLure = ifelse(FishingType_other %in% c("Both bait lure ","Both lure and bait ","Both bait or Kur ","Bith","Both bait and lure","Both "), "Both", BaitLure)) %>% 
+  dplyr::mutate(BaitLure = ifelse(FishingType_other %in% "Bait dropping", "Bait", BaitLure)) %>%
+  dplyr::mutate(BaitLure = ifelse(FishingType_other %in% "Lures", "Lure", BaitLure)) %>%
+  dplyr::mutate(MaxHook = ifelse(FishingType_other %in% "80 m", "80", MaxHook)) %>% 
+  dplyr::mutate(SiteType = ifelse(FishingType_other %in% c("Off jetty","Only just put hooks in -arrived yesterday so no other activities","From boat ramp"), "Shore", SiteType)) %>%
+  dplyr::mutate(Species = ifelse(FishingType_other %in% "Coral trout fly island ", paste("Coral trout", Species, sep = "|"), Species)) %>%
+  dplyr::mutate(UseLat = ifelse(FishingType_other %in% "Coral trout fly island ", "-21.8093", UseLat)) %>%
+  dplyr::mutate(UseLong = ifelse(FishingType_other %in% "Coral trout fly island ", "114.5551", UseLong)) %>% 
+  
+  dplyr::mutate(FishingType_other = ifelse(str_detect(FishingType_other, "^Both bait lure $|^Both lure and bait $|^Both bait or Kur $|^Bith$|^Both bait and lure$|^Both $|^Bait dropping$|^Going for squid$|^Always come back with a feed, fishing from boat on average 25 times a year $|^Occasional spearing and casting$|^Occasional line and squidding, but not recently $|^Also squidding, each weekend here or at town beach$|^Trolled on the way back$|^Trawling and spearing$|^For. Arlin$|^Electric reel$|^Squiring, trolling$|^Marlin fishing$|^Travelers 6nm trolling to this point$|^Caught one cod w the lure but we’re just squidding$|^Off jetty$|^Only just put hooks in -arrived yesterday so no other activities$|^From boat ramp$|^80 m$|^Coral trout fly island $|^Casting elswhere, halfway back$|^All of the above except spearing|^And casting$|^And bottom bashing$|^And squidding$|^Trolled from marina to 1st site$|^Comments...annoying that people don’t listen to advice and then complain. $|^And whale watching$"), NA, FishingType_other)) %>% 
+  
+  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Lining ","Casting", "Casting w rods", "Line", "Fly fishing"), "Casting", FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(FishingType_other %in% "Prawning", "Prawning", FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Drift","Bottom bashin","Drifting", "Bottom bashing and trolling", "Did some trawling on the way to sight; then bottom bashing", "Squidding and bottom bashing", "Bottom bashing", "Bottom fishing", "Drifted with sea anchor"), "Demersal", FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Marlin trawling","Sports and game fishing", "Sports fishing", "Trawling", "Trolling"), "Trolling", FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Squidding", "Jigging, stick baiting", "Squiding", "Trolling, squid"), "Squidding", FishingType)) %>% 
+  dplyr::mutate(FishingType = ifelse(FishingType_other %in% c("Free diving; spearing", "Free dive", "Spearing", "Free Diving for crays ", "Spearing "), "Spearing", FishingType)) %>% 
+  dplyr::mutate(FishingType = ifelse(numYear < "2020", jFishingType, FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(FishingType =="Other", "Trolling", FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(FishingType %in% c("Demersal ","Demersal","Bottom-bashing (drifting)","Bottom-bashing (anchored)"), "Demersal", FishingType)) %>%
+  dplyr::mutate(FishingType = ifelse(BoatAccess %in% "No", "Casting", FishingType)) %>% 
+  dplyr::mutate(FishingType = ifelse(is.na(FishingType) & is.na(exRecall) &is.na(nexRecall) & Site %in% c("BundegiBeach", "LearmonthJetty"), "Casting", FishingType)) %>%
+  dplyr::select(-c(FishingType_other, jFishingType))
 ```
 
 ## Activity
@@ -1225,7 +1219,7 @@ dplyr::mutate(Activity_other=ifelse(str_detect(Activity_other,"Swim|swim|play|Re
   dplyr::mutate(Activity = ifelse(Activity %in% "Snorkling", "Snorkeling", Activity)) %>%
   dplyr::mutate(Activity = ifelse(Activity %in% "Kite surfing ", "WindSport", Activity)) %>%
   dplyr::mutate(Activity = ifelse(Activity %in% "Exploring", "Explore", Activity)) %>%
-  dplyr::mutate(Activity = ifelse(Activity %in% "JetSki", "Jet skiing", Activity)) %>% 
+  dplyr::mutate(Activity = ifelse(Activity %in% "Jet skiing", "JetSki", Activity)) %>%
   dplyr::mutate(Activity = ifelse(Activity %in% "Relaxing", "Beachgoing", Activity)) %>% 
   dplyr::mutate(Activity = ifelse(numYear < "2020", "Fishing", Activity)) %>%
   dplyr::mutate(MultiUse = ifelse(!is.na(Activity) & numYear > "2016" & !is.na(FishingType), "1", "0")) %>%
@@ -1252,6 +1246,7 @@ Ning <- Ning %>%
   dplyr::mutate(MaxHook = ifelse(numYear < "2020", jMaxHook, MaxHook)) %>%
   dplyr::mutate(MaxHook = ifelse(FishingType %in% "Trolling", "0", MaxHook)) %>% 
   dplyr::mutate(MaxHook = as.numeric(MaxHook)) %>% 
+  dplyr::mutate(FishingType = ifelse(is.na(FishingType) & MaxHook > 5, "Demersal", FishingType)) %>%
   dplyr::select(-jMaxHook)
 ```
 
@@ -1341,6 +1336,14 @@ Ning <- Ning %>%
    dplyr::relocate(perDP, .after = nDP) 
 ```
 
+### Proportion depredated
+```{r}
+Ning <- Ning %>% 
+   dplyr::mutate(proDP = perDP/100) %>% 
+   dplyr::mutate(proDP = as.numeric(proDP)) %>%
+   dplyr::relocate(proDP, .after = perDP) 
+```
+
 ### Number of fish caught undamaged per hour
 ```{r nUndamHr}
 Ning <- Ning %>%
@@ -1348,7 +1351,7 @@ Ning <- Ning %>%
   dplyr::mutate(nUndamHr = ifelse(is.nan(nUndamHr), "0", nUndamHr)) %>%
   dplyr::mutate(nUndamHr = ifelse(is.infinite(nUndamHr), "0", nUndamHr)) %>%
   dplyr::mutate(nUndamHr = as.numeric(nUndamHr)) %>%
-  dplyr::relocate(nUndamHr, .after = perDP)
+  dplyr::relocate(nUndamHr, .after = proDP)
 ```
 
 ### Number of fish depredated per hour
@@ -1430,6 +1433,8 @@ Ning <- Ning %>%
   
   dplyr::mutate(exWhyLeave_other = ifelse(exWhyLeave_other %in% c("Haven’t left yet", "Still going", "While I interviewed them they were still there so I didn’t ask but I saw them leave at 1020", "Still fishing", "Did both bottom trawling and bottom bashing; interviewed about bottom bashing", "Was trolling to next site ", "Note they also had a jet ski- jet ski and dinghy were together", "What to go round to ex marjona and freestyle JetSki", "Leave marine park", "Drop off", "Just playing around"), NA, exWhyLeave_other)) %>%
   dplyr::mutate(exWhyLeave = ifelse(!is.na(exWhyLeave_other)|exWhyLeave %in% "Other", exWhyLeave_other, exWhyLeave)) %>% 
+  dplyr::mutate(exWhyLeave = ifelse(exWhyLeave %in% c("End of day"), "EndOfDay", exWhyLeave)) %>% 
+  dplyr::mutate(exWhyLeave = ifelse(exWhyLeave %in% c("Bagged out"), "BagLimit", exWhyLeave)) %>% 
   dplyr::select(-exWhyLeave_other)
 ```
 
@@ -1469,7 +1474,7 @@ Ning <- Ning%>%
   mutate(exYrs = gsub("[a-zA-Z]|[ ]|[-]|[,]|[’]","",exYrs))%>%
   mutate(exYrs = ifelse(exYrs!="", exYrs, NA)) %>%
   relocate(FishLife, FishOcc, .after = nTimesFished) %>% 
-  mutate(exYrs = is.numeric(exYrs)) %>% 
+  mutate(exYrs = as.numeric(exYrs)) %>%
   dplyr::select(-c(jexYrs)) #Remove John's column
 ```
 
@@ -1638,7 +1643,6 @@ Ning <- Ning %>%
   mutate(Resident = ifelse(Postcode %in% 6707, 1, Resident))
 # Need to deal with "South Australia"
 # 810 is actually 0810 Darwin
-
 ```
 
 ```{r}
