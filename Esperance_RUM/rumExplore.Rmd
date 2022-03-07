@@ -1,0 +1,349 @@
+---
+title: "Esperance Data Exploration"
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    self_contained: false
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    number_sections: true
+---
+
+```{r setup, include = FALSE, echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+# libraries
+library(tidyverse)
+library(lubridate)
+library(chron)
+library(sp)
+library(raster)
+library(ggplot2)
+library(leaflet)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(RColorBrewer)
+library(ggsn)
+library(cowplot)
+library(rcartocolor)
+library(tmap)
+library(ggspatial)
+library(spatstat)
+
+# directories
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic" # set working directory
+d.dir <- paste(w.dir, "Esperance_RUM/rumIgnore", sep='/') # set data directory
+f.dir <- paste(w.dir, "Esperance_RUM/rumFunc", sep = '/') # set functions directory
+s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/') # set gpkg directory
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/') # set raster directory
+rumPlots <- paste(w.dir, "Esperance_RUM/rumPlots", sep='/') # set plots directory
+
+# Data
+esp <- read.csv(paste(d.dir, "Esp_v1.csv", sep='/'))
+
+#Spatial Data
+spEsp <- esp %>% 
+  filter(!is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords = c("UseLong", "UseLat"), crs = 4283)
+spCoast <- st_read(paste(s.dir, "Esp_coast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+bbox <- st_bbox(c(xmin = 121.5, xmax = 123, ymax = -33.4, ymin = -34.5), crs = st_crs(4283))
+spCoast_crop <- st_crop(spCoast, bbox) 
+
+# set colour palette
+col1 <- c("#d48e84")
+col2 <- c("9592a5")
+```
+
+```{r ResponseRate, echo = FALSE}
+Approached <- esp %>%
+  distinct(PersonID, .keep_all = TRUE)
+
+nApproached <- nrow(Approached)
+nNE <- length(which(Approached$Agreement == "NE"))
+nPartcipants <- length(which(Approached$Agreement == "Yes"))
+nRefusals <- length(which(Approached$Agreement == "No"))
+
+RefusalRate <- (nRefusals/(nApproached - nNE))*100
+ResponseRate <- (nPartcipants/(nApproached - nNE))*100
+
+ResponseStats <- expand.grid(nApproached = nApproached, nNE=nNE, nRefusals = nRefusals, nPartcipants=nPartcipants, RefusalRate=RefusalRate, ResponseRate=ResponseRate)
+
+# ResponseStats
+```
+  - Number of use surveys in total: `r nrow(esp)-length(nRefusals)`  
+  - Number of individuals surveyed: `r nApproached`
+  - Response rate for Esperance: `r ResponseRate`%
+
+```{r DataPrep, echo=FALSE}
+yes <- esp %>% 
+  filter(Agreement == "Yes") 
+# Extractive data
+exdat <- yes %>%
+  filter(Activity == "Fishing")
+
+# Boat based extractive
+bf <- yes %>% 
+  filter(SiteType == "Boat" & ActivityType %in% c("Extractive"))
+
+# Non-extractive data
+nexdat <- yes %>%
+  filter(ActivityType == "NonExtractive")
+
+```
+
+```{r ActTyp, echo=FALSE}
+local <- ggplot(yes) + # get decending to work, add number of activities
+   aes(x = reorder(Resident, desc(Resident))) +
+   geom_bar(fill = col1) +
+   labs(x = "Resident", y = paste("Frequency (n = ", nrow(yes), ")", sep = "")) +
+   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+ 
+ local
+ ggsave(paste(rumPlots, "lacal.png", sep='/'), width = 8, height = 4)
+```
+
+## Extractive vs Non-Extractive {.tabset}
+### Bar plot {-}
+```{r ActTyp1, echo=FALSE}
+ActTyp <- ggplot(yes) + # get decending to work, add number of activities
+   aes(x = ActivityType) +
+   geom_bar(fill = col1) +
+   labs(x = "Activity Type", y = paste("Frequency (n = ", nrow(yes), ")", sep = "")) +
+   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+ 
+ ActTyp
+ ggsave(paste(rumPlots, "ActTyp.png", sep='/'), width = 8, height = 4)
+```
+
+### Spatial {-}
+```{r ActTyp2, echo=FALSE}
+spActType <- ggplot() +
+  geom_sf(data = spCoast_crop, lwd = 0.1) +
+  geom_sf(data = spEsp, aes(color = ActivityType), size = 0.5) +# colour for discrete, fill for 
+  # scale_color_brewer(palette = "YlGnBu") + # colour for discrete, fill for continuous
+  scale_fill_manual(values=c(col1, col2)) +
+    guides(color = guide_legend(title.theme = element_text(size = 6.5, vjust = 5),
+                        label.theme = element_text(size = 6.5))) +
+  theme_void()
+
+spActType
+ggsave(paste(rumPlots, "spActType.png", sep='/'), width = 4, height = 6)
+```
+
+## Activities {.tabset}
+### Bar plot {-}
+```{r ActFreq, fig.dim = c(7, 7), echo=FALSE}
+ActFreq <- yes %>% 
+  group_by(Activity) %>%   
+  mutate(count_name_occurr = n()) %>% 
+  ggplot(aes(y=reorder(Activity,count_name_occurr))) +
+  geom_bar(stat="count", fill = col1) +
+  labs(x = paste("Activity (n = ", length(na.omit(unique(yes$Activity))), ")", sep=""), y = paste("Frequency (n = ", nrow(yes), ")", sep = "")) +
+  geom_text(stat='count', aes(label=..count..), hjust = -0.5, size = 2.5)
+  
+ActFreq
+ggsave(paste(rumPlots, "ActFreq.png", sep='/'), width = 8, height = 4)
+```
+
+### Spatial {-}
+```{r ActFreq1, fig.dim = c(7, 7), echo=FALSE}
+spAct <- ggplot() +
+  geom_sf(data = spCoast_crop, lwd = 0.1) +
+  geom_sf(data = spEsp, aes(color = Activity), size = 0.5) +# colour for discrete, fill for 
+  scale_color_brewer(palette = "Set2") + # colour for discrete, fill for continuous
+  # scale_fill_manual(values=c("#cce2cb", "#97c1a9", "#81caca")) +
+    guides(color = guide_legend(title.theme = element_text(size = 6.5, vjust = 5),
+                        label.theme = element_text(size = 6.5))) +
+  theme_void()
+spAct
+ggsave(paste(rumPlots, "spAct.png", sep='/'), width = 4, height = 6)
+```
+
+
+```{r SiteType, echo=FALSE}
+ # SiteTyp <- ggplot(yes) +
+ #   aes(x = SiteType) +
+ #   geom_bar(fill = "#8fcaca") +
+ #   labs(x = "Site Type", y = "Frequency") +
+ #   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+ # 
+ # SiteTyp
+ # ggsave(paste(rumPlots, "SiteTyp.png", sep='/'), width = 8, height = 4)
+```
+
+## Fishing Type {.tabset}
+### Bar plot {-}
+```{r FTyp, echo=FALSE}
+FTyp <- exdat %>%
+  group_by(FishingType) %>%
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") %>%
+  ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', position = position_dodge2(reverse = TRUE), fill = col1) +
+    # scale_fill_manual(labels = c("Boat", "Shore"), values = c("#81caca", "#97c1a9"), name = "Site Type") +
+  # scale_color_manual(labels = c("2015", "2016", "2020", "2021"), values = c("palevioletred1","lightskyblue", "lightsalmon","lightgreen"), name = "Year") +
+  labs(x = paste("Fishing Type (n = ", length(na.omit(unique(exdat$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(exdat), ")", sep = "")) +
+  # facet_wrap(. ~ numYear) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+
+FTyp
+
+ggsave(paste(rumPlots, "FishingType.png", sep='/'), width = 8, height = 4)
+```
+
+### Spatial {-}
+```{r FTyp1, echo=FALSE}
+#### Extractive
+spbf <- st_as_sf(bf, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = 4283)
+spbf_plot <- ggplot() +
+  geom_sf(data = spCoast_crop, lwd = 0.1) +
+  geom_sf(data = spbf, aes(color = FishingType), size = 1) + # colour for discrete, fill for continuous
+  scale_color_brewer(palette = "Set3") + # colour for discrete, fill for continuous
+  # labs(caption = "Spatial distribution of non-extractive marine recreational use") +
+  # annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.1, "cm"), text_cex = 0.5, bar_cols = c("grey", "white"), line_width = 0.1) +
+  #   annotation_north_arrow(location = "br", which_north = "true", 
+  #       pad_x = unit(0.5, "cm"), pad_y = unit(1, "cm"),
+  #       style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+  #                                              fill = c("white", "Grey"), text_col = "grey"),
+  #       height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme(axis.text.x = element_text(angle = 90, size = 7),
+        axis.text.y = element_text(size = 7),
+        legend.key = element_rect(fill = "White", color = "White"),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 7, vjust = 1),
+        legend.text = element_text(size = 7)) +
+  theme_void()
+
+spbf_plot
+ggsave(paste(rumPlots, "spbf.png", sep='/'), width = 4, height = 6)
+```
+
+
+```{r Kernal Densit, echo=FALSE}
+# ## Getting kernal densityfor boat based 
+# #### Getting kernal densityfor boat based fishing
+# ## Using denisty from spatstat
+# sp_bf <- bf %>% 
+#   filter(!is.na(UseLat), !is.na(UseLong)) %>% 
+#   st_as_sf(coords = c("UseLong", "UseLat"), crs = 4283)
+# 
+# bf_Lam <- st_transform(sp_bf, crs = 3112) # making lambert ass a ppp object can only be made from a projected crs
+# 
+# bf_ppp <- as.ppp(bf_Lam)
+# bf_ppp.km <- rescale(bf_ppp, 1000, "km")
+# 
+# bf_ppp.km$KernalDensity <- density(bf_ppp.km, sigma = 5) # Using the default bandwidth
+# bf_kdens_plot <- plot(bf_ppp.km$KernalDensity, main=NULL, las=1)
+# contour(bf_ppp.km$KernalDensity, add=TRUE)
+# 
+# # Turn the KDE points into a raster
+# bf_kdraster <- bf_ppp.km$KernalDensity
+# bf_kdraster <- rescale(bf_kdraster, 0.001, "m") #Need to rescale so the coords match up with the original ones from the dataset
+# 
+# bf_kdraster <- raster(bf_kdraster) #Convert to raster
+# 
+# bf_points <- st_as_sf(bf_spNing_Lam$geometry) #Convert your dataframe points in a simple shape file
+# 
+# #Check they plot over the top of each other and therefore that the coordinates are the same
+# plot(bf_kdraster)
+# plot(bf_points, add=T, cex = 0.05) #If you want to plot this on top you need to run this line and the above line in the consol as RMarkdown won't let you plot one on top of the other 
+# 
+# # Extract the value in the raster where your points are 
+# KDEPoints <- raster::extract(bf_kdraster, bf_points, fun=max)
+
+#Add the KDE to a dataframe where you've already removed the NAs (Otherwise you'll get the wrong KDE associated with the points because of the missing values)
+# bf <- sp_bf %>%
+#   mutate(kdens = KDEPoints)
+
+# bf$kdens <- KDEPoints
+
+# Join the KDE to the original dataframe preserving where you have NA geomtry and therefore NA KDE
+# Ning <- left_join(Ning, bf_spNing, by = "ID", suffix = c("", ".y")) %>%
+#  select_at(vars(-ends_with(".y"))) 
+
+# rm(b_kdraster, b_points, b_spNing, b_spNing_Lam, b_spNing_ppp, b_spNing_ppp.km, bf_kdraster, bf_points, bf_spNing, bf_spNing_Lam, bf_spNing_ppp, bf_spNing_ppp.km, b_kdens_plot, bf_kdens_plot, KDEPoints)
+
+# 
+#   ggplot()+
+#   geom_raster(data = bf, aes(x = bf$UseLong, y = bf$UseLat, fill = kdens)) +
+#     
+# 
+# 
+# plot(bf_kdraster)
+# plot(SC) 
+# 
+# ggplot()+
+#   geom_raster(data = bf, fill = KDEPoints)+
+#   geom_sf(data = SC)
+#   
+# 
+# 
+# ggplot() +  
+#   geom_tile(data=bf, aes(x=UseLong, y=UseLat, fill=kdens), alpha=0.8) +
+#   geom_sf(data=SC) 
+```
+
+```{r DPFTyp, echo=FALSE}
+# dpFT <- exdat %>%
+#   group_by(FishingType) %>%
+#   summarise(tHooked = sum(nHooked),
+#             tDP = sum(nDP),
+#             tperDP = tDP/tHooked*100)
+# 
+# dpFT <-dpFT %>% 
+#   filter(!is.na(FishingType), tDP > 0) %>% 
+#   mutate(tperDP = round(tperDP))
+# 
+# dpFT
+# 
+# pdpFT <- ggplot(dpFT) +
+#   aes(x = reorder(FishingType, desc(FishingType)), y = tperDP) +
+#   geom_col(fill = "#8fcaca") +
+#     labs(x = paste("Fishing Type (n = ", length(na.omit(unique(dpFT$FishingType))), ")", sep=""), 
+#          y = "Percentage depredation (%)") +
+#   geom_text(aes(label= paste(tperDP, "%", sep="")), vjust = -0.5, size = 2.5)
+# 
+# pdpFT
+# 
+# dpdat <- bf %>% 
+#   dplyr::filter(FishingType %in% c("Trolling", "Demersal"))
+# 
+# saveRDS(dpdat, paste(d.dir, "dpdat_v1.csv", sep = "/"))
+```
+
+## Non-Extractive
+```{r, echo=FALSE}
+
+#### Non -extractive
+snexdat <- st_as_sf(nexdat, coords = c("UseLong", "UseLat"), ## This wont worj if there are blanks in data set so  filtered
+                  crs = 4283)
+
+spnex <- ggplot() +
+  geom_sf(data = spCoast_crop, lwd = 0.1) +
+  geom_sf(data = snexdat, aes(color = Activity), size = 1) + # colour for discrete, fill for continuous
+  scale_color_brewer(palette = "Set3") + # colour for discrete, fill for continuous
+  # labs(caption = "Spatial distribution of non-extractive marine recreational use") +
+  # annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.1, "cm"), text_cex = 0.5, bar_cols = c("grey", "white"), line_width = 0.1) +
+  #   annotation_north_arrow(location = "br", which_north = "true", 
+  #       pad_x = unit(0.5, "cm"), pad_y = unit(1, "cm"),
+  #       style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+  #                                              fill = c("white", "Grey"), text_col = "grey"),
+  #       height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme(axis.text.x = element_text(angle = 90, size = 7),
+        axis.text.y = element_text(size = 7),
+        legend.key = element_rect(fill = "White", color = "White"),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 7, vjust = 1),
+        legend.text = element_text(size = 7)) +
+  theme_void()
+
+spnex
+ggsave(paste(rumPlots, "spnex.png", sep='/'), width = 4, height = 6)
+```

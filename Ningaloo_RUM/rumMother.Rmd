@@ -1,0 +1,84 @@
+---
+title: "Chapter 1: RUMs"
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    self_contained: false
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    number_section: true
+---
+
+```{r setglobal, echo= FALSE}
+knitr::opts_chunk$set(fig.align = "center",
+                      fig.width = 7, 
+                      fig.height = 5, 
+                      dev = "png",
+                      cache = TRUE)
+
+```
+
+```{r packages, include = FALSE}
+# install.packages("tidyverse")
+# install.packages("devtools")
+# install.packages("chron")
+# install.packages("sp")
+# install.packages("raster")
+# install.packages("ggplot2")
+# install.packages("leaflet")
+# install.packages("rgeos")
+# install.packages("rgdal")
+# install.packages("sf") # select no
+# install.packages("ggsn")
+# install.packages("cowplot")
+# install.packages("rcartocolor")
+# install.packages("mgcv")
+# install.packages('nngeo')
+# install.packages("raster")
+# install.packages("spatstat")
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(chron)
+library(sp)
+library(raster)
+library(ggplot2)
+library(leaflet)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(ggsn)
+library(cowplot)
+library(rcartocolor)
+library(mgcv)
+library(raster)
+library(nngeo)
+library(spatstat)
+```
+
+```{r dir, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Agent-lobster"
+d.dir <- paste(w.dir, "Ch2-RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+rumPlots <- paste(w.dir, "Ch2-RUM/rumPlots", sep='/')
+```
+
+# Functions 
+```{r functions}
+allmissingbutmeta <- Ning$PersonID %in% c("173", "174", "229", "232", "327", "668", "517", "530", "581", "764", "488")
+```
+
+```{r readData, echo = FALSE}
+Ning <- read.csv(paste(d.dir, "Ning_v2.csv", sep = "/"))
+```
+
+```{r child = c('rumDP.Rmd')}
+```
+
+
+
+

@@ -1,0 +1,530 @@
+This script is filled with test pieces of code, drafts of code and redundant coee I know long need by might be useful for future reference, 
+
+## Making maps Cape and CB - attempted insets
+```{r spDataPrep}
+## Setting up spatial layers
+## crs1 <- 4283 is it useful to give a crs a name ?? GDA94
+# Data 
+# spNing <- st_as_sf(N1, coords = c("UseLong", "UseLat"), ## Won't work if there are blanks in df so  filtered
+#                   crs = 4283)
+# 
+# # Coast
+# WA <- st_read(paste(s.dir, "waCoast.shp", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# NWS <- st_crop(WA, xmin = 113.00, ymin = -24.00, xmax = 115.00, ymax = -20.5) # what you want to crop, masked onto what
+
+# # 
+# # # cropping sNing to CB/cape extent
+# # CBning <- st_crop(sNing, CB)
+# # #Capening <- st_crop(sNing, Cape)
+# # Capening <- st_crop(sNing, Cape)
+# 
+# ## BR
+# ausBR <- st_read(paste(s.dir, "ausRamps.shp", sep = '/')) %>%
+#   st_transform(crs = 4283)
+# 
+# BR <- st_crop(ausBR, sNing)
+# # CBR <- st_crop(BR, CB)
+# # CapeBR <- st_crop(BR, Cape)
+# 
+# 
+#  #### Bathy
+# bathy <- st_read(paste(s.dir, "waDepths.shp", sep = '/')) %>%
+#   st_transform(crs = 4283) %>%
+#   st_make_valid()
+# 
+# bathy
+# 
+# NWSbathy <- st_crop(bathy, NWS)
+# CBbathy <- st_crop(NWSbathy, CB)
+# Capebathy <- st_crop(NWSbathy, Cape)
+
+# ggplot() +
+#   geom_sf(data = NWSbathy, lwd = 0.1, fill = "white") +
+#   geom_sf(data = NWS, lwd = 0.1) +
+#   geom_sf(data = sNing)
+# 
+# # summary(Ning$UseLat)
+# # max(Ning$UseLat, na.rm = T)
+# # which(Ning$UseLat == "-21.06476")
+# # Ning[567,]
+# # max(N1$UseLat, na.rm = T)
+# 
+# NWS xmin: 113.4615 ymin: -24.0027 xmax: 115 ymax: -21.4219
+# NWSbathy xmin: 113.4615 ymin: -24.0027 xmax: 115 ymax: -21.4219
+# sNing xmin: 113.2797 ymin: -23.46818 xmax: 114.7503 ymax: -21.06476
+# 
+# 113, -24, 115, -21
+# 
+# NWS
+```
+
+```{r}
+CB <- st_crop(WA, xmin = 113.6271, xmax = 114.000, ymin = -23.46973, ymax = -22.562)
+Cape <- st_crop(WA, xmin = 113.6271, ymin = -22.562, xmax = 114.7503, ymax = -21.56369)
+
+Making bbox for CB
+CBbbox = st_as_sfc(st_bbox(CB))
+
+# Making CB inset
+CBinset <- ggplot() +
+  geom_sf(data = NWS, lwd = 0.1) +
+  geom_sf(data = BR, color = "mediumaquamarine") +
+  #geom_sf_text(data = BR, aes(label = boat_ramp), size = 2, nudge_x = 0.15) +
+  geom_sf_label(data = BR, aes(label = boat_ramp), size = 1, nudge_x = 0.15, nudge_y = 0.02, label.padding =
+                  unit(0.5, "mm"),label.size = 0) +
+  labs(x = "", y = "") +
+  theme_bw() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title=element_blank()) +
+  geom_sf(data = CBbbox, fill = NA, color = "mediumaquamarine", size = 1)
+
+CBinset
+
+ ggsave(paste(rumPlots, "spBR.png", sep='/'), width = 8, height = 4)
+ 
+##### Spatial plot for all activties at CB 
+CBspAct <- ggplot() +
+  geom_sf(data = CB, lwd = 0.1) +
+  geom_sf(data = CBning, aes(color = Activity, shape = ActivityType), size = 1) + # colour for discrete, fill for continuous
+  scale_color_brewer(palette = "Set3", direction = -1) + # colour for discrete, fill for continuous
+  labs(caption = "Spatial distribution of marine recreational use", title = "Coral Bay") +
+  annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true", 
+        pad_x = unit(0.5, "cm"), pad_y = unit(1, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+                                               fill = c("white", "Grey"), text_col = "grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme(axis.text.x = element_text(angle = 90, size = 7),
+        axis.text.y = element_text(size = 7),
+        legend.key = element_rect(fill = "White", color = "White"),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 7, vjust = 1),
+        legend.text = element_text(size = 7),
+        title = element_text(size = 8))
+
+CBspAct
+ggsave(paste(rumPlots, "CBspAct.png", sep='/'), width = 5, height = 6)
+
+# 
+# CBspAct_inset = ggdraw() +
+#   draw_plot(CBspAct) +
+#   draw_plot(CBinset, x = 0.5, y = 0.05, width = 0.3, height = 0.2)
+# 
+# CBspAct_inset
+# 
+# ggsave(paste(rumPlots, "CBspAct_inset.png", sep='/'), width = 5, height = 6)
+```
+
+```{r}
+##### Spatial plot for all activties at CB 
+CapespAct <- ggplot() +
+  geom_sf(data = Cape, lwd = 0.1) +
+  geom_sf(data = Capening, aes(color = Activity, shape = ActivityType), size = 1) + # colour for discrete, fill for continuous
+  scale_color_brewer(palette = "Set3") + # colour for discrete, fill for continuous
+  labs(caption = "Spatial distribution of marine recreational use") +
+  annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true", 
+        pad_x = unit(0.5, "cm"), pad_y = unit(1, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+                                               fill = c("white", "Grey"), text_col = "grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm")) +
+  theme(axis.text.x = element_text(angle = 90, size = 7),
+        axis.text.y = element_text(size = 7),
+        legend.key = element_rect(fill = "White", color = "White"),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 7, vjust = 1),
+        legend.text = element_text(size = 7),
+        title = element_text(size = 8))
+
+CapespAct
+ggsave(paste(rumPlots, "CapespAct.png", sep='/'), width = 5, height = 6)
+```
+
+## Violin/Raincloud plot
+```{r}
+ggviolin(
+  data = dpdat,
+  x = c("DP"),
+  y = c("nHooked"),
+  color = "#81caca",
+  fill = "#ceeded",
+  alpha = 1,
+  xlab = "Presence of depredation",
+  ylab = "Number of fish hooked",
+  # draw_quantiles = c(0.25, 0.5, 0.75),
+  add = "boxplot",
+  add.params = list(fill = "#81caca", color = "#ceeded"),
+  error.plot = "linerange",
+  label = NULL,
+  font.label = list(size = 8, color = "black"))
+
+ggviolin(
+  data = dpdat,
+  x = c("facYear"),
+  y = c("nDP", "nHooked"),
+  color = "#81caca",
+  fill = c("DP"),
+  alpha = 1,
+  xlab = "Year",
+  ylab = "Nmber of fish depredated",
+  # draw_quantiles = c(0.25, 0.5, 0.75),
+  # facet.by = c("facYear"),
+  add = "boxplot",
+  add.params = list(fill = "#81caca", color = "#ceeded"),
+  error.plot = "linerange",
+  label = NULL,
+  font.label = list(size = 8, color = "black"))
+
+"#ceeded"
+
+dpdat %>%
+  ggplot(aes(x = factor(DP), y = nHooked, fill = factor(DP))) +
+  ggdist::stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA) +
+  geom_boxplot(width = 0.12, outlier.colour = NA, alpha = 0.5) +
+  ggdist::stat_dots(side = "left", justification = 1.1, binwidth = 0.25) +
+  labs(y = "Number of fish hooked", x = "") +
+  scale_x_discrete(breaks=c("1", "0"),
+                      labels=c("", "")) +
+  scale_fill_manual(values=c("#97c1a9", "#81caca"),
+                    name="Depredation",
+                    breaks=c("1", "0"),
+                    labels=c("Present", "Absent")) +
+  theme(axis.ticks.y = element_blank()) +
+  coord_flip()
+```
+
+# %DP facetted by Year
+## Grouped bar
+```{r}
+
+dpdat %>%
+  group_by(Side, facYear) %>%
+  summarise(TotalHooked = sum(nHooked, na.rm = TRUE),
+                     TotalDP = sum(nDP, na.rm = TRUE),
+            TotalperDP = (TotalDP/TotalHooked)*100) %>%
+  gather(Total, Value, TotalHooked:TotalDP) %>%
+  mutate(Total = as.factor(ifelse(Total %in% "TotalHooked", "Hooked", "Depredated"))) %>%
+drop_na()  %>%
+ggplot(aes(x = factor(1), y = Value, fill = Total)) +
+  geom_bar(width = 1, stat = "identity", position = position_dodge2(reverse=TRUE)) +
+  scale_fill_manual(values=c("light coral", "medium aquamarine")) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label=Value), position=position_dodge2(width=1, reverse = TRUE), vjust=-0.25, size = 2) +
+  labs(x = "", y = "Number of fish") +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) 
+  facet_grid(Side~facYear)
+```
+## Pie chart
+
+## Averages
+Barplot showing the Average number of fish depredated per site facetted by year. 
+```{r avDPYr}
+# Average number of fish depredated per year
+avDPYr <- exdat %>%
+  filter(!is.na(nHooked),  nHooked != "", !is.na(nDP), nDP != "") %>%
+  group_by(facYear) %>%
+  summarise(ave = mean(nDP)) %>% 
+  # mutate(numYear = as.character(Year)) %>%
+  ggplot( 
+  aes(x = facYear, y = ave)) +
+  geom_col(fill = "mediumaquamarine") +
+  labs(x = "Year", y = "Average number of fish depredated per site")
+  
+avDPYr
+# ggsave(paste(rumPlots, "avDPYr.png", sep='/'), width = 8, height = 4)
+```
+
+## Catch rate
+Barplot showing the average catch rate per site facetted by year. 
+```{r CR}
+CR <- exdat1 %>%
+  group_by(facYear) %>%
+  summarise(avCR = mean(CaughtUndam)) 
+%>% 
+CR
+
+# Hist of nDP
+avCR <- ggplot(CR) +
+  aes(y = avCR, x = facYear) +
+  geom_col(fill = "mediumaquamarine") +
+  labs(x = "Average catch rate per site", y = "Year")
+
+avCR
+# ggsave(paste(rumPlots, "avCR.png", sep='/'), width = 8, height = 4)
+```
+
+# CAoe and CB spatial plots for depredation
+```{r spDP_CB}
+# Make an extent for coral bay and run the above code
+## st of just nDP == 0
+CBsexdp0 <- st_crop(sexdp0, CB)
+
+## st  nDP > 0
+CBsexdp <- st_crop(sexdp, CB)
+
+CBspexdp <- ggplot() +
+  geom_sf(data = CB, lwd = 0.1) +
+  geom_sf(data = CBsexdp0, shape = 1, size = 0.5, color= "grey") +
+  geom_sf(data = CBsexdp, aes(color = perDP), size = 1) + # colour for discrete, fill for continuous
+  scale_color_distiller(palette = "YlGnBu", trans = "reverse") + # colour for discrete, fill for continuous
+  scale_fill_continuous(trans = 'reverse') +
+  labs(color = "Percentage\nDepredated", caption = "Points indicate sites of recreational fishing coloured by percentage depredation.\nSites denoted by hollow grey circle are sites where zero depredation occured.", title = "Coral Bay") +
+  theme(axis.text.x = element_text(angle = 90, size = 5),
+        axis.text.y = element_text(size = 5),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 5, vjust = 1),
+        legend.text = element_text(size = 5),
+        legend.key.height = unit(25, "mm"),
+        title = element_text(size = 8)) +
+  guides(color = guide_colorbar(reverse = TRUE)) +
+  facet_wrap(. ~ Year) +
+  annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true", 
+        pad_x = unit(0.25, "cm"), pad_y = unit(0.5, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+                                               fill = c("white", "Grey"), text_col = "grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm"))
+
+CBspexdp
+
+# ggsave(paste(rumPlots, "CBspexdp.png", sep='/'), width = 4, height = 6)
+```
+
+```{r spDP_Cape}
+# Cape
+## st of just nDP == 0
+Capesexdp0 <- st_crop(sexdp0, Cape)
+
+## st  nDP > 0
+Capesexdp <- st_crop(sexdp, Cape)
+
+Capespexdp <- ggplot() +
+  geom_sf(data = Cape, lwd = 0.1) +
+  geom_sf(data = Capesexdp0, shape = 1, size = 0.5, color= "grey") +
+  geom_sf(data = Capesexdp, aes(color = perDP), size = 1) + # colour for discrete, fill for continuous
+  scale_color_distiller(palette = "YlGnBu", trans = "reverse") + # colour for discrete, fill for continuous
+  scale_fill_continuous(trans = 'reverse') +
+  labs(color = "Percentage\nDepredated", caption = "Points indicate sites of recreational fishing coloured by percentage depredation.\nSites denoted by hollow grey circle are sites where zero depredation occured.") +
+  theme(axis.text.x = element_text(angle = 90, size = 5),
+        axis.text.y = element_text(size = 5),
+        plot.caption = element_text(hjust = 0, size = 5),
+        legend.title = element_text(size = 5, vjust = 1),
+        legend.text = element_text(size = 5),
+        legend.key.height = unit(25, "mm"),
+        title = element_text(size = 8)) +
+  guides(color = guide_colorbar(reverse = TRUE)) +
+  facet_wrap(. ~ Year) +
+  annotation_scale(location = "br", pad_y = unit(0.1, "cm"), height = unit(0.5, "mm"), text_cex = 0.3, bar_cols = c("grey", "white"), line_width = 0.1) +
+    annotation_north_arrow(location = "br", which_north = "true", 
+        pad_x = unit(0.25, "cm"), pad_y = unit(0.5, "cm"),
+        style = north_arrow_fancy_orienteering(line_width = 1, text_size = 3, line_col = "Grey",
+                                               fill = c("white", "Grey"), text_col = "grey"),
+        height = unit(0.5, "cm"), width = unit(0.5, "cm"))
+
+Capespexdp
+# 
+# ggsave(paste(rumPlots, "Capespexdp.png", sep='/'), width = 4, height = 6)
+```
+
+```{r}
+ a <- st_read(paste(s.dir, "gpkg/FADs.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "FADs.shp", sep = '/'), append = F)
+
+ 
+  a <- st_read(paste(s.dir, "gpkg/ncmpSZ.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "ncmpSZ.shp", sep = '/'), append = F)
+ 
+   a <- st_read(paste(s.dir, "gpkg/NingBR.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "NingBR.shp", sep = '/'), append = F)
+ 
+ 
+    a <- st_read(paste(s.dir, "gpkg/nmpSpPurposeShore.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "nmpSpPurposeShore.shp", sep = '/'), append = F)
+ 
+     a <- st_read(paste(s.dir, "gpkg/NWScoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "NWScoast.shp", sep = '/'), append = F)
+ 
+  a <- st_read(paste(s.dir, "gpkg/NWScoast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "NWScoast.shp", sep = '/'), append = F)
+ 
+  
+  a <- st_read(paste(s.dir, "gpkg/ReefHabitat.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "Reef.shp", sep = '/'), append = F)
+ 
+ 
+  a <- st_read(paste(s.dir, "gpkg/Wells.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "shp/Wells.shp", sep = '/'), append = F)
+ 
+   a <- st_read(paste(s.dir, "gpkg/Pipes.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+ st_write(a, paste(s.dir, "shp/Pipes.shp", sep = '/'), append = F)
+```
+
+```{r}
+FTyp <- exdat %>% 
+  group_by(FishingType) %>%   
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") %>% 
+  ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', fill = "#8fcaca") +
+  labs(x = paste("Fishing Type (n = ", length(na.omit(unique(exdat$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(exdat), ")", sep = "")) +
+  # facet_wrap(. ~ numYear) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+
+FTyp
+ggsave(paste(rumPlots, "FTyp.png", sep='/'), width = 8, height = 4)
+
+
+bf_FTyp <- bf %>% 
+  group_by(FishingType) %>%   
+  mutate(count_name_occurr = n()) %>%
+  filter(!is.na(FishingType), FishingType != "") %>% 
+  ggplot(
+  aes(x=reorder(FishingType,-count_name_occurr))) + #reorder(col to reorder, by what var)
+  geom_bar(stat='count', fill = "#8fcaca") +
+    labs(x = paste("Boat based fishing type (n = ", length(na.omit(unique(bf$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(bf), ")", sep = "")) +
+  # facet_wrap(. ~ numYear) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5)
+
+bf_FTyp
+
+ggsave(paste(rumPlots, "bf_FTyp.png", sep='/'), width = 8, height = 4)
+
+```
+
+```{r}
+a <- dpdat %>%
+  group_by(PersonID, TripNum, facYear) %>% 
+  summarise(hookedTrip = sum(nHooked),
+            DPTrip = sum(nDP), 
+            per = DPTrip/hookedTrip*100, # percentage of depredation per trip 
+            bin = ifelse(per > 0, 1, 0),
+            bin = ifelse(hookedTrip == 0 & nDP == 0, 0, bin)) 
+
+perDPTrip <- a %>% 
+  group_by(facYear) %>% 
+  summarise(Percentage = sum(bin==1)/n()*100) %>% 
+  mutate(label = paste(round(Percentage, digits = 1), "%", sep =" "),
+         data = "Trips")
+
+
+perDPSite <- dpdat %>%
+  group_by(facYear) %>%
+  summarise(Percentage = (sum(DP == 1)/n())*100) %>% 
+    mutate(label = paste(round(Percentage, digits = 1), "%", sep =" "),
+           data = "Sites") 
+
+c <- bind_rows(perDPTrip, perDPSite) %>% 
+  ggplot(aes(factor(1), y = Percentage, fill = data)) +
+   geom_bar(stat = "identity", position = position_dodge2(reverse = TRUE)) +
+  labs(y = "Number of fish", x="") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values=c("#97c1a9", "#81caca"), name = "") +
+   theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  geom_text(aes(label=label), vjust = -0.5, size = 2.5, position = position_dodge2(.9, reverse = TRUE)) +
+  facet_grid(~facYear)
+c
+```
+
+```{r}
+var_names <- c('lat', 'lon', 'time', 'sea_surface_temperature', 'sst_dtime', 'dt_analysis', 'satellite_zenith_angle', 'l2p_flags')
+
+sst_f1 <- nc_open(paste(cdf.dir, 'SST_nc4_f1/IMOS_aggregation_20211209T025615Z.nc', sep = "/"), write = TRUE)
+sst_f2 <- nc_open(paste(cdf.dir, 'SST_nc4_f2/IMOS_aggregation_20211209T025716Z.nc', sep = "/"), write = TRUE)
+sst_f3 <- nc_open(paste(cdf.dir, 'SST_nc4_f3/IMOS_aggregation_20211209T025817Z.nc', sep = "/"), write = TRUE)
+sst_f4 <- nc_open(paste(cdf.dir, 'SST_nc4_f4/IMOS_aggregation_20211209T030015Z.nc', sep = "/"), write = TRUE)
+sst_f5 <- nc_open(paste(cdf.dir, 'SST_nc4_f5/IMOS_aggregation_20211209T033329Z.nc', sep = "/"), write = TRUE)
+sst_f6 <- nc_open(paste(cdf.dir, 'SST_nc4_f6/IMOS_aggregation_20211209T033413Z.nc', sep = "/"), write = TRUE)
+# Just for one variable for now
+dat_new <- cbind(
+  ncvar_get(sst_f1, var_names),
+  ncvar_get(sst_f2, var_names),
+  ncvar_get(sst_f3, var_names),
+  ncvar_get(sst_f4, var_names),
+  ncvar_get(sst_f5, var_names),
+  ncvar_get(sst_f6, var_names))
+dim(dat_new)
+var <- sst_f1$var[var_names]$varnames
+
+# Create a new file
+file_new3 <- nc_create(
+  filename = 'sst_f2f6.nc',
+  # We need to define the variables here
+  vars = ncvar_def(
+    name = 'var_names',
+    units = var$units,
+    dim = dim(dat_new)))
+
+# And write to it
+ncvar_put(
+  nc = file_new,
+  varid = 'var_names',
+  vals = dat_new)
+
+# Finally, close the file
+nc_close(file_new)
+# 
+# 
+# 
+# 
+# 
+var_names <- c('lat', 'lon', 'time', 'sea_surface_temperature', 'sst_dtime', 'dt_analysis', 'satellite_zenith_angle', 'l2p_flags')
+
+for (var_name in var_names) {
+
+  # Create raster stack
+  x <- stack(
+    raster(sst_f1n, varname = var_name),
+    raster(sst_f2n, varname = var_name),
+    raster(sst_f3n, varname = var_name),
+    raster(sst_f4n, varname = var_name),
+    raster(sst_f5n, varname = var_name),
+    raster(sst_f6n, varname = var_name))
+
+  # Name each layer
+  names(x) <- c("f1", "f2", "f3", "f4", "f5", "f6")
+
+  writeRaster(x = x,
+              filename = paste0(var_name, '_out.nc'),
+              overwrite = TRUE,
+              format = 'CDF')
+}
+
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+gpkg.dir <- paste(w.dir, "spIgnore/gpkg", sep='/')
+
+Esp_ss <- st_read(paste(gpkg.dir, "Esp_StudySite.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+st_write(Esp_ss, paste(s.dir, "Esp_StudySite.shp", sep = '/'))
+```
+
+```{r}
+
+# 12 days
+# 2 units of free time 
+# 60% chamce of getting Esperance 
+# 40% chance of getting Duke
+# 
+# 
+runif(3, 1, 8)
+sample(c('Esperance','Duke'), size=6, replace=T, prob=c(.8,.2))
+
+sample(c('Esperance','Duke', 'Lucky', 'Alexander'), size=18, replace=T, prob=c(.4,.4, .1, .1))
+
+```
+
