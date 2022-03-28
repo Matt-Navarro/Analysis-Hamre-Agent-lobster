@@ -1,0 +1,351 @@
+# Catch Exploration
+***
+
+
+## Overall Catch {.tabset}
+This explores total catch including those depredated (if present) across all fishing types.
+
+### Histogram
+Zeros included
+```{r hist_nHooked0}
+ggplot(ex) +
+  aes(x = nHooked) +
+  geom_histogram(fill = dcol1, binwidth = 3) +
+  labs(x = paste("Number of fish hooked (n = ", sum(ex$nHooked), ")", sep ="")) +
+  my_theme
+ggsave(paste(crExplore_plots, "hist_nHooked0.png", sep='/'), width = 8, height = 4)
+```
+
+Zeros excluded
+```{r hist_nHooked}
+ex %>% 
+  filter(nHooked > 0) %>% 
+  ggplot() +
+  aes(x = nHooked) +
+  geom_histogram(fill = dcol2, binwidth = 3) +
+  labs(x = paste("Number of fish hooked (n = ", sum(ex$nHooked), ")", sep ="")) +
+  my_theme
+ggsave(paste(crExplore_plots, "hist_nHooked.png", sep='/'), width = 8, height = 4)
+```
+
+
+```{r bar_avHooked.year}
+# heading
+if (length(unique(ex$facYear)) > 1) {
+  asis_output("### Year\n")
+}
+
+if (length(unique(ex$facYear)) > 1) {
+year <- ex %>%
+  group_by(facYear) %>%
+  summarise(mean=mean(nHooked, na.rm = TRUE), sd=sd(nHooked, na.rm = TRUE)) %>% 
+  ggplot(aes(x = as.factor(facYear), y = mean)) +
+  geom_col(stat="identity", fill = dcol1) +
+  geom_errorbar(aes(ymin = mean+sd, ymax = mean+sd), width = .2, colour = col3) + 
+  geom_linerange(aes(ymin = mean, ymax = mean+sd), colour = col3) +
+  labs(y = "Average number of fish hooked", x=" Year") +
+  my_theme
+ggsave(paste(crExplore_plots, "bar_avHooked.year.png", sep='/'), width = 8, height = 4)
+year
+}
+```
+
+```{r box_nHooked0.year}
+if (length(unique(ex$facYear)) > 1) {
+year <- ex %>% 
+  ggplot() +
+  aes(x = as.factor(facYear), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Year", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_nHooked0.year.png", sep='/'), width = 8, height = 4)
+year
+}
+```
+
+
+```{r box_nHooked0.month}
+# heading
+if (length(unique(ex$TripMonth)) > 1) {
+  asis_output("### Month\n")
+}
+
+if (length(unique(ex$TripMonth)) > 1) {
+month <- ex %>% 
+  ggplot() +
+  aes(x = as.factor(TripMonth), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Month", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_nHooked0.month.png", sep='/'), width = 8, height = 4)
+month
+}
+```
+
+
+```{r box_nHooked0.extype}
+# heading
+if (length(unique(ex$FishingType)) > 1) {
+  asis_output("### Fishing type\n")
+}
+
+# plot
+if (length(unique(ex$FishingType)) > 1) {
+fishingtype <- ex %>% 
+  ggplot() +
+  aes(x = as.factor(FishingType), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Fishing Type", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_nHooked0.extype.png", sep='/'), width = 8, height = 4)
+fishingtype
+}
+```
+
+
+```{r box_nHooked0.sitetype, eval = boat & shore}
+  asis_output("### Site type\n")
+
+ex %>% 
+  ggplot() +
+  aes(x = as.factor(SiteType), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Site Type", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_nHooked0.sitetype.png", sep='/'), width = 8, height = 4)
+```
+
+### Locality
+```{r box_nHooked0.resident}
+ex %>% 
+  ggplot() +
+  aes(x = as.factor(Resident), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Resident", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_nHooked0.resident.png", sep='/'), width = 8, height = 4)
+```
+
+### Lure type
+```{r box_nHooked0.lure}
+ex %>% 
+  ggplot() +
+  aes(x = as.factor(BaitLure), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Lure type", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_nHooked0.resident.png", sep='/'), width = 8, height = 4)
+```
+
+### Depth
+```{r scat_nHooked0.depth}
+ex %>% 
+  ggplot() +
+  aes(x = MaxHook, y = nHooked) +
+  geom_point(colour = dcol1) +
+  labs(x = "Max hook depth", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "scat_nHooked0.depth.png", sep='/'), width = 8, height = 4)
+```
+
+### Median Time
+```{r scat_nHooked0.mediantime}
+ex %>% 
+  ggplot() +
+  aes(x = decMedianTime, y = nHooked) +
+  geom_point(colour = dcol1) +
+  labs(x = "Deciman median time", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "scat_nHooked0.mediantime.png", sep='/'), width = 8, height = 4)
+```
+
+### Spatial
+Zeros are displayed with small black dots.
+```{r sp_cr}
+sp_cr0 <- ex %>% 
+  filter(nHooked == '0', !is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords =c("UseLong", "UseLat"), crs = 4283)
+
+sp_cr <- ex %>% 
+  filter(nHooked != '0', !is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords =c("UseLong", "UseLat"), crs = 4283)
+
+basemap +
+  geom_sf(data = sp_cr, aes(color = nHooked), size = 1.5) +
+  geom_sf(data = sp_cr0, size = 0.25, color = "black") +
+  scale_color_distiller(palette = "YlGnBu", direction = 1, name = "Number of\nfish hooked") +
+  map_theme +
+  labs(x = "Longitude", y = "Latitude")
+ggsave(paste(crExplore_plots, "sp_cr.png", sep='/'), width = 4, height = 6)
+```
+
+
+```{r}
+
+# put fishing types in loop
+
+# bdem <- exb %>% filter(FishingType %in% "Demersal") # demersal data set
+# sp_bdem <- st_as_sf(bdem, coords = c("UseLong", "UseLat"), crs = 4283) %>% 
+#   mutate(UseLong = sf::st_coordinates(.)[,1], UseLat = sf::st_coordinates(.)[,2])
+
+if (length(which(ex$FishingType == "Demersal")) > 100) {
+  bdem <- exb %>% filter(FishingType %in% "Demersal")
+  sp_bdem <- st_as_sf(bdem, coords = c("UseLong", "UseLat"), crs = 4283) %>% 
+  mutate(UseLong = sf::st_coordinates(.)[,1], UseLat = sf::st_coordinates(.)[,2])
+  eval_bdem <- TRUE
+} else {
+  eval_bdem <- FALSE
+}
+
+# heading
+if (eval_bdem == TRUE) {
+  asis_output("## Boat based demersal fishing {.tabset}\n***")
+}
+```
+
+### Histogram
+Zeros included
+```{r hist_bdem.nHooked0}
+ggplot(bdem) +
+  aes(x = nHooked) +
+  geom_histogram(fill = dcol1, binwidth = 3) +
+  labs(x = paste("Number of fish hooked (n = ", sum(bdem$nHooked), ")", sep ="")) +
+  my_theme
+ggsave(paste(crExplore_plots, "hist_bdem.nHooked0.png", sep='/'), width = 8, height = 4)
+```
+
+Zeros excluded
+```{r hist_bdem.Hooked}
+bdem %>% 
+  filter(nHooked > 0) %>% 
+  ggplot() +
+  aes(x = nHooked) +
+  geom_histogram(fill = dcol2, binwidth = 3) +
+  labs(x = paste("Number of fish hooked (n = ", sum(bdem$nHooked), ")", sep ="")) +
+  my_theme
+ggsave(paste(crExplore_plots, "hist_nbdem.Hooked.png", sep='/'), width = 8, height = 4)
+```
+
+
+```{r bar_bdem.avHooked.year}
+# heading
+if (length(unique(ex$facYear)) > 1) {
+  asis_output("### Year\n")
+}
+
+if (length(unique(ex$facYear)) > 1) {
+year <- bdem %>%
+  group_by(facYear) %>%
+  summarise(mean=mean(nHooked, na.rm = TRUE), sd=sd(nHooked, na.rm = TRUE)) %>% 
+  ggplot(aes(x = as.factor(facYear), y = mean)) +
+  geom_col(stat="identity", fill = dcol1) +
+  geom_errorbar(aes(ymin = mean+sd, ymax = mean+sd), width = .2, colour = col3) + 
+  geom_linerange(aes(ymin = mean, ymax = mean+sd), colour = col3) +
+  labs(y = "Average number of fish hooked", x=" Year") +
+  my_theme
+ggsave(paste(crExplore_plots, "bar_bdem.avHooked.year.png", sep='/'), width = 8, height = 4)
+year
+}
+```
+
+```{r box_bdem.nHooked0.year}
+if (length(unique(ex$facYear)) > 1) {
+year <- bdem %>% 
+  ggplot() +
+  aes(x = as.factor(facYear), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Year", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_bdem.nHooked0.year.png", sep='/'), width = 8, height = 4)
+year 
+}
+```
+
+
+```{r box_bdem.nHooked0.month}
+# heading
+if (length(unique(ex$TripMonth)) > 1) {
+  asis_output("### Month\n")
+}
+
+if (length(unique(ex$TripMonth)) > 1) {
+month <- bdem %>% 
+  ggplot() +
+  aes(x = as.factor(TripMonth), y = nHooked) +
+  geom_boxplot(fill = dcol1, alpha = 0.5, lwd = 0.25, color = col3) +
+  labs(x = "Month", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_bdem.nHooked0.month.png", sep='/'), width = 8, height = 4)
+month
+}
+```
+
+### Depth
+```{r scat_bdem.nHooked0.depth}
+bdem %>% 
+  ggplot() +
+  aes(x = MaxHook, y = nHooked) +
+  geom_jitter(colour = dcol1) +
+  labs(x = "Max hook depth", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_bdem.nHooked0.depth.png", sep='/'), width = 8, height = 4)
+```
+
+### Median Time
+```{r scat_bdem.nHooked0.mediantime}
+bdem %>% 
+  ggplot() +
+  aes(x = decMedianTime, y = nHooked) +
+  geom_jitter(colour = dcol1) +
+  labs(x = "Deciman median time", y = "Number of fish hooked") +
+  my_theme
+ggsave(paste(crExplore_plots, "box_bdem.nHooked0.mediantime.png", sep='/'), width = 8, height = 4)
+```
+
+
+### Spatial and kernal denisty
+Spatial distribution and kernal density of boat based fishing where no fish were caught. 
+```{r sp_kdens.cr0}
+sp_bdem.cr0 <- bdem %>% 
+  filter(nHooked == '0', !is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords =c("UseLong", "UseLat"), crs = 4283) %>% 
+  mutate(UseLong = sf::st_coordinates(.)[,1], UseLat = sf::st_coordinates(.)[,2])
+
+sp_bdem.cr0 %>% 
+  ggplot() +
+  stat_density_2d(aes(x = UseLong, y = UseLat, fill = stat(level), alpha = ..level..), geom = "polygon", bins = 10) +
+  scale_fill_distiller(palette = "YlGnBu", direction = -1, name = "Kernal\nDensity") +
+  geom_sf(data = sp_bdem.cr0, size = 0.25, color= "black") +
+  scale_alpha(guide = 'none') +
+  geom_sf(data = coast, lwd = 0.07) +
+  map_theme +
+  labs(x = "Longitude", y = "Latitude")
+ggsave(paste(rumExplore_plots, "kdens_bdem0.png", sep='/'), width = 4, height = 6)
+```
+
+Spatial ditribtion and kernal density of boat based fishing where fish were caught.
+```{r sp_kdens_bdem.cr}
+sp_bdem.cr <- bdem %>% 
+  filter(nHooked != '0', !is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords =c("UseLong", "UseLat"), crs = 4283) %>% 
+  mutate(UseLong = sf::st_coordinates(.)[,1], UseLat = sf::st_coordinates(.)[,2])
+
+basemap +
+  geom_sf(data = sp_bdem.cr, aes(color = nHooked), size = 1) +
+  scale_color_distiller(palette = "YlGnBu", direction = 1, name = "Number of\nfish hooked") +
+  map_theme
+ggsave(paste(crExplore_plots, "sp_bdem.cr.png", sep='/'), width = 4, height = 6)
+
+sp_bdem.cr %>% 
+  ggplot() +
+  stat_density_2d(aes(x = UseLong, y = UseLat, fill = stat(level), alpha = ..level..), geom = "polygon", bins = 10) +
+  scale_fill_distiller(palette = "YlGnBu", direction = -1, name = "Kernal\nDensity") +
+  scale_alpha(guide = 'none') +
+  geom_sf(data = coast, lwd = 0.07) +
+  map_theme +
+  labs(x = "Longitude", y = "Latitude")
+ggsave(paste(rumExplore_plots, "kdens_bdem.cr.png", sep='/'), width = 4, height = 6)
+```
+
+
+

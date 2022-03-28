@@ -1,0 +1,86 @@
+This script compiles all the individual csvs once downloaded from AGOL. 
+
+# Data Prep
+After downloading the data from AGOL, you end up four individual .csv docs for each survey layer; 
+
+  - Meta
+  - Extractive Use 
+  - Non-Extractive Use
+  - Avidity
+
+1. Read in documents, including `na = c("", " ")` to make all empty cells consistent
+
+```{r  read data}
+meta <- read_csv("rumIgnore/200322_Meta.csv", na =c("", " ", "na", "NA", "-"))
+ex <- read_csv("rumIgnore/200322_Extractive.csv", na =c("", " ", "na", "NA", "-"))
+nex <- read_csv("rumIgnore/200322_NoNExtractive.csv", na =c("", " ", "na", "NA", "-"))
+avid <- read_csv("rumIgnore/200322_Avidity.csv", na =c("", " ", "na", "NA", "-"))
+```
+
+Do not expect any of your data sheets to have the same number of observations.
+
+  - Meta data will contain one observation per person approached so wil include refusals.
+  
+  - Extractive and non-extractive use data will contain an observation per use which may
+  be more than one per person therefore could have more observations than the meta data.
+  Alternatively it may have less observations than the meta data if most people doing the survey are
+  participating in the alternative use type (i.e. most people are doing extractive and few are doing
+  non-extractive)
+  
+  - Avidity data will contain an observation per completed survey, so you would expect there to be
+  less observations in the avidity data than the meta data as it does not include refusals. 
+
+For each individual dataset: 
+  2. Check no missing GlobalIDs in Meta or GUIDs in Use or Avidity data
+  3. Give ID variables intuitive names
+  5 Add activity type for Use surveys
+
+```{r  data prep}
+table(is.na(meta$GlobalID)) # all false
+
+meta %<>% # meta data
+  rename(mObjID = OBJECTID,
+         mGlobID = GlobalID,
+         mLong = x,
+         mLat = y) %>%
+  dplyr::select(-c(created_user, last_edited_user, last_edited_date, "GUID for meta"))
+
+table(is.na(ex$exGUID)) # all false
+
+ex %<>% # extractive data
+  rename(exObjID = OBJECTID,
+         exGlobID = GlobalID,
+         exLong = x,
+         exLat = y) %>%
+  dplyr::select(-c(Creator, EditDate, Editor, CreationDate)) %>%
+  mutate(exActivityType = "Extractive")
+
+table(is.na(nex$nexGUID)) # all false
+
+nex %<>% # non-extractive data
+  rename(nexObjID = OBJECTID,
+         nexGlobID = GlobalID,
+         nexLong = x,
+         nexLat = y) %>%
+  dplyr::select(-c(Creator, EditDate, Editor, CreationDate)) %>%
+  mutate(nexActivityType = "NonExtractive")
+
+table(is.na(avid$aGUID)) # all false
+
+avid <- avid %>% # avidity data
+  rename(aObjID = OBJECTID,
+         aGlobID = GlobalID) %>%
+  dplyr::select(-c(Creator, EditDate, Editor, CreationDate))
+```
+
+Join the four data sets, linking them by the Meta GlobalID (primary key) and GUID (foreign key) of the other data sheets (ie. every Meta GlobalID should match the GUID in the other data sheets). 
+
+meta (GlobalID) -> ex/nex/avid GUID
+
+Use a `full_join` to connect individual data sheets. Using a inner join will remove refusals which are needed for response rate calculations. 
+
+```{r  join}
+dat1 <- full_join(meta, ex, by = c("mGlobID" = "exGUID"), keep = T) # joining meta to extractive
+dat2 <- full_join(dat1, nex, by = c("mGlobID" = "nexGUID"), keep = T) # joining non-extractive
+full <- full_join(dat2, avid, by = c("mGlobID" = "aGUID"), keep = T) # joining avidity
+```

@@ -29,10 +29,10 @@ After downloading the data from arcCollector, you end up four individual .csv do
 1. Read in documents, including `na = c("", " ")` to make all empty cells consistent
 
 ```{r  read data}
-# meta <- read_csv("rumIgnore/280222_Meta.csv", na =c("", " ", "na", "NA", "-"))
-# ex <- read_csv("rumIgnore/280222_Extractive.csv", na =c("", " ", "na", "NA", "-"))
-# nex <- read_csv("rumIgnore/280222_NoNExtractive.csv", na =c("", " ", "na", "NA", "-"))
-# avid <- read_csv("rumIgnore/280222_Avidity.csv", na =c("", " ", "na", "NA", "-"))
+# meta <- read_csv("rumIgnore/200322_Meta.csv", na =c("", " ", "na", "NA", "-"))
+# ex <- read_csv("rumIgnore/200322_Extractive.csv", na =c("", " ", "na", "NA", "-"))
+# nex <- read_csv("rumIgnore/200322_NoNExtractive.csv", na =c("", " ", "na", "NA", "-"))
+# avid <- read_csv("rumIgnore/200322_Avidity.csv", na =c("", " ", "na", "NA", "-"))
 ```
 
 Do not expect any of your data sheets to have the same number of observations.
@@ -54,7 +54,7 @@ For each individual dataset:
   5 Add activity type for Use surveys
 
 ```{r  data prep}
-# # table(is.na(meta$GlobalID)) # all false
+# table(is.na(meta$GlobalID)) # all false
 # 
 # meta %<>% # meta data
 #   rename(mObjID = OBJECTID,
@@ -63,7 +63,7 @@ For each individual dataset:
 #          mLat = y) %>%
 #   dplyr::select(-c(created_user, last_edited_user, last_edited_date, "GUID for meta"))
 # 
-# # table(is.na(ex$exGUID)) # all false
+# table(is.na(ex$exGUID)) # all false
 # 
 # ex %<>% # extractive data
 #   rename(exObjID = OBJECTID,
@@ -72,8 +72,8 @@ For each individual dataset:
 #          exLat = y) %>%
 #   dplyr::select(-c(Creator, EditDate, Editor, CreationDate)) %>%
 #   mutate(exActivityType = "Extractive")
-#   
-# # table(is.na(nex$nexGUID)) # all false
+# 
+# table(is.na(nex$nexGUID)) # all false
 # 
 # nex %<>% # non-extractive data
 #   rename(nexObjID = OBJECTID,
@@ -82,8 +82,8 @@ For each individual dataset:
 #          nexLat = y) %>%
 #   dplyr::select(-c(Creator, EditDate, Editor, CreationDate)) %>%
 #   mutate(nexActivityType = "NonExtractive")
-#   
-# # table(is.na(avid$aGUID)) # all false
+# 
+# table(is.na(avid$aGUID)) # all false
 # 
 # avid <- avid %>% # avidity data
 #   rename(aObjID = OBJECTID,
@@ -168,7 +168,11 @@ dplyr::rename(ID = "...1",
               BoatID = "# Boat number and/or name",
               aComments = "Comments",
               exDetract = "Did anything detract from the experience you had at this site?",
-              nexDetract = "Did anything detract from your experience at this site?")
+              nexDetract = "Did anything detract from your experience at this site?",
+              Native = "Are you of Aboriginal or Torres Strait Islander origin?",
+              TO = "Do you identify as a TO in this region?",
+              exCustom = "If of Aboriginal or Torres Strait Islander origin, was this activity undertaken for a customary purpose?.x",
+              nexCustom = "If of Aboriginal or Torres Strait Islander origin, was this activity undertaken for a customary purpose?.y")
 ```
 
 ## Temporal variables
@@ -204,14 +208,14 @@ esp <- esp %>%
 # Start (chr), Stop (chr), MedianTime (chr), decMedianTime (num), decDuration (num)
 esp <- esp %>%
   mutate(Start = substr(as.character(ifelse(!is.na(exStart), as.character(exStart),
-                                     as.character(nexStart))), 1, 5)) %>%  # start time
-  mutate(Start = sub("[.]", ":", Start)) %>% # change every bit of punctuation to a colon
+                                     as.character(nexStart))), 1, 5)) %>% # start time
+  mutate(Start = sub("[.]", ":", Start)) %>%  # change every bit of punctuation to a colon
   mutate(Start = ifelse(str_length(sub(":.*", "", Start)) != 2, str_c("0", Start),Start)) %>% 
   # if str_length before colon !=2, add a zero to the start
-  mutate(Start = ifelse(str_length(sub(".*:", "", Start)) != 2, str_c(Start, "0"), Start)) %>% 
-  # if str_length after colon !=2, add a zero to the end
+  mutate(Start = ifelse(str_length(sub(".*:", "", Start)) != 2, str_c(Start, "0"), Start)) %>% # if str_length after colon !=2, add a zero to the end
+  mutate(Start = ifelse(Start %in% c("011am0", "11:90"), "11:00", Start)) %>% 
   mutate(Stop = substr(as.character(ifelse(!is.na(exStop), as.character(exStop),
-                                     as.character(nexStop))), 1, 5)) %>%   # stop time
+                                     as.character(nexStop))), 1, 5)) %>%  # stop time
   mutate(Start = sub("[.]", ":", Start)) %>% # change every bit of punctuation to a colon
   mutate(Stop = ifelse(str_length(sub(":.*", "", Stop)) != 2, str_c("0", Stop),
                          Stop)) %>% # if str_length before colon !=2, add a zero to the start
@@ -242,7 +246,9 @@ esp <- esp %>%
     ymd("2022-01-16"), ymd("2022-01-25")), "1",NA))) %>% # assigning dates to field trip 1
   mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
     ymd("2022-02-14"), ymd("2022-02-28")), "2", FieldTrip))) %>%
-  dplyr::filter(!is.na(FieldTrip)) # filtering out submissions out with field trip dates (dummys)
+  mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
+    ymd("2022-03-07"), ymd("2022-03-20")), "2", FieldTrip))) %>%
+  dplyr::filter(!is.na(FieldTrip), Interviewer != "Dummy") # filtering out submissions out with field trip dates (dummys)
 ```
 
 ## IDs
@@ -252,7 +258,6 @@ esp <- esp %>%
   * Mutate Person ID to reflect that people with same boat ID should have the same associated person ID. 
 
 ```{r IDs}
-
 # Need to fix boat ID so everything is just 2 letter and 3 numbers, anything with 1 in position 2 should be I, move in boat names into boat name column
 # esp1 <- esp %>%
 #   # dplyr::mutate(BoatID = ifelse(str_detect(BoatID, "[H, h]ire|[R,r]ental|M&H"), "Rental",
@@ -295,8 +300,8 @@ esp <- esp %>%
 esp <- esp %>%
   group_by(PersonID) %>%
   arrange(Start) %>% 
-  mutate(TripNum = as.numeric(as.factor(TripDate))) %>%
-  mutate(SiteNum = sequence(rle(TripNum)$lengths)) %>%
+  mutate(TripNum = as.numeric(as.factor(TripDate))) %>% # number trips done by same person across different days
+  mutate(SiteNum = sequence(rle(TripNum)$lengths)) %>% # chronological order of which a participant has conducted uses in a single trip
   arrange(ID) %>%
   dplyr::ungroup()
 ```
@@ -307,7 +312,7 @@ esp <- esp %>%
   mutate(nBoatDays = as.numeric(ifelse(nBoatDays %in% "All", nBoatDays, nBoatDays))) %>% 
   mutate(nShoreDays = as.numeric(ifelse(nShoreDays %in% "All", nDaysInArea, nShoreDays))) %>% 
   mutate_each_(funs(factor(.)), c("Interviewer", "Screen18", "PrevInter", "Agreement",
-                                  "BoatAccess", "Resident"))
+                                  "BoatAccess", "Resident", "facYear"))
 ```
 
 ## Use cleaning
@@ -378,10 +383,32 @@ esp <- esp %>%
 ## Avidity and demographics cleaning
 ```{r avidity clean}
 esp <- esp %>% 
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 0, 4), "0-4", NA)) %>% 
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 5, 9), "5-9", bin_exTimes12m)) %>%
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 10, 14), "10-14", bin_exTimes12m)) %>%
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 15, 19), "15-19", bin_exTimes12m)) %>%
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 20, 29), "20-29", bin_exTimes12m)) %>%
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 30, 39), "30-39", bin_exTimes12m)) %>%
+  mutate(bin_exTimes12m = ifelse(between(exTimes12m, 40, 59), "40-59", bin_exTimes12m)) %>%
+  mutate(bin_exTimes12m = ifelse(exTimes12m > 59, "60+", bin_exTimes12m)) 
+# Age 
+esp <- esp %>% 
+  mutate(Age = 2021-YrBorn) %>% 
+  mutate(binAge = ifelse(between(Age, 18, 25), "18-24", NA)) %>% 
+  mutate(binAge = ifelse(between(Age, 25, 34), "25-34", binAge)) %>%
+  mutate(binAge = ifelse(between(Age, 35, 44), "35-44", binAge)) %>%
+  mutate(binAge = ifelse(between(Age, 45, 54), "45-54", binAge)) %>%
+  mutate(binAge = ifelse(between(Age, 55, 64), "55-64", binAge)) %>%
+  mutate(binAge = ifelse(between(Age, 65, 74), "65-74", binAge)) %>%
+  mutate(binAge = ifelse(Age>74, "75+", binAge))
+
 # Postcode
+esp <- esp %>% 
   mutate(Postcode = as.factor(ifelse(Resident == "Yes", "6450", Postcode))) %>% 
-  mutate(Postcode = as.factor(ifelse(Postcode ==" 0", NA, Postcode))) %>% 
+  mutate(Postcode = as.factor(ifelse(Postcode ==" 0", NA, Postcode))) 
+
 # Party
+esp <- esp %>% 
   mutate(Sex = as.factor(Sex)) %>% 
   mutate(nFemales = ifelse(is.na(nFemales), 0, nFemales)) %>%
   mutate(nMales = ifelse(is.na(nMales), 0, nMales)) %>%
@@ -392,7 +419,6 @@ esp <- esp %>%
   mutate(nAdults = nFemales + nMales) %>% 
   mutate(nChild = nGirls + nBoys) %>% 
   mutate(PartySize = nAdults + nChild) %>% 
-# convert to factor
   mutate_each_(funs(factor(.)), c("Accom", "DiveCert"))
 ```
 
@@ -411,8 +437,8 @@ esp <- esp %>%
          UseLat, UseLong, ActivityType, Activity, Start, Stop, MedianTime, decMedianTime,
          decDuration, FishingType, BaitLure, MaxHook, KeptUndam, RelUndam, nDP, CaughtUndam,
          nHooked, binDP, perDP, proDP, CaughtUndam, nHooked, nUndamHr, nDPHr, DPrateHr, Species,
-         DiveMaxDepth, WhyChoose, WhyLeave, Detract, exTimes12m, exYrs, nexTimes12m, nexYrs,
-         DiveCert, nDives, YrBorn, Postcode, Accom, Sex, nFemales, nMales, nGirls, nBoys, nAdults,
+         DiveMaxDepth, WhyChoose, WhyLeave, Detract, bin_exTimes12m, exYrs, nexTimes12m, nexYrs,
+         DiveCert, nDives, binAge, Postcode, Accom, Sex, nFemales, nMales, nGirls, nBoys, nAdults,
          nChild, PartySize, BoatLength, BoatID, Comments, LunarPhase)
 ```
 

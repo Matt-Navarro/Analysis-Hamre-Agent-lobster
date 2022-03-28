@@ -1,0 +1,100 @@
+---
+title: "Esperance RUM Data"
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  bookdown::html_document2:
+    self_contained: false
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    smooth_scroll: true
+    theme: paper
+    number_sections: false
+    highlight: tango
+---
+
+```{r setup, include = FALSE}
+# knitr options
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, cache = TRUE, fig.align = 'center', fig.width=10, fig.height=7) 
+
+# libraries
+library(tidyverse)
+library(sp)
+library(raster)
+library(ggplot2)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(RColorBrewer)
+library(ggspatial)
+library(spatstat)
+library(patchwork)
+library(forcats)
+library(knitr)
+
+# directories
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic" # set working directory
+d.dir <- paste(w.dir, "RUM_workflow/rumIgnore/Esperance", sep='/') # set data directory
+f.dir <- paste(w.dir, "RUM_workflow/rumSource", sep = '/') # set functions directory
+s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/') # set gpkg directory
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/') # set raster directory
+rumExplore_plots <- paste(w.dir, "RUM_workflow/esp_plots/rumExplore", sep='/') # set plots directory
+crExplore_plots <- paste(w.dir, "RUM_workflow/esp_plots/crExplore", sep='/') # set plots directory
+
+# source 
+source(paste(f.dir, "esp_basemap.R", sep = '/')) # base map and spatial files
+portrait <- FALSE # set orientation of map
+landscape <- TRUE # set orientation of map
+
+# Data
+dat <- read.csv(paste(d.dir, "Esp_v1.csv", sep='/'))
+
+# Spatial
+spdat <- dat %>% 
+  filter(!is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords = c("UseLong", "UseLat"), crs = 4283) %>% 
+  mutate(UseLong = sf::st_coordinates(.)[,1], UseLat = sf::st_coordinates(.)[,2])
+
+st_write(spdat, paste(s.dir, "spEsp.gpkg", sep = '/'), append = F)
+
+# Set parameters of data
+extractive = TRUE
+nonextractive = TRUE
+boat = TRUE
+shore = FALSE
+
+# set colour palette
+dcol1 <- c("#d38685") # Dark col1
+lcol1 <- c("#e9b19b") # light col1
+dcol2 <- c("#5a5365") # Dark col 2
+lcol2 <- c("9b7785") # light col2
+col3 <- c("dark grey")  # base col
+
+# standard plot theme
+ax.title <- 14
+ax.text <- 9
+ax.legend <- 12
+strip <- 9
+a4_width <- 160
+my_theme <- theme_classic() + theme(axis.text=element_text(size = ax.text),
+                                    text = element_text(size = ax.text),
+                                    axis.title=element_text(size = ax.title),
+                                    line = element_line(size = 0.3),
+                                    strip.background = element_rect(colour = "white", fill = col3),
+                                    strip.text = element_text(size = strip),
+                                    legend.title = element_text(size = ax.legend),
+                                    legend.text = element_text(size = ax.legend),
+                                    plot.title = element_text(size = ax.title, hjust = 0.5))
+
+# map theme
+map_theme <- my_theme + theme(axis.text.x = element_text(angle = 90))
+  
+```
+
+```{r child = c('rumExplore.Rmd')}
+```
+
+```{r child = if (extractive == TRUE) 'crExplore.Rmd'}
+```
+<!-- select knit to run -->

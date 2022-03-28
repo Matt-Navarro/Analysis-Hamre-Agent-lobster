@@ -1,0 +1,40 @@
+---
+title: "RUM data cleaning and validation"
+author: "Nicole Hamre"
+---
+
+```{r setup}
+# libraries
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(chron)
+library(lunar)
+library(ggplot2)
+
+# directories
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic/RUM_workflow" # set working directory
+d.dir <- paste(w.dir, "RUM_workflow/rumIgnore", sep='/') # set data directory
+f.dir <- paste(w.dir, "RUM_workflow/rumFunc", sep = '/') # set function directory
+
+# source
+source(paste(f.dir, "cleaningFunc.R", sep = '/')) # source cleaning functions
+```
+
+```{r, child=if (compile == TRUE) '01_compile.Rmd'}
+```
+
+```{r}
+write.csv(full, 'rumIgnore/RAW_Esp.csv')  # write full raw un-cleaned dataset from compile
+dat <- read_csv("rumIgnore/RAW_Esp.csv") # read full raw un-cleaned dataset from compile
+```
+
+```{r child = c('02_clean.Rmd')}
+```
+
+```{r csv}
+write.csv(dat, "rumIgnore/esp_v1.csv", row.names = FALSE) # write fully cleaned data from clean
+```
+
+```{r child = c('03_validate.Rmd')}
+```

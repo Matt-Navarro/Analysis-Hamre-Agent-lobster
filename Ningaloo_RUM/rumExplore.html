@@ -12,12 +12,12 @@
 <meta name="author" content="Nicole Hamre" />
 
 
-<title>Esperance Data Exploration</title>
+<title>Ningaloo Data Exploration</title>
 
 <script src="rumExplore_files/header-attrs-2.9/header-attrs.js"></script>
 <script src="rumExplore_files/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="rumExplore_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link href="rumExplore_files/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
 <script src="rumExplore_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="rumExplore_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="rumExplore_files/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -34,8 +34,6 @@
 <link href="rumExplore_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="rumExplore_files/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="rumExplore_files/navigation-1.1/tabsets.js"></script>
-<link href="rumExplore_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
-<script src="rumExplore_files/highlightjs-9.12.0/highlight.js"></script>
 <link href="rumExplore_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
 <script src="rumExplore_files/pagedtable-1.1/js/pagedtable.js"></script>
 
@@ -48,16 +46,6 @@
   ul.task-list{list-style: none;}
     </style>
 
-<style type="text/css">code{white-space: pre;}</style>
-<script type="text/javascript">
-if (window.hljs) {
-  hljs.configure({languages: []});
-  hljs.initHighlightingOnLoad();
-  if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
-  }
-}
-</script>
 
 
 
@@ -242,56 +230,152 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Esperance Data Exploration</h1>
+<h1 class="title toc-ignore">Ningaloo Data Exploration</h1>
 <h4 class="author">Nicole Hamre</h4>
-<h4 class="date">06 March, 2022</h4>
+<h4 class="date">15 March, 2022</h4>
 
 </div>
 
 
-<ul>
-<li>Number of use surveys in total: 162<br />
-</li>
-<li>Number of individuals surveyed: 134</li>
-<li>Response rate for Esperance: 90%</li>
-</ul>
-<p><img src="rumExplore_files/figure-html/ActTyp-1.png" width="672" /></p>
-<div id="extractive-vs-non-extractive" class="section level2 tabset" number="0.1">
-<h2><span class="header-section-number">0.1</span> Extractive vs Non-Extractive</h2>
-<div id="bar-plot" class="section level3 unnumbered">
+<p><br><br></p>
+<blockquote>
+<p>MEG Mission satatment: <strong>Optimising human use of the ocean</strong></p>
+</blockquote>
+<hr />
+<div id="data" class="section level1 tabset">
+<h1>Data</h1>
+<p>Data for recreational marine use in Ningaloo was collected through face-to-face surveys at boat ramps and coastal access points. The surveys facilitated the collection of multi-use data. The survey had a <strong>90.28% response rate</strong> with <strong>1152 participants</strong>, producing a total of <strong>1487 spatial use data points</strong>, 205 of which were from multi-use surveys.</p>
+<div id="response" class="section level2">
+<h2>Response</h2>
+<p><img src="rumExplore_files/figure-html/agree-1.png" width="672" /></p>
+</div>
+<div id="site-type" class="section level2">
+<h2>Site type</h2>
+<p><img src="rumExplore_files/figure-html/bar_sitetype-1.png" width="672" /></p>
+</div>
+<div id="year" class="section level2">
+<h2>Year</h2>
+<p><img src="rumExplore_files/figure-html/bar_year-1.png" width="672" /></p>
+</div>
+</div>
+<div id="demographics" class="section level1 tabset">
+<h1>Demographics</h1>
+<hr />
+<div id="locality" class="section level2">
+<h2>Locality</h2>
+<p><img src="rumExplore_files/figure-html/bar_locality-1.png" width="672" /></p>
+</div>
+<div id="age" class="section level2">
+<h2>Age</h2>
+<p>Only my data, Jon did not record age.
+<img src="rumExplore_files/figure-html/bar_age-1.png" width="672" /></p>
+</div>
+<div id="gender" class="section level2">
+<h2>Gender</h2>
+<p><img src="rumExplore_files/figure-html/bar_gender-1.png" width="672" /></p>
+</div>
+<div id="fishing-avidity" class="section level2">
+<h2>Fishing Avidity</h2>
+<p><img src="rumExplore_files/figure-html/bar_exavid-1.png" width="672" /></p>
+</div>
+</div>
+<div id="overall-use" class="section level1 tabset">
+<h1>Overall use</h1>
+<hr />
+<div id="activity-type" class="section level2 tabset">
+<h2>Activity Type</h2>
+<div id="bar-plot" class="section level3">
 <h3>Bar plot</h3>
-<p><img src="rumExplore_files/figure-html/ActTyp1-1.png" width="672" /></p>
+<p><img src="rumExplore_files/figure-html/bar_acttype-1.png" width="672" /></p>
 </div>
-<div id="spatial" class="section level3 unnumbered">
+<div id="spatial" class="section level3">
 <h3>Spatial</h3>
-<p><img src="rumExplore_files/figure-html/ActTyp2-1.png" width="672" /></p>
+<p><img src="rumExplore_files/figure-html/sp_acttype-1.png" width="672" /></p>
 </div>
 </div>
-<div id="activities" class="section level2 tabset" number="0.2">
-<h2><span class="header-section-number">0.2</span> Activities</h2>
-<div id="bar-plot-1" class="section level3 unnumbered">
+<div id="activities" class="section level2 tabset">
+<h2>Activities</h2>
+<div id="bar-plot-1" class="section level3 tabset">
 <h3>Bar plot</h3>
-<p><img src="rumExplore_files/figure-html/ActFreq-1.png" width="672" /></p>
+<p><img src="rumExplore_files/figure-html/bar_actfreq-1.png" width="672" /></p>
 </div>
-<div id="spatial-1" class="section level3 unnumbered">
+<div id="spatial-1" class="section level3">
 <h3>Spatial</h3>
-<p><img src="rumExplore_files/figure-html/ActFreq1-1.png" width="672" /></p>
+<p><img src="rumExplore_files/figure-html/sp_actfreq-1.png" width="672" /></p>
 </div>
 </div>
-<div id="fishing-type" class="section level2 tabset" number="0.3">
-<h2><span class="header-section-number">0.3</span> Fishing Type</h2>
-<div id="bar-plot-2" class="section level3 unnumbered">
-<h3>Bar plot</h3>
-<p><img src="rumExplore_files/figure-html/FTyp-1.png" width="672" /></p>
-</div>
-<div id="spatial-2" class="section level3 unnumbered">
-<h3>Spatial</h3>
-<p><img src="rumExplore_files/figure-html/FTyp1-1.png" width="672" /></p>
+<div id="kernal-density" class="section level2">
+<h2>Kernal density</h2>
+<p><img src="rumExplore_files/figure-html/kdens_all-1.png" width="672" /></p>
 </div>
 </div>
-<div id="non-extractive" class="section level2" number="0.4">
-<h2><span class="header-section-number">0.4</span> Non-Extractive</h2>
-<p><img src="rumExplore_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<div id="extractive-use" class="section level1">
+<h1>Extractive use</h1>
+<hr />
+<div id="boat-based" class="section level2 tabset">
+<h2>Boat based</h2>
+<div id="bar-fishing-type" class="section level3">
+<h3>Bar: Fishing type</h3>
+<p><img src="rumExplore_files/figure-html/bar_bex-1.png" width="672" /></p>
+</div>
+<div id="spatial-fishing-type" class="section level3">
+<h3>Spatial: Fishing type</h3>
+<p><img src="rumExplore_files/figure-html/sp_bex-1.png" width="672" /></p>
+</div>
+<div id="kernal-density-1" class="section level3">
+<h3>Kernal density</h3>
+<p><img src="rumExplore_files/figure-html/kdens_bex-1.png" width="672" /></p>
+</div>
+</div>
+<div id="shore-based" class="section level2 tabset">
+<h2>Shore based</h2>
+<div id="bar-fishing-type-1" class="section level3">
+<h3>Bar: Fishing type</h3>
+<p><img src="rumExplore_files/figure-html/bar_sex-1.png" width="672" /></p>
+</div>
+<div id="spatial-fishing-type-1" class="section level3">
+<h3>Spatial: Fishing type</h3>
+<p><img src="rumExplore_files/figure-html/sp_sex-1.png" width="672" /></p>
+</div>
+<div id="kernal-density-2" class="section level3">
+<h3>Kernal density</h3>
+<p><img src="rumExplore_files/figure-html/kdens_sex-1.png" width="672" /></p>
+</div>
+</div>
+</div>
+<div id="non-extractive-use" class="section level1">
+<h1>Non-extractive use</h1>
+<hr />
+<div id="boat-based-1" class="section level2 tabset">
+<h2>Boat Based</h2>
+<div id="bar-actvity" class="section level3">
+<h3>Bar: Actvity</h3>
+<p><img src="rumExplore_files/figure-html/bar_bnex-1.png" width="672" /></p>
+</div>
+<div id="spatial-activity" class="section level3">
+<h3>Spatial: Activity</h3>
+<p><img src="rumExplore_files/figure-html/sp_bnex-1.png" width="672" /></p>
+</div>
+<div id="kernal-denisty" class="section level3">
+<h3>Kernal denisty</h3>
+<p><img src="rumExplore_files/figure-html/kdens_bnex-1.png" width="672" /></p>
+</div>
+</div>
+<div id="shore-based-1" class="section level2 tabset">
+<h2>Shore Based</h2>
+<div id="bar-activity" class="section level3">
+<h3>Bar: Activity</h3>
+<p><img src="rumExplore_files/figure-html/bar_snex-1.png" width="672" /></p>
+</div>
+<div id="spatial-activity-1" class="section level3">
+<h3>Spatial: Activity</h3>
+<p><img src="rumExplore_files/figure-html/sp_snex-1.png" width="672" /></p>
+</div>
+<div id="kernal-denisty-1" class="section level3">
+<h3>Kernal denisty</h3>
+<p><img src="rumExplore_files/figure-html/kdens_snex-1.png" width="672" /></p>
+</div>
+</div>
 </div>
 
 

@@ -1,0 +1,718 @@
+```{r librarys}
+library(ggBRT)
+library(gbm)
+library(dismo)
+library(MASS)
+library(dplyr)
+```
+
+```{r dir, echo = FALSE}
+# w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
+# d.dir <- paste(w.dir, "Ningaloo_RUM/rumIgnore", sep='/')
+# f.dir <- paste(w.dir, "Ningaloo_RUM/rumFunc", sep = '/')
+# m.dir <- paste(w.dir, "Ningaloo_RUM/rumDP/models", sep = '/') # model directory
+# dpBRT <- paste(m.dir, "dpBRT", sep='/')
+# crBRT <- paste(m.dir, "crBRT", sep='/')
+
+# directories
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic"
+d.dir <- paste(w.dir, "Ningaloo_RUM/rumIgnore", sep='/')
+s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/')
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/')
+f.dir <- paste(w.dir, "Ningaloo_RUM/rumFunc", sep = '/')
+m.dir <- paste(w.dir, "Ningaloo_RUM/rumDP/models", sep = '/') # model directory
+dpBRT <- paste(m.dir, "dpBRT", sep='/')
+crBRT <- paste(m.dir, "crBRT", sep='/')
+```
+
+
+```{r functions}
+source(paste(f.dir, "brtFunc.R", sep = '/'))
+```
+
+```{r read data}
+# dpdat <- read.csv(paste(d.dir, "dpDat_v1.csv", sep='/'))
+# 
+dat <- readRDS(paste(d.dir, "Ning_v2.csv", sep='/'))
+dpdat <- dat %>% filter(FishingType %in% "Demersal")
+```
+
+# BRT {.tabset}
+Boosted regression trees
+
+The BRT approach differs fundamentally from traditional regression methods that produce a single ‘best’ model, instead using the technique of boosting to combine large numbers of relatively simple tree models adaptively, to optimize predictive performance. 
+
+Learning rate (lr) determines the contribution of each tree to the growing model. Dedpeasing (slowing) lr indpeases the number of trees required, and in general a smaller lr (and larger nt) are preferable, conditional on the number of observations and time available for computation.
+
+Tree complexity (tc) controls whether interactions are fitted. A tc of 1 (single decision stump; two terminal nodes) fits an additive model, a tc of two fits a model with up to two-way interactions, and so on. For a given lr, fitting more complex trees leads to fewer trees being required for minimum error. So, as tc is indpeased, lr must be dedpeased if sufficient trees are to be fitted.
+
+As a general guide, lr needs to be dedpeased as tc indpeases, usually inversely: doubling tc should be matched with halving lr to give approximately the same nt. 
+
+Number of trees (nt), the lr and tc determine the number of trees (nt) required for optimal prediction.
+
+Bag fraction (bf), controls stochasticity that specifies the proportion of data to be selected at each step. The default bag fraction is 0·5, meaning that, at each iteration, 50% of the data are drawn at random, without replacement, from the full training set. In our experience, stochasticity improves model performance, and fractions in the range 0·5–0·75 have given best results for presence–absence responses. 
+
+Step size, is the number of trees added at each step. 
+
+Note that the data has to be in data.frame ONLY format - not a tibble or sf as well.
+
+```{r}
+# Making all character vars factors
+dpdat <- dpdat %>%
+  mutate_if(is.character, as.factor) %>% 
+  mutate(facYear = as.factor(facYear))
+```
+## Depredation BRT 1 - prep overall
+
+### Data Prep 
+```{r data prep for BRTs}
+# making a grid for step.loop
+## make a res.dev variable to store in grid
+res.dev<-c() 
+dp_step.loop<-expand.grid(lr=c(0.01, 0.005, 0.0001), tc=c(2, 3, 5, 7), bf=c(0.5, 0.75, 0.9), ss=c(5, 20, 30, 50)) ## make grid of lr, tc and bag.fraction that gbm.step will run through
+dp_step.loop$res.dev<-NA ## add res.dev to grid
+
+# define response
+nDP <- which(colnames(dpdat)=="nDP") 
+
+# defining covariates
+DPcov <- which(colnames(dpdat) %in% c("facYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst"))
+
+# defining offset
+# dp_offset = dpdat$nHooked
+# Raw offset very zero inflated and doesnt run 
+dp_offset_log = round(log(dpdat$nHooked +1))
+# hist(log(dpdat$nHooked)+1)
+
+#Set up CV
+  k=10 #number of folds
+  p<-unique(dpdat$PersonID)
+  p<-data.frame(PersonID=(sample(p)))# shuffle the data
+  p$k<-c(rep(1:k, floor(nrow(p)/k)), sample(1:k, size = nrow(p) -length(rep(1:k, floor(nrow(p)/k)))))
+  dpdat<-left_join(dpdat, p, by="PersonID")
+  table(dpdat$k) #k provides indicator for 10 fold cross validation
+```
+
+### gbm.step loop
+Loop which runs through several parameters 
+```{r dp.step loop, warning=FALSE}
+# This first gbm.step is looping through parameters so i can sleect the optimal model
+for(i in 1:nrow(dp_step.loop)) {
+  dp.step<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP, ## response - number of fish depredated
+                           offset = dp_offset_log,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           lr = dp_step.loop[i,"lr"], ## ref to step.loop
+                           tree.complexity = dp_step.loop[i,"tc"], ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction = dp_step.loop[i,"bf"],
+                           step.size = dp_step.loop[i, "ss"],
+                           plot.main = F)
+  dp_step.loop[i, "res.dev"] <-dp.step$self.statistics$mean.resid ### store res.dev in step.loop
+  dp_step.loop[i, "nt"] <-dp.step$n.trees} 
+```
+
+### Optimal parameters
+Optimal parameters  which minimise the residual devience as defined by outputs of gbm.step loop
+```{r optimal parameters, echo = FALSE}
+# Full loop data set if intere
+# dp_step.loop 
+dp_opt.resdev <- dp_step.loop[dp_step.loop$res.dev==min(dp_step.loop$res.dev, na.rm= T),]
+dp_opt.resdev <- dp_opt.resdev %>% drop_na()
+dp_opt.resdev
+dp_opt.nt <- dp_step.loop[dp_step.loop$nt==max(dp_step.loop$nt, na.rm= T),]
+dp_opt.nt <- dp_opt.nt %>% drop_na()
+dp_opt.nt
+
+dp_opt <- full_join(dp_opt.resdev, dp_opt.nt)
+dp_opt <- dp_opt %>% drop_na
+dp_opt
+```
+
+Running gbm.step with optimal parameters and extracting n.trees. 
+```{r dp.brt, warning=FALSE}
+
+dp.brt<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP,## response - number of fish depredated
+                           offset=dp_offset,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = dp_opt.nt$lr, ## ref to step.loop
+                           tree.complexity = dp_opt.nt$tc, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=dp_opt.nt$bf,
+                           step.size = dp_opt.nt$ss)
+
+dp.brt<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP,## response - number of fish depredated
+                           offset=dp_offset_log,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+
+dp.brt_v1<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP,## response - number of fish depredated
+                           offset=dp_offset_log,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+# nt <- dp.step$n.trees # adds number of trees to step param
+# dp_best$nt <- nt # defines nt for automation
+# dp_best$res.dev  <- dp.step$self.statistics$mean.resid # updates residual devience
+# dp_best
+# 
+dp.brt_v1$self.statistics$discrimination
+```
+
+### Outputs
+#### Default outputs
+```{r dp.brt_v1 output}
+
+ggPerformance(dp.brt_v1)
+
+dp.brt_influence_v1 <- ggInfluence(dp.brt_v1, signif = TRUE, main = "Significant predictors on number of fish depredated") 
+ggsave(paste(dpBRT, "dp.brt_Influence_v1.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_v1
+
+for(i in 1:nrow(dp.brt_influence_v1)) {
+dp.brt_PD_v1 <- ggPD(dp.brt_v1, rug = T, smooth = T, predictor = i) 
+ggsave(dp.brt_PD_v1, file = paste(dpBRT, paste("dp.brt_PD_v1", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(dp.brt_influence_v1)) {
+dp.brt_PDFit_v1 <- ggPDfit(dp.brt_v1, smooth = T, se = T, predictor = i) 
+ggsave(dp.brt_PDFit_v1, file = paste(dpBRT, paste("dp.brt_PDFit_v1", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ dp_interaction_v1 <- ggInteract_list(dp.brt_v1, index = F) 
+ 
+ dp_interaction_v1
+```
+
+
+```{r}
+m.dir/corplot.png
+```
+![](/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic/Ningaloo_RUM/rumDP/models/corplot.png)
+#### Bootstrapped cis
+```{r dp.bootstrap, include=FALSE}
+
+## This will not work if there is an offset.
+# Might need something ike the code below to get it to work - but maybe not worth using this code to plot if there is an offset  
+# dp.brt3$gbm.call$dataframe$nDP <- dp.brt3$gbm.call$dataframe$nDP + dp_offset[1:581]
+# dp.brt3$fitted <- dp.brt3$fitted + dp_offset[1:581]
+
+dp.brt_prerun_v1<- plot.gbm.4list(dp.brt_v1)
+
+dp.brt_boot_v1 <- gbm.bootstrap.functions(dp.brt_v1, list.predictors=dp.brt_prerun_v1, n.reps=100)
+
+for(i in 1:nrow(dp.brt_influence_v1)) {
+dp.brt_PDboot_v1<-ggPD_boot(dp.brt_v1, list.4.preds=dp.brt_prerun_v1,
+                booted.preds=dp.brt_boot_v1$function.preds, type.ci="ribbon", rug=T, smooth = T, predictor = i)
+ggsave(dp.brt_PDboot_v1, file = paste(dpBRT, paste("dp.brt_PDboot_v1", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+```
+
+## Depredation BRT 1 - orginal 
+
+response: nDP
+family: poisson
+offset: log(nHooked+1)
+boat kernal density and boat within 5 km
+
+```{r}
+nDP <- which(colnames(dpdat)=="nDP") 
+
+# defining covariates
+DPcov <- which(colnames(dpdat) %in% c("facYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","exnTimes12m","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst", "BaitLure", "TripNum", "SiteNum"))
+
+
+
+dp_offset_log = round(log(dpdat$nHooked +1))
+
+dp.brt_v1<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=nDP,## response - number of fish depredated
+                           offset=dp_offset_log,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+```
+
+```{r}
+ggPerformance(dp.brt_v1)
+
+dp.brt_influence_v1 <- ggInfluence(dp.brt_v1, signif = TRUE, main = "Significant predictors on number of fish depredated", col.bar = "#97c1a9") 
+ggsave(paste(dpBRT, "dp.brt_Influence_v1.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_v1
+
+
+for(i in 1:nrow(dp.brt_influence_v1)) {
+dp.brt_PD_v1 <- ggPD(dp.brt_v1, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_v1, file = paste(dpBRT, paste("dp.brt_PD_v1", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+# for(i in 1:nrow(dp.brt_influence_v1)) {
+# dp.brt_PDFit_v1 <- ggPDfit(dp.brt_v1, smooth = T, se = T, predictor = i) 
+# ggsave(dp.brt_PDFit_v1, file = paste(dpBRT, paste("dp.brt_PDFit_v1", i, ".png"), sep = "/"), width = 8, height = 4)
+# }
+
+ dp_interaction_v1 <- ggInteract_list(dp.brt_v1, index = F) 
+ 
+ dp_interaction_v1
+```
+## Depredation BRT 3 - West
+
+```{r}
+west <- dpdat %>% 
+  filter(Side %in% "West")
+
+nDP_west <- which(colnames(west)=="nDP") 
+
+DPcov_west <- which(colnames(west) %in% c("facYear", "Month", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","exnTimes12m","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst", "BaitLure", "TripNum", "SiteNum"))
+
+dp_offset_w = round(log(west$nHooked +1))
+
+dp.brt_west<-dismo::gbm.step(data=west,
+                           gbm.x=c(DPcov_west),
+                           gbm.y=nDP_west,## response - number of fish depredated
+                           offset = dp_offset_w,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+```
+
+```{r}
+ggPerformance(dp.brt_west)
+
+dp.brt_influence_west <- ggInfluence(dp.brt_west, signif = TRUE, main = "Significant predictors on number of fish depredated", col.bar = "#97c1a9") 
+ggsave(paste(dpBRT, "dp.brt_Influence_west.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_west
+
+for(i in 1:nrow(dp.brt_influence_west)) {
+dp.brt_PD_west <- ggPD(dp.brt_west, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_west, file = paste(dpBRT, paste("dp.brt_PD_west", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+# for(i in 1:nrow(dp.brt_influence_west)) {
+# dp.brt_PDFit_west <- ggPDfit(dp.brt_west, smooth = T, se = T, predictor = i) 
+# ggsave(dp.brt_PDFit_west, file = paste(dpBRT, paste("dp.brt_PDFit_west", i, ".png"), sep = "/"), width = 8, height = 4)
+# }
+
+ dp_interaction_west <- ggInteract_list(dp.brt_west, index = F) 
+ 
+ dp_interaction_west
+```
+
+
+east
+
+```{r}
+
+east <- dpdat %>% 
+  filter(Side %in% "East")
+
+nDP_east <- which(colnames(east)=="nDP") 
+DPcov_east <- which(colnames(east) %in% c("facYear", "Month", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","exnTimes12m","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst", "BaitLure", "TripNum", "SiteNum"))
+
+dp_offset_e = round(log(east$nHooked +1))
+
+dp.brt_east<-dismo::gbm.step(data=east,
+                           gbm.x=c(DPcov_east),
+                           gbm.y=nDP_east,## response - number of fish depredated
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+```
+
+```{r}
+ggPerformance(dp.brt_east)
+
+dp.brt_influence_east <- ggInfluence(dp.brt_east, signif = TRUE, main = "Significant predictors on number of fish depredated", col.bar = "#97c1a9") 
+ggsave(paste(dpBRT, "dp.brt_Influence_east.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_east
+
+for(i in 1:nrow(dp.brt_influence_east)) {
+dp.brt_PD_east <- ggPD(dp.brt_east, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_east, file = paste(dpBRT, paste("dp.brt_PD_east", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(dp.brt_influence_east)) {
+dp.brt_PDFit_east <- ggPDfit(dp.brt_east, smooth = T, se = T, predictor = i) 
+ggsave(dp.brt_PDFit_east, file = paste(dpBRT, paste("dp.brt_PDFit_east", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ dp_interaction_east <- ggInteract_list(dp.brt_east, index = F) 
+ 
+ dp_interaction_east
+```
+
+```{r}
+dp_dem <- dpdat %>% 
+  filter(FishingType %in% "Demersal")
+
+nDP_dem <- which(colnames(dp_dem)=="nDP") 
+
+# defining covariates
+DPcov_dem <- which(colnames(dp_dem) %in% c("facYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","DecFishingHr","MaxHook",
+                                   "exYrs","exnTimes12m","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst", "BaitLure", "TripNum", "SiteNum"))
+
+
+
+dp_offset_dem = round(log(dp_dem$nHooked +1))
+
+dp.brt_dem<-dismo::gbm.step(data=dp_dem,
+                           gbm.x=c(DPcov_dem),
+                           gbm.y=nDP_dem,## response - number of fish depredated
+                           offset=dp_offset_dem,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+```
+```{r}
+ggPerformance(dp.brt_dem)
+
+dp.brt_influence_dem <- ggInfluence(dp.brt_dem, signif = TRUE, main = "Significant predictors on number of fish depredated", col.bar = "#97c1a9") 
+ggsave(paste(dpBRT, "dp.brt_Influence_dem.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_dem
+
+for(i in 1:nrow(dp.brt_influence_dem)) {
+dp.brt_PD_dem <- ggPD(dp.brt_dem, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_dem, file = paste(dpBRT, paste("dp.brt_PD_dem", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+# for(i in 1:nrow(dp.brt_influence_dem)) {
+# dp.brt_PDFit_dem <- ggPDfit(dp.brt_dem, smooth = T, se = T, predictor = i) 
+# ggsave(dp.brt_PDFit_dem, file = paste(dpBRT, paste("dp.brt_PDFit_dem", i, ".png"), sep = "/"), width = 8, height = 4)
+# }
+
+ dp_interaction_dem <- ggInteract_list(dp.brt_dem, index = F) 
+ 
+ dp_interaction_dem
+```
+
+```{r}
+east_dem <- east %>% 
+  filter(FishingType %in% "Demersal")
+
+dp_east_dem <- which(colnames(east_dem)=="nDP") 
+
+# defining covariates
+DPcov_east_dem <- which(colnames(east_dem) %in% c("facYear", "Month", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","DecFishingHr","MaxHook",
+                                   "exYrs","exnTimes12m","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst", "BaitLure", "TripNum", "SiteNum"))
+
+
+
+dp_offset_east_dem = round(log(east_dem$nHooked +1))
+
+dp.brt_east_dem<-dismo::gbm.step(data=east_dem,
+                           gbm.x=c(DPcov_east_dem),
+                           gbm.y=dp_east_dem,## response - number of fish depredated
+                           offset=dp_offset_east_dem,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+```
+
+```{r}
+ggPerformance(dp.brt_east_dem)
+
+dp.brt_influence_east_dem <- ggInfluence(dp.brt_east_dem, signif = TRUE, main = "Significant predictors on number of fish depredated", col.bar = "#97c1a9") 
+ggsave(paste(dpBRT, "dp.brt_Influence_east__dem.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_east_dem
+
+for(i in 1:nrow(dp.brt_influence_east_dem)) {
+dp.brt_PD_east_dem <- ggPD(dp.brt_east_dem, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_east_dem, file = paste(dpBRT, paste("dp.brt_PD_east_dem", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+# for(i in 1:nrow(dp.brt_influence_dem)) {
+# dp.brt_PDFit_dem <- ggPDfit(dp.brt_dem, smooth = T, se = T, predictor = i) 
+# ggsave(dp.brt_PDFit_dem, file = paste(dpBRT, paste("dp.brt_PDFit_dem", i, ".png"), sep = "/"), width = 8, height = 4)
+# }
+
+ dp_interaction_east_dem <- ggInteract_list(dp.brt_east_dem, index = F) 
+ 
+ dp_interaction_east_dem
+ 
+ names(dpdat)
+```
+```{r}
+
+dpdat$proDP <- dpdat$nDP/100
+
+proDP <- which(colnames(dpdat)=="proDP") 
+
+# defining covariates
+DPcov <- which(colnames(dpdat) %in% c("facYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook","exnTimes12m","BoatLength", "LunarPhase", "b_kdens", "b_5km", "sst", "BaitLure", "TripNum", "SiteNum"))
+
+
+
+dp_offset_log = round(log(dpdat$nHooked +1))
+
+dp.brt_ber<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov),
+                           gbm.y=proDP,## response - number of fish depredated
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="bernoulli", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+
+ggPerformance(dp.brt_ber)
+
+dp.brt_influence_east_dem <- ggInfluence(dp.brt_ber, signif = TRUE, main = "Significant predictors on number of fish depredated", col.bar = "#97c1a9") 
+ggsave(paste(dpBRT, "dp.brt_Influence_east__dem.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_east_dem
+
+for(i in 1:nrow(dp.brt_influence_east_dem)) {
+dp.brt_PD_east_dem <- ggPD(dp.brt_ber, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_east_dem, file = paste(dpBRT, paste("dp.brt_PD_east_dem", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+# for(i in 1:nrow(dp.brt_influence_dem)) {
+# dp.brt_PDFit_dem <- ggPDfit(dp.brt_dem, smooth = T, se = T, predictor = i) 
+# ggsave(dp.brt_PDFit_dem, file = paste(dpBRT, paste("dp.brt_PDFit_dem", i, ".png"), sep = "/"), width = 8, height = 4)
+# }
+
+ dp_interaction_east_dem <- ggInteract_list(dp.brt_ber, index = F) 
+ 
+ dp_interaction_east_dem
+```
+
+## Depredation BRT 2 - fishing vessels vs vessels
+response: nDP
+family: poisson
+offset: log(nHooked+1)
+fishing boat kernal density and boat within 5 km
+```{r}
+DPcov_v2 <- which(colnames(dpdat) %in% c("facYear", "Month", "Side", "Resident",
+                                   "nTimesLast24m","exDecMedianTime",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "LunarPhase", "bf_kdens", "bf_5km", "sst"))
+
+dp.brt_v2<-dismo::gbm.step(data=dpdat,
+                           gbm.x=c(DPcov_v2),
+                           gbm.y=nDP,## response - number of fish depredated
+                           offset=dp_offset_log,
+                           fold.vector = dpdat$k,
+                           n.folds = k,
+                           learning.rate = 0.001, ## ref to step.loop
+                           tree.complexity = 4, ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction=0.5,
+                           step.size = 50)
+```
+
+```{r}
+ggPerformance(dp.brt_v2)
+
+dp.brt_influence_v2 <- ggInfluence(dp.brt_v2, signif = TRUE, main = "Significant predictors on number of fish depredated") 
+ggsave(paste(dpBRT, "dp.brt_Influence_v2.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_v2
+
+for(i in 1:nrow(dp.brt_influence_v2)) {
+dp.brt_PD_v2 <- ggPD(dp.brt_v2, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_v2, file = paste(dpBRT, paste("dp.brt_PD_v2", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(dp.brt_influence_v2)) {
+dp.brt_PDFit_v2 <- ggPDfit(dp.brt_v2, smooth = T, se = T, predictor = i) 
+ggsave(dp.brt_PDFit_v2, file = paste(dpBRT, paste("dp.brt_PDFit_v2", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ dp_interaction_v2 <- ggInteract_list(dp.brt_v2, index = F) 
+ 
+ dp_interaction_v2
+```
+
+
+```{r}
+ggPerformance(dp.brt_east)
+
+dp.brt_influence_east <- ggInfluence(dp.brt_east, signif = TRUE, main = "Significant predictors on number of fish depredated") 
+ggsave(paste(dpBRT, "dp.brt_Influence_east.png", sep='/'), width = 8, height = 4)
+dp.brt_influence_east
+
+for(i in 1:nrow(dp.brt_influence_east)) {
+dp.brt_PD_east <- ggPD(dp.brt_east, rug = T, smooth = T, predictor = i, col.line = "#8fcaca", col.smooth = "#97c1a9") 
+ggsave(dp.brt_PD_east, file = paste(dpBRT, paste("dp.brt_PD_east", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(dp.brt_influence_east)) {
+dp.brt_PDFit_east <- ggPDfit(dp.brt_east, smooth = T, se = T, predictor = i) 
+ggsave(dp.brt_PDFit_east, file = paste(dpBRT, paste("dp.brt_PDFit_east", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ dp_interaction_east <- ggInteract_list(dp.brt_east, index = F) 
+ 
+ dp_interaction_east
+```
+
+
+## Catch rate BRT
+### Data Prep 
+```{r data prep for BRTs}
+# making a grid for step.loop
+## make a res.dev variable to store in grid
+res.dev<-c() 
+cr_step.loop<-expand.grid(lr=c(0.1, 0.01, 0.001), tc=c(2, 3, 5), bf=c(0.5, 0.75, 0.9), ss=c(20, 30, 50)) ## make grid of lr, tc and bag.fraction that gbm.step will run through
+cr_step.loop$res.dev<-NA ## add res.dev to grid
+cr_step.loop$nt <- NA
+
+# define response
+cr <- which(colnames(dpdat)=="CaughtUndam") 
+
+# defining covariates
+crcov <- which(colnames(dpdat) %in% c("numYear", "Month", "Side", "Resident",
+                                  "exDecMedianTime", "exnTimes12m",
+                                   "Depth", "Habitat","DistNearestBRkm", "DistNearestInfra", "UseLat",
+                                   "UseLong","FishingType", "BaitLure", "DecFishingHr","MaxHook",
+                                   "exYrs","BoatLength", "LunarPhase", "b_kdens", "b_5km"))
+
+# add number of times 12 months 
+
+```
+
+### gbm.step loop
+Loop which runs through several parameters 
+```{r cr.step loop, warning=FALSE}
+# This first gbm.step is looping through parameters so i can select the optimal model
+for(i in 1:nrow(cr_step.loop)) {
+  cr.step<-dismo::gbm.step(data=crdat,
+                           gbm.x=c(crcov),
+                           gbm.y=cr, ## response - number of fish caught undamaged
+                           lr = cr_step.loop[i,"lr"], ## ref to step.loop
+                           tree.complexity = cr_step.loop[i,"tc"], ## ref to step.loop
+                           family="poisson", ## distribution family
+                           bag.fraction = cr_step.loop[i,"bf"],
+                           step.size = cr_step.loop[i, "ss"],
+                           plot.main = F)
+  cr_step.loop[i, "res.dev"] <-cr.step$self.statistics$mean.resid ### store res.dev in step.loop
+  cr_step.loop[i, "nt"]<- cr.step$n.trees} ### store n.trees in step.loop
+```
+
+### Optimal parameters
+Optimal parameters  which minimise the residual devience as defined by outputs of gbm.step loop
+```{r step parameters, echo = FALSE}
+cr_step.loop # all gbm outputs
+cr_best1 <- cr_step.loop[cr_step.loop$res.dev==min(cr_step.loop$res.dev, na.rm= T),] # output with lowest residual devience
+cr_best2 <- cr_step.loop[cr_step.loop$nt==max(cr_step.loop$nt, na.rm = T),] # output with highets number of trees
+
+cr_best <-cr_best %>% drop_na
+cr_best
+```
+
+### Running catch rate BRT
+Running gbm.step with optimal parameters and extracting n.trees. 
+```{r cr.brt, warning=FALSE}
+
+cr.brt<-dismo::gbm.step(data=dpdat,
+                        gbm.x=c(crcov),
+                        gbm.y=cr,## response - number of fish caught undamaged
+                        learning.rate = 0.01, ## ref to step.loop
+                        tree.complexity = 2, ## ref to step.loop
+                        family="poisson", ## distribution family
+                        bag.fraction=0.9,
+                        step.size = 30)
+```
+### Outputs
+#### Default outputs
+```{r cr.step output}
+
+ggPerformance(cr.brt)
+
+cr.brt_influence <- ggInfluence(cr.brt, signif = TRUE, main = "Significant predictors for catch rate") 
+ggsave(paste(crBRT_plots, "cr.brt_Influence.png", sep='/'), width = 8, height = 4)
+cr.brt_influence
+
+for(i in 1:nrow(cr.brt_influence)) {
+cr.brt_PD <- ggPD(cr.brt, rug = T, smooth = T, predictor = i) 
+ggsave(cr.brt_PD, file = paste(crBRT_plots, paste("cr.brt_PD", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+for(i in 1:nrow(cr.brt_influence)) {
+cr.brt_PDFit <- ggPDfit(cr.brt, smooth = T, se = T, predictor = i) 
+ggsave(cr.brt_PDFit, file = paste(crBRT_plots, paste("cr.brt_PDFit", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+ggInteract_list(cr.brt, index = F) 
+```
+#### Boostrapped ci
+```{r cr.bootstrap, include=FALSE}
+
+cr.brt_prerun<- plot.gbm.4list(cr.brt)
+
+cr.brt_boot <- gbm.bootstrap.functions(cr.brt, list.predictors=cr.brt_prerun, n.reps=100)
+
+for(i in 1:nrow(cr.brt_influence)) {
+cr.brt_PDboot<-ggPD_boot(cr.brt, list.4.preds=cr.brt_prerun,
+                booted.preds=cr.brt_boot$function.preds, type.ci="ribbon", rug=T, smooth = T, col.smooth = "red", predictor = i)
+ggsave(cr.brt_PDboot, file = paste(crBRT_plots, paste("cr.brt_PDboot", i, ".png"), sep = "/"), width = 8, height = 4)
+}
+
+
+
+# The above code doesnt produce plots for factor variables? 
+```

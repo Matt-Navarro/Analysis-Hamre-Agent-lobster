@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Nicole Hamre" />
+
+
+<title>Ningaloo RUM</title>
+
+<script src="rumMother_files/header-attrs-2.9/header-attrs.js"></script>
+<script src="rumMother_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="rumMother_files/bootstrap-3.3.5/css/paper.min.css" rel="stylesheet" />
+<script src="rumMother_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="rumMother_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="rumMother_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="rumMother_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="rumMother_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="rumMother_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="rumMother_files/navigation-1.1/tabsets.js"></script>
+<link href="rumMother_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="rumMother_files/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Ningaloo RUM</h1>
+<h4 class="author">Nicole Hamre</h4>
+<h4 class="date">28 March, 2022</h4>
+
+</div>
+
+
+<p><br><br></p>
+<blockquote>
+<p>MEG Mission statement: <strong>Optimising human use of the ocean</strong></p>
+</blockquote>
+<hr />
+<div id="data" class="section level1 tabset">
+<h1>Data</h1>
+<p>Data for recreational marine use in Esperance was collected through face-to-face surveys at boat launches. The surveys facilitated the collection of multi-use data and multi-greement data.The survey had a <strong>90% response rate</strong> with <strong>1152 participants</strong>, of those <strong>1077 survey were first instance or single agreement surveys</strong> and <strong>75 were multi-agreement surveys</strong> (survey participant surveyed for a second or more times). This produced a <strong>total of 1481 spatial use data points</strong>, <strong>329 of which were part of multi-use trips</strong> (excluding first instance).</p>
+<div id="response" class="section level2">
+<h2>Response</h2>
+<p>The plot below shows the number of agreements, refusals and non-eligible people that were approached in the sampling process.
+<img src="rumMother_files/figure-html/bar_response-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="site-type" class="section level2">
+<h2>Site type</h2>
+<p>The plot below shows the number of boat and shore based activities that were captured in the data.
+<img src="rumMother_files/figure-html/bar_sitetype-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="year" class="section level2">
+<h2>Year</h2>
+<p>The plot below shows the how the data is distributed across years.
+<img src="rumMother_files/figure-html/bar_year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="demographics" class="section level1 tabset">
+<h1>Demographics</h1>
+<hr />
+<div id="locality" class="section level2">
+<h2>Locality</h2>
+<p>The plot below shows how many of the participants were residents and visitors.
+<img src="rumMother_files/figure-html/bar_locality-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="age" class="section level2">
+<h2>Age</h2>
+<p>The plot below shows the ages of participants. This only includes my data, Jon did not record age.
+<img src="rumMother_files/figure-html/bar_age-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="gender" class="section level2">
+<h2>Gender</h2>
+<p>The plot below shows the gender of participants.
+<img src="rumMother_files/figure-html/bar_gender-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="fishing-avidity" class="section level2">
+<h2>Fishing Avidity</h2>
+<p>The plot below shows the fishing avidity of participants.
+<img src="rumMother_files/figure-html/bar_exavid-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="use" class="section level1">
+<h1>Use</h1>
+<hr />
+<div id="overall" class="section level2 tabset">
+<h2>Overall</h2>
+<p>This map shows the kernal density of all boat based and shore based recreational uses.</p>
+<pre><code>## $title
+## [1] &quot;Shore based activities&quot;
+## 
+## attr(,&quot;class&quot;)
+## [1] &quot;labels&quot;</code></pre>
+<p><img src="rumMother_files/figure-html/kdens_all-1.png" width="960" style="display: block; margin: auto;" /></p>
+<div id="activity-type" class="section level3 tabset">
+<h3>Activity Type</h3>
+<p>The plots below shows how many surveys are relevant to extractive and non-extractive activities and there spatial distribution.
+<img src="rumMother_files/figure-html/bar_sp_acttype-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="activities" class="section level3">
+<h3>Activities</h3>
+<p>The plots below shows what activities participants conducted and there spatial distribution.
+<img src="rumMother_files/figure-html/bar_actfreq-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="extractive-use" class="section level2">
+<h2>Extractive use</h2>
+<hr />
+<div id="boat-based" class="section level3 tabset">
+<h3>Boat based</h3>
+<div id="bar-fishing-type" class="section level4">
+<h4>Bar: Fishing type</h4>
+<p><img src="rumMother_files/figure-html/bar_bex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial-fishing-type-and-kernal-density" class="section level4">
+<h4>Spatial: fishing type and kernal density</h4>
+<p><img src="rumMother_files/figure-html/sp_bex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="shore-based" class="section level3 tabset">
+<h3>Shore based</h3>
+<div id="bar-fishing-type-1" class="section level4">
+<h4>Bar: Fishing type</h4>
+<p><img src="rumMother_files/figure-html/bar_sex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial-fishing-type-and-kernal-density-1" class="section level4">
+<h4>Spatial: fishing type and kernal density</h4>
+<p><img src="rumMother_files/figure-html/sp_sex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="non-extractive-use" class="section level2">
+<h2>Non-extractive use</h2>
+<hr />
+<div id="boat-based-1" class="section level3 tabset">
+<h3>Boat Based</h3>
+<div id="bar-actvity" class="section level4">
+<h4>Bar: Actvity</h4>
+<p><img src="rumMother_files/figure-html/bar_bnex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial-activity-and-kernal-density" class="section level4">
+<h4>Spatial: Activity and kernal density</h4>
+<p><img src="rumMother_files/figure-html/sp_bnex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="shore-based-1" class="section level3 tabset">
+<h3>Shore Based</h3>
+<div id="bar-activity" class="section level4">
+<h4>Bar: Activity</h4>
+<p><img src="rumMother_files/figure-html/bar_snex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial-activity-and-kernal-density-1" class="section level4">
+<h4>Spatial: Activity and kernal density</h4>
+<p><img src="rumMother_files/figure-html/sp_snex-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+</div>
+<div id="catch-exploration" class="section level1">
+<h1>Catch Exploration</h1>
+<hr />
+<div id="overall-catch" class="section level2 tabset">
+<h2>Overall Catch</h2>
+<p>This explores total catch including those depredated across all fishing types.</p>
+<div id="histogram" class="section level3">
+<h3>Histogram</h3>
+<p>Zeros included
+<img src="rumMother_files/figure-html/hist_nHooked0-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Zeros excluded
+<img src="rumMother_files/figure-html/hist_nHooked-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="year-1" class="section level3">
+<h3>Year</h3>
+<p>Average hooked per year
+<img src="rumMother_files/figure-html/bar_avHooked.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Outliers for 2020 is 2 data points (36, 37), more than double highest below that (15). Zeros are included in the below plot.
+<img src="rumMother_files/figure-html/box_nHooked0.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="month" class="section level3">
+<h3>Month</h3>
+<p><img src="rumMother_files/figure-html/box_nHooked0.month-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="side-of-cape" class="section level3">
+<h3>Side of Cape</h3>
+<p><img src="rumMother_files/figure-html/box_nHooked0.side-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="fishing-type" class="section level3">
+<h3>Fishing type</h3>
+<p><img src="rumMother_files/figure-html/box_nHooked0.extype-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="site-type-1" class="section level3">
+<h3>Site type</h3>
+<p><img src="rumMother_files/figure-html/box_nHooked0.sitetype-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="locality-1" class="section level3">
+<h3>Locality</h3>
+<p><img src="rumMother_files/figure-html/box_nHooked0.resident-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="lure-type" class="section level3">
+<h3>Lure type</h3>
+<p><img src="rumMother_files/figure-html/box_nHooked0.lure-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="depth" class="section level3">
+<h3>Depth</h3>
+<p><img src="rumMother_files/figure-html/scat_nHooked0.depth-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="median-time" class="section level3">
+<h3>Median Time</h3>
+<p><img src="rumMother_files/figure-html/scat_nHooked0.mediantime-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial" class="section level3">
+<h3>Spatial</h3>
+<p>Zeros are displayed with grey rings - few and underneath catch points.
+<img src="rumMother_files/figure-html/sp_cr-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="boat-based-demersal-fishing" class="section level2 tabset">
+<h2>Boat based demersal fishing</h2>
+<hr />
+<div id="histogram-1" class="section level3">
+<h3>Histogram</h3>
+<p>Zeros included
+<img src="rumMother_files/figure-html/hist_bdem.nHooked0-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Zeros excluded
+<img src="rumMother_files/figure-html/hist_bdem.Hooked-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="year-2" class="section level3">
+<h3>Year</h3>
+<p>Average hooked per year
+<img src="rumMother_files/figure-html/bar_bdem.avHooked.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p><img src="rumMother_files/figure-html/box_bdem.nHooked0.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="month-1" class="section level3">
+<h3>Month</h3>
+<p><img src="rumMother_files/figure-html/box_bdem.nHooked0.month-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="side-of-cape-1" class="section level3">
+<h3>Side of Cape</h3>
+<p><img src="rumMother_files/figure-html/box_bdem.nHooked0.side-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="depth-1" class="section level3">
+<h3>Depth</h3>
+<p><img src="rumMother_files/figure-html/scat_bdem.nHooked0.depth-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="median-time-1" class="section level3">
+<h3>Median Time</h3>
+<p><img src="rumMother_files/figure-html/scat_bdem.nHooked0.mediantime-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial-and-kernal-denisty" class="section level3">
+<h3>Spatial and kernal denisty</h3>
+<p>Spatial distribution and kernal density of boat based fishing where no fish were caught.
+<img src="rumMother_files/figure-html/sp_kdens.cr0-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Spatial ditribtion and kernal density of boat based fishing where fish were caught.
+<img src="rumMother_files/figure-html/sp_kdens_bdem.cr-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="depredation-exploration" class="section level1">
+<h1>Depredation Exploration</h1>
+<hr />
+<div id="overall-depredation" class="section level2 tabset">
+<h2>Overall Depredation</h2>
+<p>This explores depredation across all fishing types.</p>
+<div id="outlier" class="section level3">
+<h3>2020 outlier</h3>
+<p>Investigated the outlier of 30 depredation - from 2020, comments said data point should be removed because fisher was very biased and didn’t give real answer. This was removed. The data points with 20 depredation was 2015 and 2021.
+<img src="rumMother_files/figure-html/hist_nDP.outlier-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p><img src="rumMother_files/figure-html/box_nDP.year.outlier-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="fishing-type-1" class="section level3">
+<h3>Fishing type</h3>
+<p>Given demersal fishing impacted the most by depredation the following section will focus on boat based demersal fishing only.</p>
+<div id="zeros-included" class="section level4">
+<h4>Zeros Included</h4>
+<p><img src="rumMother_files/figure-html/box_nDP0.extype-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="zeros-excluded" class="section level4">
+<h4>Zeros excluded</h4>
+<p><img src="rumMother_files/figure-html/box_nDP.extype-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="demersal-boat-based-fishing" class="section level2 tabset">
+<h2>Demersal boat based fishing</h2>
+<div id="presence-of-depredation" class="section level3">
+<h3>Presence of depredation</h3>
+<p>Across all fishing and all years 31% of sites experienced depredation.
+<img src="rumMother_files/figure-html/bar_pie_DP-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="what-percentage-of-total-catch-was-depredated" class="section level3">
+<h3>What percentage of total catch was depredated?</h3>
+<p>Over all fishing types and all years, 12% of total catch was depredated.
+<img src="rumMother_files/figure-html/pie_nDP-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="histogram-2" class="section level3">
+<h3>Histogram</h3>
+<div id="zeros-included-1" class="section level4">
+<h4>Zeros included</h4>
+<p><img src="rumMother_files/figure-html/hist_nDP0-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="zeros-excluded-1" class="section level4">
+<h4>Zeros excluded</h4>
+<p><img src="rumMother_files/figure-html/hist_nDP-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="year-3" class="section level3">
+<h3>Year</h3>
+<div id="average" class="section level4">
+<h4>Average</h4>
+<p><img src="rumMother_files/figure-html/bar_avDP.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="zeros-included-2" class="section level4">
+<h4>Zeros included</h4>
+<p><img src="rumMother_files/figure-html/box_nDP0.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="zeros-excluded-2" class="section level4">
+<h4>Zeros excluded</h4>
+<p><img src="rumMother_files/figure-html/box_nDP.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="percentage" class="section level4">
+<h4>Percentage</h4>
+<p>Percentage of sites that experience depredation facetted by year.
+<img src="rumMother_files/figure-html/bar_DP.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Percentage of catch depredated facetted by year.
+<img src="rumMother_files/figure-html/bar_perDP.year-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="month-2" class="section level3">
+<h3>Month</h3>
+<div id="zeros-included-3" class="section level4">
+<h4>Zeros included</h4>
+<p><img src="rumMother_files/figure-html/box_nDP0.month-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="zeros-excluded-3" class="section level4">
+<h4>Zeros excluded</h4>
+<p><img src="rumMother_files/figure-html/box_nDP.month-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="side-of-cape-2" class="section level3">
+<h3>Side of Cape</h3>
+<div id="zeros-included-4" class="section level4">
+<h4>Zeros included</h4>
+<p><img src="rumMother_files/figure-html/box_nDP0.side-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="zeros-excluded-4" class="section level4">
+<h4>Zeros excluded</h4>
+<p><img src="rumMother_files/figure-html/box_nDP.side-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="fish-hooked" class="section level3">
+<h3>Fish hooked</h3>
+<p>Zeros included
+<img src="rumMother_files/figure-html/scat_nDP0.nHooked-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Zeros excluded
+<img src="rumMother_files/figure-html/scat_nDP.nHooked-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="spatial-1" class="section level3">
+<h3>Spatial</h3>
+<p>Sites where depredation was absent.
+<img src="rumMother_files/figure-html/sp_perDP0-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Sites where depredation was present.
+<img src="rumMother_files/figure-html/sp_perDP-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="depredation-brt-model-outputs" class="section level1">
+<h1>depredation brt model outputs</h1>
+<p>Demersal only
+- learning.rate = 0.001
+- tree.complexity = 4
+- bag.fraction = 0.75
+- number.of.trees = 3100
+- res.dev = 0.1289609
+- discrimination = 0</p>
+<p><img src="rumDP/models/dpBRT/dp.brt_Influence_v1.png" />
+<img src="rumDP/models/dpBRT/dp.brt_PD_v1%201%20.png" />
+<img src="rumDP/models/dpBRT/dp.brt_PD_v1%202%20.png" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
