@@ -105,7 +105,6 @@ When you make these they will be large sfc - when you write, and thenm read them
 #   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
 #   st_intersection(Lagoon)
 # st_write(LagoonGrid, paste(s.dir, "LagoonGrid.gpkg", sep = '/'), append = FALSE)
-
 ```
 
 ### Making unified habitat grid

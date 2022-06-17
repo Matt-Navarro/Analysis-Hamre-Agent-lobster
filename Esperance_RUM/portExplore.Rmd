@@ -1,0 +1,249 @@
+```{r}
+portExplore_plots <- paste(w.dir, "Esperance_RUM/rumExplore_plots/portExplore_plots", sep='/') # set plots directory
+```
+
+
+```{r dataprep_port, message=FALSE, error=FALSE, echo=FALSE}
+inside_port <- st_filter(spdat, port)
+inside_port <- inside_port %>% 
+  mutate(Port = "Yes")
+outside_port <- anti_join(dat, inside_port)
+outside_port <- outside_port %>% 
+  filter(!is.na(UseLat), !is.na(UseLong)) %>% 
+  st_as_sf(coords = c("UseLong", "UseLat"), crs = 4283) %>% 
+  mutate(UseLong = sf::st_coordinates(.)[,1], UseLat = sf::st_coordinates(.)[,2])
+outside_port <- outside_port %>% 
+  mutate(Port = "No")
+
+dat_port <- rbind(inside_port, outside_port)
+
+yes <- dat_port %>% 
+  filter(Agreement == "Yes") 
+
+sp_exin <- inside_port %>% 
+  filter(ActivityType == "Extractive")
+
+sp_exout <- outside_port %>% 
+  filter(ActivityType == "Extractive")
+```
+
+
+```{r port_heading, message=FALSE, error=FALSE, echo=FALSE}
+asis_output("## Port\n***\nThe plots below show how many use surveys overall and how ,many primary surveys were outside and inside port area.") # header
+```
+
+```{r port response stats, message=FALSE, error=FALSE, echo=FALSE}
+Approached <- dat_port %>%
+  distinct(PersonID, .keep_all = TRUE) 
+nApproached <- nrow(Approached) # the number of people approached
+
+nNE <- length(which(Approached$Agreement == "NE")) # number of people approached that were ineligible to participate in the survey
+nAgree <- length(which(Approached$Agreement == "Yes")) # number of people approached who agreed to participate in the survey, including repeats 
+nRefusals <- length(which(Approached$Agreement == "No")) # number of people approached who refused to take part in the survey, including repeats
+nIndPeople <- length(which(Approached$Agreement %in% "Yes" & Approached$PrevInter %in% "No")) # the number of individual people surveyed
+nMultiAgree <- nAgree - nIndPeople # number of multi-agreement surveys (total number of surveys repeated by previous participants - excluding their first survey)
+
+nSpPoints <- nrow(dat) - nRefusals - nNE # the total number of spatial data points
+nMultiUse <- nSpPoints - nAgree # the number of spatial point that were part of multi-use trips (excluding first instance)
+
+RefusalRate <- round((nRefusals/(nApproached - nNE))*100) # refusal rate
+ResponseRate <- round((nAgree/(nApproached - nNE))*100) # response rate
+```
+
+
+```{r bar_portUse}
+# text
+asis_output("#### Use surveys\n")
+
+dat_port %>% 
+  ggplot() +
+   aes(x = Port) + 
+   geom_bar(fill = col1) +
+   labs(x = "", y = paste("Frequency (n = ", nrow(dat_port), ")", sep = "")) +
+   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5) +
+  scale_x_discrete(breaks=c("No","Yes"),
+        labels=c("Outside port", "Inside port")) +
+  my_theme
+  
+ggsave(paste(portExplore_plots, "bar_PortUse.png", sep='/'), width = 8, height = 4)
+```
+
+```{r bar_portPrimary}
+# text
+asis_output("#### Primary Surveys\n")
+
+dat_port %>% 
+  distinct(PersonID, .keep_all = TRUE) %>% 
+  ggplot() +
+   aes(x = Port) + 
+   geom_bar(fill = col1) +
+   labs(x = "", y = paste("Frequency (n = ", nrow(Approached), ")", sep = "")) +
+   geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5) +
+  scale_x_discrete(breaks=c("No","Yes"),
+        labels=c("Outside port", "Inside port")) +
+  my_theme
+  
+ggsave(paste(portExplore_plots, "bar_PortPrimary.png", sep='/'), width = 8, height = 4)
+```
+
+
+```{r inside_port header}
+asis_output("### Inside Port {.tabset}\n") # header
+```
+
+
+```{r inside_port kernalAll}
+asis_output("#### Kernal Density of all activities\n") # header
+
+inside_port %>% 
+    ggplot() +
+    stat_density_2d(aes(x = UseLong, y = UseLat, fill = stat(level), alpha = ..level..), geom =
+                      "polygon", bins = 10) +
+    scale_fill_distiller(palette = "YlGnBu", direction = -1, name = "Kernal\nDensity") +
+    scale_alpha(guide = 'none') +
+    geom_sf(data = coast_port, lwd = 0.07) +
+    map_theme +
+  geom_sf(data = port, fill = NA) +
+  geom_sf(data = port_secure, fill = NA) +
+    labs(title = "All activities", x = "", y = "")
+
+ggsave(paste(portExplore_plots, "kern_InsideAll.png", sep='/'), width = 8, height = 4)
+```
+
+
+```{r inside_port acttype}
+asis_output("#### Activity Type\n") # header
+
+ggplot(inside_port) +
+    aes(x = fct_infreq(ActivityType)) +
+    geom_bar(fill = col1) +
+    labs(x = "Activity Type", y = paste("Frequency (n = ", nrow(yes), ")", sep = "")) +
+    geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5) + 
+    my_theme
+ggsave(paste(portExplore_plots, "bar_InsideActType.png", sep='/'), width = 8, height = 4)
+ 
+basemap_port + 
+  geom_sf(data = inside_port, aes(color = ActivityType), size = 0.5) +
+  scale_color_manual(values = c(col1, col2), name = "") + 
+  map_theme
+ggsave(paste(rumExplore_plots, "sp_InsideActType.png", sep='/'))
+```
+
+```{r inside_port extractive}
+asis_output("#### Extractive Activity\n") # header
+
+# plot
+inside_port %>%
+ ggplot(aes(x = fct_infreq(FishingType))) +
+  geom_bar(stat='count', position = position_dodge2(reverse = TRUE), fill = col1) +
+  labs(x = paste("Fishing Type (n = ", length(na.omit(unique(inside_port$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(inside_port), ")", sep = "")) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5) +
+  my_theme
+
+ggsave(paste(portExplore_plots, "bar_InsideExAct.png", sep='/'), width = 8, height = 4)
+ 
+basemap_port +
+    geom_sf(data = sp_exin, aes(colour = FishingType), size = 0.5) +
+    scale_color_brewer(palette = "Set3") +
+    labs(color='Boat based fishing') +
+    map_theme
+
+ggsave(paste(rumExplore_plots, "sp_InsideActType.png", sep='/'), width = 8, height = 4)
+
+sp_exin %>% 
+  ggplot() +
+    stat_density_2d(aes(x = UseLong, y = UseLat, fill = stat(level), alpha = ..level..), geom = "polygon", bins = 10) +
+    scale_fill_distiller(palette = "YlGnBu", direction = -1, name = "Kernal\nDensity") +
+    scale_alpha(guide = 'none') +
+    geom_sf(data = coast_port, lwd = 0.07) + 
+    map_theme +
+    geom_sf(data = port, fill = NA) +
+   geom_sf(data = port_secure, fill = NA) +
+    labs(x = "", y = "")
+
+ggsave(paste(portExplore_plots, "kern_InsideEx.png", sep='/'), width = 8, height = 4)
+```
+
+
+```{r outside_port header}
+asis_output("### Outside Port {.tabset}\n") # header
+```
+
+
+```{r outside_port kernalAll}
+asis_output("#### Kernal Density of all activities\n") # header
+
+outside_port %>% 
+    ggplot() +
+    stat_density_2d(aes(x = UseLong, y = UseLat, fill = stat(level), alpha = ..level..), geom =
+                      "polygon", bins = 10) +
+    scale_fill_distiller(palette = "YlGnBu", direction = -1, name = "Kernal\nDensity") +
+    scale_alpha(guide = 'none') +
+    geom_sf(data = coast, lwd = 0.07) +
+    map_theme +
+  geom_sf(data = port, fill = "white") +
+  geom_sf(data = port_secure, fill = "white") +
+    labs(title = "All activities", x = "", y = "")
+
+ggsave(paste(portExplore_plots, "kern_OutsideAll.png", sep='/'), width = 8, height = 4)
+```
+
+
+```{r outside_port acttype}
+asis_output("#### Activity Type\n") # header
+
+ggplot(outside_port) +
+    aes(x = fct_infreq(ActivityType)) +
+    geom_bar(fill = col1) +
+    labs(x = "Activity Type", y = paste("Frequency (n = ", nrow(outside_port), ")", sep = "")) +
+    geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5) + 
+    my_theme
+
+ggsave(paste(portExplore_plots, "bar_OutsideActTyoe.png", sep='/'), width = 8, height = 4)
+ 
+basemap + 
+  geom_sf(data = outside_port, aes(color = ActivityType), size = 0.5) +
+  scale_color_manual(values = c(col1, col2), name = "") + 
+  map_theme +
+  geom_sf(data = port, fill = "white") +
+  geom_sf(data = port_secure, fill = "white") 
+
+ggsave(paste(portExplore_plots, "sp_OutsideActType.png", sep='/'), width = 8, height = 4)
+```
+
+```{r outside_port extractive}
+asis_output("#### Extractive Activity\n") # header
+
+# plot
+outside_port %>%
+ ggplot(aes(x = fct_infreq(FishingType))) +
+  geom_bar(stat='count', position = position_dodge2(reverse = TRUE), fill = col1) +
+  labs(x = paste("Fishing Type (n = ", length(na.omit(unique(outside_port$FishingType))), ")", sep=""), y = paste("Frequency (n = ", nrow(outside_port), ")", sep = "")) +
+  geom_text(stat='count', aes(label=..count..), vjust = -0.5, size = 2.5) +
+  my_theme
+
+ggsave(paste(portExplore_plots, "bar_OutsideExType.png", sep='/'), width = 8, height = 4)
+ 
+basemap +
+    geom_sf(data = sp_exout, aes(colour = FishingType), size = 0.5) +
+    scale_color_brewer(palette = "Set3") +
+    labs(color='Boat based fishing') +
+    map_theme +
+    geom_sf(data = port, fill = "white") +
+  geom_sf(data = port_secure, fill = "white")
+
+ggsave(paste(portExplore_plots, "sp_OutsideExType.png", sep='/'), width = 8, height = 4)
+
+sp_exout %>% 
+  ggplot() +
+    stat_density_2d(aes(x = UseLong, y = UseLat, fill = stat(level), alpha = ..level..), geom = "polygon", bins = 10) +
+    scale_fill_distiller(palette = "YlGnBu", direction = -1, name = "Kernal\nDensity") +
+    scale_alpha(guide = 'none') +
+    geom_sf(data = coast, lwd = 0.07) + 
+    map_theme +
+    geom_sf(data = port, fill = "white") +
+   geom_sf(data = port_secure, fill = "white") +
+    labs(x = "", y = "")
+
+ggsave(paste(portExplore_plots, "kern_OutsideEx.png", sep='/'), width = 8, height = 4)
+```

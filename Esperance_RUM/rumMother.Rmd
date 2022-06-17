@@ -18,7 +18,7 @@ output:
 
 ```{r setup, include = FALSE}
 # knitr options
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, cache = TRUE, fig.align = 'center', fig.width=10, fig.height=7) 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.align = 'center', fig.width=10, fig.height=7) 
 
 # libraries
 library(tidyverse)
@@ -91,4 +91,7 @@ map_theme <- my_theme + theme(axis.text.x = element_text(angle = 90))
 ```
 
 ```{r child = c('rumExplore.Rmd')}
+```
+
+```{r child = c('portExplore.Rmd')}
 ```

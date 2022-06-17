@@ -29,10 +29,11 @@ After downloading the data from arcCollector, you end up four individual .csv do
 1. Read in documents, including `na = c("", " ")` to make all empty cells consistent
 
 ```{r  read data}
-# meta <- read_csv("rumIgnore/200322_Meta.csv", na =c("", " ", "na", "NA", "-"))
-# ex <- read_csv("rumIgnore/200322_Extractive.csv", na =c("", " ", "na", "NA", "-"))
-# nex <- read_csv("rumIgnore/200322_NoNExtractive.csv", na =c("", " ", "na", "NA", "-"))
-# avid <- read_csv("rumIgnore/200322_Avidity.csv", na =c("", " ", "na", "NA", "-"))
+# Note this data has been manually compiled across 2 feature classes after updating the data
+# meta <- read_csv("rumIgnore/020522_Meta2.csv", na =c("", " ", "na", "NA", "-"))
+# ex <- read_csv("rumIgnore/020522_Extractive2.csv", na =c("", " ", "na", "NA", "-"))
+# nex <- read_csv("rumIgnore/020522_NonExtractive2.csv", na =c("", " ", "na", "NA", "-"))
+# avid <- read_csv("rumIgnore/020522_Avidity2.csv", na =c("", " ", "na", "NA", "-"))
 ```
 
 Do not expect any of your data sheets to have the same number of observations.
@@ -57,8 +58,7 @@ For each individual dataset:
 # table(is.na(meta$GlobalID)) # all false
 # 
 # meta %<>% # meta data
-#   rename(mObjID = OBJECTID,
-#          mGlobID = GlobalID,
+#   rename(mGlobID = GlobalID,
 #          mLong = x,
 #          mLat = y) %>%
 #   dplyr::select(-c(created_user, last_edited_user, last_edited_date, "GUID for meta"))
@@ -66,29 +66,25 @@ For each individual dataset:
 # table(is.na(ex$exGUID)) # all false
 # 
 # ex %<>% # extractive data
-#   rename(exObjID = OBJECTID,
-#          exGlobID = GlobalID,
+#   rename(exGlobID = GlobalID,
 #          exLong = x,
 #          exLat = y) %>%
-#   dplyr::select(-c(Creator, EditDate, Editor, CreationDate)) %>%
+#   dplyr::select(-c(created_user, last_edited_user, last_edited_date)) %>%
 #   mutate(exActivityType = "Extractive")
 # 
 # table(is.na(nex$nexGUID)) # all false
 # 
 # nex %<>% # non-extractive data
-#   rename(nexObjID = OBJECTID,
-#          nexGlobID = GlobalID,
+#   rename(nexGlobID = GlobalID,
 #          nexLong = x,
 #          nexLat = y) %>%
-#   dplyr::select(-c(Creator, EditDate, Editor, CreationDate)) %>%
+#   dplyr::select(-c(created_user, last_edited_user, last_edited_date)) %>%
 #   mutate(nexActivityType = "NonExtractive")
 # 
 # table(is.na(avid$aGUID)) # all false
 # 
 # avid <- avid %>% # avidity data
-#   rename(aObjID = OBJECTID,
-#          aGlobID = GlobalID) %>%
-#   dplyr::select(-c(Creator, EditDate, Editor, CreationDate))
+#   dplyr::select(-c(created_user, last_edited_user, last_edited_date, GlobalID))
 ```
 
 Join the four data sets, linking them by the Meta GlobalID (primary key) and GUID (foreign key) of the other data sheets (ie. every Meta GlobalID should match the GUID in the other data sheets). 
@@ -113,11 +109,11 @@ Rename questions to make them R friendly
 ```{r select and filter}
 esp  <- esp %>% 
 dplyr::rename(ID = "...1",
-              PersonID = mObjID,
+              PersonID = "OBJECTID",
               Interviewer = "# Interviewer",
               Site = "# Site",
               Screen18 = "Screen: 18+",
-              PrevInter = "Screen: Have you been surveyed in the last 2 weeks?", 
+              PrevInter = "Screen: Have you done this survey recently?", 
               Agreement = "Agreement to participate",
               Resident = "Are you/have you been a resident, got a holiday home here or been here over 3 months?",
               
@@ -127,7 +123,7 @@ dplyr::rename(ID = "...1",
               nShoreDays = "How many DAYS of your trip will you be doing coastal shore based activities in total?",
 
               nTimesLast12m = "Excluding this trip, how many times have you been to the area in the last 12 month?",
-              Date = "created_date",
+              SurveyDate = "created_date.x",
               exSiteType = "# Is this a boat based or shore based activity?",
               exRecall = "If RECALL, what date did they go fishing?",
               FishingType = "What type of fishing did you do?",
@@ -165,14 +161,14 @@ dplyr::rename(ID = "...1",
               nGirls = "# Number of girls in party",
               nBoys = "# Number of boys in party",
               BoatLength = "# Boat Length (m)",
-              BoatID = "# Boat number and/or name",
+              BoatID = "# Boat number",
               aComments = "Comments",
-              exDetract = "Did anything detract from the experience you had at this site?",
-              nexDetract = "Did anything detract from your experience at this site?",
+              exDetract = "Did anything detract from your experience at this site?.x",
+              nexDetract = "Did anything detract from your experience at this site?.y",
               Native = "Are you of Aboriginal or Torres Strait Islander origin?",
-              TO = "Do you identify as a TO in this region?",
-              exCustom = "If of Aboriginal or Torres Strait Islander origin, was this activity undertaken for a customary purpose?.x",
-              nexCustom = "If of Aboriginal or Torres Strait Islander origin, was this activity undertaken for a customary purpose?.y")
+              TO = "Are you a Traditional Owner of the region?",
+              exCustom = "If of Aboriginal or Torres Strait Islander origin, was this activity undertaken for a customary purpose?",
+              nexCustom = "If of Aboriginal or Torres Strait Islander origin, was this activity undertaken from a customary purpose?")
 ```
 
 ## Temporal variables
@@ -183,32 +179,136 @@ dplyr::rename(ID = "...1",
   - Any data out with field trip dates is a dummy/test survey
   
 ```{r temporal variables}
-# Date (Date) and Year (num/fac)
-esp <- esp %>%
-  mutate(Date = parse_date_time(Date, c("mdY IMS p"))) %>%  # making POSIX
-  mutate(Date = as.Date(as.character(
-    as.Date(substr(Date, 1, 10), "%Y-%m-%d")))) %>% # extracting date
-  mutate(numYear = as.numeric(substr(Date, 1, 4))) %>% # extracting year (numeric)
-  mutate(facYear = as.factor(numYear))  # year (factor)
+# This is the original code when the date all came out the same format
+# 
+# Date (Date) and Year (num/fac) - mannual synch makes this redundant
+# esp <- esp %>%
+#   mutate(Date = parse_date_time(Date, c("mdY IMS p"))) %>%  # making POSIX
+#   mutate(Date = as.Date(as.character(
+#     as.Date(substr(Date, 1, 10), "%Y-%m-%d")))) %>% # extracting date
+#   mutate(numYear = as.numeric(substr(Date, 1, 4))) %>% # extracting year (numeric)
+#   mutate(facYear = as.factor(numYear))  # year (factor)
+#   
 
 # TripDate (Date), TripMonth (chr), TripJulianDay (num), binRecall (fac)
-esp <- esp %>%
-  mutate(exRecall = parse_date_time(exRecall, c("mdY IMS p"))) %>% # making POSIX
-  mutate(exRecall = as.Date(substr(exRecall, 1, 10), "%Y-%m-%d")) %>% # extracting date
-  mutate(nexRecall = parse_date_time(nexRecall, c("mdY IMS p"))) %>% # making POSIX
-  mutate(nexRecall = as.Date(substr(nexRecall, 1, 10), "%Y-%m-%d")) %>% # extracting date
-  mutate(TripDate = as.Date(ifelse(!is.na(exRecall), as.character(as.Date(exRecall)),
-                                   as.character(as.Date(nexRecall))))) %>% # adhere recalls
-  mutate(TripDate = as.Date(ifelse(is.na(TripDate),as.character(as.Date(Date)),
-                                       as.character(as.Date(TripDate))))) %>% # adhere date
+# esp <- esp %>%
+#   mutate(exRecall = parse_date_time(exRecall, c("mdY IMS p"))) %>% # making POSIX
+#   mutate(exRecall = as.Date(substr(exRecall, 1, 10), "%Y-%m-%d")) %>% # extracting date
+#   mutate(nexRecall = parse_date_time(nexRecall, c("mdY IMS p"))) %>% # making POSIX
+#   mutate(nexRecall = as.Date(substr(nexRecall, 1, 10), "%Y-%m-%d")) %>% # extracting date
+#   mutate(TripDate = as.Date(ifelse(!is.na(exRecall), as.character(as.Date(exRecall)),
+#                                    as.character(as.Date(nexRecall))))) %>% # adhere recalls
+#   mutate(TripDate = as.Date(ifelse(is.na(TripDate),as.character(as.Date(Date)),
+#                                        as.character(as.Date(TripDate))))) %>% # adhere date
+#   mutate(TripMonth = as.factor(format(TripDate,"%B"))) %>% # month (chr)
+#   mutate(TripJulianDay = as.numeric(julian(TripDate))) %>% # julian date (num)
+#   mutate(binRecall = as.factor(ifelse(TripDate==Date, 0, 1))) # binary recall (fac)
+  
+# # Start (chr), Stop (chr), MedianTime (chr), decMedianTime (num), decDuration (num)
+# esp1 <- esp %>%
+#   mutate(Start = substr(as.character(ifelse(!is.na(exStart), as.character(exStart),
+#                                      as.character(nexStart))), 1, 5)) %>% # start time
+#   mutate(Start = sub("[.]", ":", Start)) %>%  # change every bit of punctuation to a colon
+#   mutate(Start = ifelse(str_length(sub(":.*", "", Start)) != 2, str_c("0", Start),Start)) %>% 
+#   # if str_length before colon !=2, add a zero to the start
+#   mutate(Start = ifelse(str_length(sub(".*:", "", Start)) != 2, str_c(Start, "0"), Start)) %>% # if str_length after colon !=2, add a zero to the end
+#   mutate(Start = ifelse(Start %in% c("011am0", "11:90"), "11:00", Start)) %>% 
+#   mutate(Stop = substr(as.character(ifelse(!is.na(exStop), as.character(exStop),
+#                                      as.character(nexStop))), 1, 5)) %>%  # stop time
+#   mutate(Start = sub("[.]", ":", Start)) %>% # change every bit of punctuation to a colon
+#   mutate(Stop = ifelse(str_length(sub(":.*", "", Stop)) != 2, str_c("0", Stop),
+#                          Stop)) %>% # if str_length before colon !=2, add a zero to the start
+#   mutate(Stop = ifelse(str_length(sub(".*:", "", Stop)) != 2, str_c(Stop, "0"),
+#                          Stop)) # if str_length after colon !=2, add a zero to the end
+
+# esp[a, ]
+# unique(esp $ exStart)
+# Need to check that all times are 4 digit, 5 character, 24 hour format separated with colon
+# eg. 07:30, 19:30 NOT 7:30, 7pm, 19.30
+# unique(esp$Start)
+# unique(esp$Stop)
+
+# esp <- esp %>%
+#   mutate(temp_Start = parse_date_time(Start, c("HM"))) %>% # making temp_start POSIX for calcs
+#   mutate(temp_Stop = parse_date_time(Stop, c("HM"))) %>% # making temp_stop POSIX for calcs
+#   rowwise() %>%
+#   mutate(MedianTime = substr(median(c(temp_Start, temp_Stop)), 12, 16)) %>% # median time (chr)
+#   ungroup() %>% 
+#   mutate(decMedianTime = as.numeric(round(hhmm2dec(MedianTime), 
+#                                           digits = 2))) %>% #decimal median time (num)
+#   mutate(decDuration = as.numeric(round(difftime(
+#     temp_Stop, temp_Start, units = "hours"), digits = 2))) # decimal duration of activity (num)
+
+# FieldTrip (num)
+# Trip 1: 2022-01-16 - 2022-01-25
+# Trip 2: 2022-02-14 - 2022-03-01
+# esp <- esp %>%
+#   mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
+#     ymd("2022-01-16"), ymd("2022-01-25")), "1",NA))) %>% # assigning dates to field trip 1
+#   mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
+#     ymd("2022-02-14"), ymd("2022-02-28")), "2", FieldTrip))) %>%
+#   mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
+#     ymd("2022-03-07"), ymd("2022-03-20")), "2", FieldTrip))) %>%
+#   dplyr::filter(!is.na(FieldTrip), Interviewer != "Dummy") # filtering out submissions out with field trip dates (dummys)
+```
+
+```{r}
+# When i upgraded the map and did a manual synch all the the date formats got mixed up and were all different so ive fixed them here. This is only necessary because of the transistion but wont be used for work flow as it will be consistent by then 
+
+temp <- esp %>% 
+  select(ID, SurveyDate, created_date.y, created_date.x.x, 
+         created_date.y.y, exRecall, nexRecall) %>% 
+  mutate(SurveyDate = sub(" .*", "", SurveyDate)) %>% 
+  mutate(A = sub(" .*", "", created_date.y)) %>% 
+  mutate(B = sub(" .*", "", created_date.x.x)) %>% 
+  mutate(C = sub(" .*", "", created_date.y)) %>% 
+  mutate(Date = ifelse(!is.na(SurveyDate), SurveyDate,
+                       ifelse(is.na(SurveyDate), A, 
+                              ifelse(is.na(A), B, C)))) %>% 
+  separate(Date, into = c("Day", "Month", "Year"), sep="/") %>% 
+  mutate(Day = ifelse(str_length(Day) == 1, str_c(0, Day), Day)) %>% 
+  mutate(Month = ifelse(str_length(Month) == 1, str_c(0, Month), Month)) %>% 
+  mutate(Year = ifelse(str_length(Year) == 2, str_c(20, Year), Year)) %>% 
+  unite(SurveyDate, Day:Year, sep= "/", remove = TRUE) %>% 
+  mutate(dmy = ifelse(ID < 368, SurveyDate, NA)) %>% 
+  mutate(mdy = ifelse(ID >=368, SurveyDate, NA)) %>% 
+  mutate(dmy = as.character(as.Date(dmy, "%d/%m/%Y"))) %>% 
+  mutate(mdy = as.character(as.Date(mdy, "%m/%d/%Y"))) %>% 
+  mutate(SurveyDate = ifelse(!is.na(dmy), dmy, mdy)) %>% 
+  mutate(SurveyDate = as.Date(SurveyDate, "%Y-%m-%d")) %>% 
+  mutate(numYear = as.numeric(substr(SurveyDate, 1, 4))) %>% # extracting year (numeric)
+  mutate(facYear = as.factor(numYear)) %>%  # year (factor)
+  select(ID, SurveyDate, numYear, facYear, exRecall, nexRecall) %>% 
+  mutate(TripDate = ifelse(!is.na(exRecall), exRecall, nexRecall)) %>% 
+  mutate(TripDate = sub(" .*", "", TripDate)) %>% 
+  separate(TripDate, into = c("Day", "Month", "Year"), sep="/") %>% 
+  mutate(Day = ifelse(str_length(Day) == 1, str_c(0, Day), Day)) %>% 
+  mutate(Month = ifelse(str_length(Month) == 1, str_c(0, Month), Month)) %>% 
+  mutate(Year = ifelse(str_length(Year) == 2, str_c(20, Year), Year)) %>% 
+  unite(TripDate, Day:Year, sep= "/", remove = TRUE) %>% 
+  mutate(dmy = ifelse(ID < 368, TripDate, NA)) %>% 
+  mutate(mdy = ifelse(ID >=368, TripDate, NA)) %>% 
+  mutate(dmy = as.character(as.Date(dmy, "%d/%m/%Y"))) %>% 
+  mutate(mdy = as.character(as.Date(mdy, "%m/%d/%Y"))) %>% 
+  mutate(TripDate = ifelse(!is.na(dmy), dmy, mdy)) %>% 
+  mutate(TripDate = as.character(as.Date(TripDate, "%Y-%m-%d"))) %>% 
+  mutate(TripDate = ifelse(is.na(TripDate), as.character(as.Date(SurveyDate)), TripDate)) %>% 
+  mutate(TripDate = as.Date(TripDate, "%Y-%m-%d")) %>% 
   mutate(TripMonth = as.factor(format(TripDate,"%B"))) %>% # month (chr)
   mutate(TripJulianDay = as.numeric(julian(TripDate))) %>% # julian date (num)
-  mutate(binRecall = as.factor(ifelse(TripDate==Date, 0, 1))) # binary recall (fac)
-  
+  mutate(binRecall = as.factor(ifelse(TripDate==SurveyDate, "0", "1"))) %>% # binary recall (fac)
+  select(-c(exRecall, nexRecall, dmy, mdy))
+
+esp <- esp %>% 
+  select(-c(SurveyDate, created_date.y, created_date.x.x, created_date.y.y, exRecall, nexRecall))
+
+esp <- full_join(esp, temp, by ="ID")
+
 # Start (chr), Stop (chr), MedianTime (chr), decMedianTime (num), decDuration (num)
+
 esp <- esp %>%
   mutate(Start = substr(as.character(ifelse(!is.na(exStart), as.character(exStart),
-                                     as.character(nexStart))), 1, 5)) %>% # start time
+                                     as.character(nexStart))), 1, 5)) %>%  # start time
   mutate(Start = sub("[.]", ":", Start)) %>%  # change every bit of punctuation to a colon
   mutate(Start = ifelse(str_length(sub(":.*", "", Start)) != 2, str_c("0", Start),Start)) %>% 
   # if str_length before colon !=2, add a zero to the start
@@ -222,13 +322,8 @@ esp <- esp %>%
   mutate(Stop = ifelse(str_length(sub(".*:", "", Stop)) != 2, str_c(Stop, "0"),
                          Stop)) # if str_length after colon !=2, add a zero to the end
 
-# Need to check that all times are 4 digit, 5 character, 24 hour format separated with colon
-# eg. 07:30, 19:30 NOT 7:30, 7pm, 19.30
-# unique(esp$Start)
-# unique(esp$Stop)
-
 esp <- esp %>%
-  mutate(temp_Start = parse_date_time(Start, c("HM"))) %>% # making temp_start POSIX for calcs
+  mutate(temp_Start = parse_date_time(Start, c("HM"))) %>%   # making temp_start POSIX for calcs
   mutate(temp_Stop = parse_date_time(Stop, c("HM"))) %>% # making temp_stop POSIX for calcs
   rowwise() %>%
   mutate(MedianTime = substr(median(c(temp_Start, temp_Stop)), 12, 16)) %>% # median time (chr)
@@ -241,15 +336,22 @@ esp <- esp %>%
 # FieldTrip (num)
 # Trip 1: 2022-01-16 - 2022-01-25
 # Trip 2: 2022-02-14 - 2022-03-01
+# Trip 3: 2022-03-07 - 2022-03-20
+# Trip 4: 2022-04-07 - 2022-04-28
 esp <- esp %>%
-  mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
+  mutate(FieldTrip = as.factor(ifelse(SurveyDate %within% interval(
     ymd("2022-01-16"), ymd("2022-01-25")), "1",NA))) %>% # assigning dates to field trip 1
-  mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
+  mutate(FieldTrip = as.factor(ifelse(SurveyDate %within% interval(
     ymd("2022-02-14"), ymd("2022-02-28")), "2", FieldTrip))) %>%
-  mutate(FieldTrip = as.factor(ifelse(Date %within% interval(
-    ymd("2022-03-07"), ymd("2022-03-20")), "2", FieldTrip))) %>%
+  mutate(FieldTrip = as.factor(ifelse(SurveyDate %within% interval(
+    ymd("2022-03-07"), ymd("2022-03-20")), "3", FieldTrip))) %>%
+  mutate(FieldTrip = as.factor(ifelse(SurveyDate %within% interval(
+    ymd("2022-04-07"), ymd("2022-04-28")), "4", FieldTrip))) %>%
   dplyr::filter(!is.na(FieldTrip), Interviewer != "Dummy") # filtering out submissions out with field trip dates (dummys)
+
+names(esp)
 ```
+
 
 ## IDs
   -TripNum: all activities on one boat launch (individual date) are collectively a trip, only       applicable is data from recalled trips was collected (if TripNum >1 then binRecall should        equal 1). TripNum is chronological. 
@@ -425,13 +527,13 @@ esp <- esp %>%
 ## Lunar Phase
 ```{r lunar phase}
 esp <- esp %>%
-  mutate(LunarPhase = as.factor(lunar.phase(Date, name = TRUE)))
+  mutate(LunarPhase = as.factor(lunar.phase(SurveyDate, name = TRUE)))
 ```
 
 ```{r}
 esp <- esp %>% 
   dplyr::select(
-    ID, Date, numYear, facYear, Interviewer, FieldTrip, mLat, mLong, PersonID, Screen18,
+    ID, SurveyDate, numYear, facYear, Interviewer, FieldTrip, mLat, mLong, PersonID, Screen18,
          PrevInter, Agreement, binRecall, TripDate, TripMonth, TripJulianDay, TripNum, SiteNum,
          Site, SiteType, Resident, BoatAccess, nDaysInArea, nBoatDays, nShoreDays, nTimesLast12m,
          UseLat, UseLong, ActivityType, Activity, Start, Stop, MedianTime, decMedianTime,
