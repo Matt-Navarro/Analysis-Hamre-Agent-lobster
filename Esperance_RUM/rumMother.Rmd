@@ -41,7 +41,7 @@ d.dir <- paste(w.dir, "Esperance_RUM/rumIgnore", sep='/') # set data directory
 f.dir <- paste(w.dir, "Esperance_RUM/rumFunc", sep = '/') # set functions directory
 s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/') # set gpkg directory
 r.dir <- paste(w.dir, "spIgnore/raster", sep='/') # set raster directory
-rumExplore_plots <- paste(w.dir, "Esperance_RUM/rumExplore_plots", sep='/') # set plots directory
+rumExplore_plots <- paste(w.dir, "Esperance_RUM/Plots/rumExplore", sep='/') # set plots directory
 
 # source 
 source(paste(f.dir, "basemap.R", sep = '/')) # base map and spatial files

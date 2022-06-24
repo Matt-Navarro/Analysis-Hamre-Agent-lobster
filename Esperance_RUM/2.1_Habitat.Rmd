@@ -1,0 +1,109 @@
+Check habitat layers align
+
+```{r habitat}
+ggplot() +
+  # geom_sf(data = Coast, fill = "grey", lwd = 0.1) +
+  geom_sf(data = reef, fill = "orange",  lwd = 0.1) +
+  geom_sf(data = rubble, fill = "aquamarine",  lwd = 0.1) +
+  geom_sf(data = macroalgae, fill = "green",  lwd = 0.1) +
+  geom_sf(data = sand, fill = "yellow",  lwd = 0.1) +
+  geom_sf(data = silt, fill = "brown",  lwd = 0.1) +
+  geom_sf(data = seagrass, fill = "light green",  lwd = 0.1) +
+  geom_sf(data = pelagic, fill = "light blue",  lwd = 0.1)
+```
+
+## Creating Habitat Grids
+If you need to change size of grids adapt below code. 
+When you make these they will be large sfc - when you write, and then read them again they will become an sf object ready to append habitat data.
+
+```{r Creating habitat grids}
+# Pelagic
+# PelagicGrid <- pelagic %>%
+#   st_make_grid(cellsize = 0.05, square = FALSE, crs=4283) %>%
+#   st_intersection(pelagic)
+#  st_write(PelagicGrid, paste(gpkg.dir, "Esp_PelagicGrid.gpkg", sep = '/'), append = FALSE)
+# 
+# # Reef
+# ReefGrid <- reef %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(reef)
+# st_write(ReefGrid, paste(gpkg.dir, "Esp_ReefGrid.gpkg", sep = '/'), append = FALSE)
+# 
+# # Rubble
+#  RubbleGrid <- rubble %>%
+#    st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#    st_intersection(rubble)
+#  st_write(RubbleGrid, paste(gpkg.dir, "Esp_RubbleGrid.gpkg", sep = '/'), append = FALSE)
+# 
+# Sand
+SandGrid <- sand %>%
+  st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+  st_intersection(sand)
+st_write(SandGrid, paste(gpkg.dir, "Esp_SandGrid.gpkg", sep = '/'), append = FALSE)
+# 
+# # Silt
+# SiltGrid <- silt %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(silt)
+# st_write(SiltGrid, paste(gpkg.dir, "Esp_SiltGrid.gpkg", sep = '/'), append = FALSE)
+# 
+# # Seagrass
+# SeagrassGrid <- seagrass %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(seagrass)
+# st_write(SeagrassGrid, paste(gpkg.dir, "Esp_SeagrassGrid.gpkg", sep = '/'), append = FALSE)
+# 
+# # Macroalgae
+# MacroalgaeGrid <- macroalgae %>%
+#   st_make_grid(cellsize = 0.03, square = FALSE, crs=4283) %>%
+#   st_intersection(macroalgae)
+# st_write(MacroalgaeGrid, paste(gpkg.dir, "Esp_MacroalgaeGrid.gpkg", sep = '/'), append = FALSE)
+```
+
+### Making unified habitat grid
+If manipulating the gridd sizes in chunk above you need to read in those layers after writing them to turn them from sfc to sf - which will then allow you to append habitat information. 
+```{r Grid}
+PelagicGrid <- st_read(paste(gpkg.dir, "Esp_PelagicGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+ReefGrid <- st_read(paste(gpkg.dir, "Esp_ReefGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+RubbleGrid <- st_read(paste(gpkg.dir, "Esp_RubbleGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+MacroalgaeGrid <- st_read(paste(gpkg.dir, "Esp_MacroalgaeGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+SandGrid <- st_read(paste(gpkg.dir, "Esp_SandGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+SiltGrid <- st_read(paste(gpkg.dir, "Esp_SiltGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+SeagrassGrid <- st_read(paste(gpkg.dir, "Esp_SeagrassGrid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+# 
+# ## Adding habitat variable to Grids
+# PelagicGrid$Habitat <- c("Pelagic")
+# ReefGrid$Habitat <- c("Reef")
+# RubbleGrid$Habitat <- c("Rubble")
+# MacroalgaeGrid$Habitat <- c("Macroalgae")
+# SandGrid$Habitat <- c("Sand")
+# SiltGrid$Habitat <- c("Silt")
+# SeagrassGrid$Habitat <- c("Seagrass")
+# 
+# ## Joining Grids
+Grid <- rbind(PelagicGrid, ReefGrid, RubbleGrid, MacroalgaeGrid, SandGrid, SiltGrid, SeagrassGrid) # all not work
+Grid2 <- rbind(PelagicGrid, ReefGrid, RubbleGrid, MacroalgaeGrid, SiltGrid, SeagrassGrid) # multipolygon and polygon dont work
+Grid3 <- rbind(PelagicGrid, ReefGrid, MacroalgaeGrid, SeagrassGrid)
+# 
+# ## Giveing each grid individual ID
+# Grid <- Grid %>%
+#   mutate(GridID = row_number())
+# 
+# st_write(Grid, paste(gpkg.dir, "Esp_Grid.gpkg", sep = '/'), append = FALSE)
+# 
+Grid2
+st_geometry_type(Grid2)
+```

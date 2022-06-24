@@ -1,5 +1,5 @@
 ```{r}
-portExplore_plots <- paste(w.dir, "Esperance_RUM/rumExplore_plots/portExplore_plots", sep='/') # set plots directory
+portExplore_plots <- paste(w.dir, "Esperance_RUM/Plots/portExplore", sep='/') # set plots directory
 ```
 
 

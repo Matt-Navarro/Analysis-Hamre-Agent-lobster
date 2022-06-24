@@ -1,0 +1,118 @@
+---
+title: 'Esperance Spatial Covariates'
+author: "Nicole Hamre"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    # html_document:
+    #     css: bootstrap.css
+  bookdown::html_document2:
+    self_contained: false
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    smooth_scroll: true
+    theme: paper
+    number_sections: false
+    highlight: tango
+---
+
+```{r setup, include = FALSE}
+# knitr options
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.align = 'center', fig.width=10, fig.height=7) 
+
+# libraries 
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(sp)
+library(raster)
+library(leaflet)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(ggsn)
+library(nngeo)
+library(spatstat)
+library(RNetCDF)
+library(matlab)
+library(ncdf4)
+
+# directories
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic" # set working directory
+d.dir <- paste(w.dir, "Esperance_RUM/rumIgnore", sep='/') # set data directory
+f.dir <- paste(w.dir, "Esperance_RUM/rumFunc", sep = '/') # set functions directory
+s.dir <- paste(w.dir, "spIgnore/shp", sep='/')
+gpkg.dir <- paste(w.dir, "spIgnore/gpkg", sep='/') # set gpkg directory
+r.dir <- paste(w.dir, "spIgnore/raster", sep='/') # set raster directory
+cdf.dir <- paste(w.dir, "spIgnore/NetCDF", sep = "/") # NetCDF directory
+rumPlots <- paste(w.dir, "Esperance_RUM/Plots/spCov", sep='/') # set plots directory # plots directory
+
+#source
+source(paste(f.dir, "spatialFunc.R", sep = '/'))
+
+#read data
+dat <- read.csv(paste(d.dir, "Esp_v1.csv", sep='/'))
+```
+
+# Spatial variables
+
+Main unprojected crs = 4283 (GDA94), units = m 
+Main projected crs = 3112 (Australian Lambert) 
+Raster extraction crs = 4326 (WGS84)
+
+```{r spatial layers, include = FALSE}
+spEsp <- st_read(paste(gpkg.dir, "spEsp.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+Coast <- st_read(paste(gpkg.dir, "Esp_Coast.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+StudySite <- st_read(paste(gpkg.dir, "Esp_StudySite.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+```
+
+Has a habitat grid been made?
+If a habitat grid has already been made, change `MakeHabitatGrid` to `FALSE`.
+
+```{r HabitatGridStatus, include = FALSE}
+MakeHabitatGrid <- FALSE
+
+# do not edit any more lines in this chunk
+if(MakeHabitatGrid == FALSE) {
+  HabitatGrid <- TRUE
+} else {
+  HabitatGrid <- FALSE
+}
+```
+
+```{r Habitat layers, eval = MakeHabitatGrid, include = FALSE}
+macroalgae <- st_read(paste(gpkg.dir, "Esp_Macroalgae.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+reef <- st_read(paste(gpkg.dir, "Esp_Reef.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+pelagic <- st_read(paste(gpkg.dir, "Esp_Pelagic.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+rubble <- st_read(paste(gpkg.dir, "Esp_Rubble.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+sand <- st_read(paste(gpkg.dir, "Esp_Sand.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+silt <- st_read(paste(gpkg.dir, "Esp_Silt.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+
+seagrass <- st_read(paste(gpkg.dir, "Esp_Seagrass.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+```
+
+```{r child = if(MakeHabitatGrid == TRUE) '2.1_Habitat.Rmd'}
+```
+
+```{r HabitatGrid, eval = HabitatGrid, include = FALSE}
+Grid <- st_read(paste(gpkg.dir, "Esp_Grid.gpkg", sep = '/')) %>%
+  st_transform(crs = 4283)
+```
+

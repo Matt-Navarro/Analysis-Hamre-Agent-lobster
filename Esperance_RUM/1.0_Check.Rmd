@@ -1,0 +1,39 @@
+This is the mother script (1.0) for community use data checking. (Need a snazzier name like checkEM)
+It includes the following child documents:
+
+  - 1.1_Complile
+  - 1.2_Clean   
+  - 1.3 Validate
+  
+The cleaning and validation of the data will be general in nature, if there are any site specific question and secondary cleaning script will need to be added manually. Once fully cleaned, data should be checked using the x1_Explore mother script which will run visualisation scripts. 
+
+# Set Up
+```{r libs, include = FALSE}
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(chron)
+library(lunar)
+library(ggplot2)
+```
+
+```{r directories, echo = FALSE}
+w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic" # set working directory
+d.dir <- paste(w.dir, "Esperance_RUM/rumIgnore", sep='/') # set data directory
+f.dir <- paste(w.dir, "Esperance_RUM/rumFunc", sep = '/') # set function directory
+```
+
+```{r fun, include = FALSE}
+source(paste(f.dir, "cleaningFunc.R", sep = '/')) # source cleaning functions
+```
+
+The compile scripts reads the 4 separate scripts; Meta, Extractive, Non-extractive and Avidity. This produces a complete raw data set. 
+
+Change `Compiled` to `TRUE` if the data sets have already been compiled and the raw data is ready to be read into cleaning script: 
+
+```{r, include = FALSE}
+Compiled <- TRUE
+```
+
+```{r, child = if(Compiled == FALSE) '1.1_Compile.Rmd'}
+```

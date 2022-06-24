@@ -1,0 +1,54 @@
+---
+title: "Untitled"
+output: html_document
+---
+```{r setup}
+# knitr options
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.align = 'center', fig.width=10, fig.height=7) 
+
+# libraries 
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(sp)
+library(raster)
+library(rgeos)
+library(rgdal)
+library(sf)
+library(RNetCDF)
+library(ncdf4)
+
+# directories
+ 
+# source
+```
+
+
+
+# Static Variables
+## Habitat
+
+```{r habitat}
+
+```
+
+## Area of a polygon
+```{r}
+
+```
+
+## Depth
+```{r}
+
+```
+
+## Artificial reef present
+```{r}
+
+```
+
+## Distance from mainland
+```{r}
+
+```
+

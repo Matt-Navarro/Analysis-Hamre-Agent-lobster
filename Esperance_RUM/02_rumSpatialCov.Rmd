@@ -1,97 +1,30 @@
-# Set Up
-```{r libs, include = FALSE}
-# install.packages('tidyverse')
-# install.packages('dplyr')
-# install.packages('ggplot2')
-# install.packages('sp')
-# install.packages('raster')
-# install.packages('rgeos')
-# install.packages('rgdal')
-# install.packages('sf') # select no
-# install.packages('ggsn')
-# install.packages('nngeo')
-# install.packages('spatstat')
-# install.packages('matlab')
-# install.packages('ncdf4')
-
-
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(sp)
-library(raster)
-library(rgeos)
-library(rgdal)
-library(sf)
-library(ggsn)
-library(nngeo)
-library(spatstat)
-library(RNetCDF)
-library(matlab)
-library(ncdf4)
-```
-
-```{r dir, echo = FALSE}
-w.dir <- "/Users/23088313/Documents/git_repos/Analysis-Hamre-Bioeconomic" # set working directory
-d.dir <- paste(w.dir, "Esperance_RUM/rumIgnore", sep='/') # set data directory
-f.dir <- paste(w.dir, "Esperance_RUM/rumFunc", sep = '/') # set functions directory
-s.dir <- paste(w.dir, "spIgnore/gpkg", sep='/') # set gpkg directory
-r.dir <- paste(w.dir, "spIgnore/raster", sep='/') # set raster directory
-cdf.dir <- paste(w.dir, "spIgnore/NetCDF", sep = "/") # NetCDF directory
-rumPlots <- paste(w.dir, "Esperance_RUM/rumPlots", sep='/') # set plots directory # plots directory
-```
-
-```{r functions}
-source(paste(f.dir, "spatialFunc.R", sep = '/'))
-```
-
-```{r read data}
-esp <- read.csv(paste(d.dir, "Esp_v1.csv", sep='/'))
-```
-
-# Spatial variables
-
-Main unprojected crs = 4283 (GDA94), units = m 
-Main projected crs = 3112 (Australian Lambert) 
-Raster extraction crs = 4326 (WGS84)
-
-## Reading Final Layers 
-Assuming you don't have to manipulate any of the psatial layers you can rea dthe finalised spatial layers in directly here and run rest of the code. 
-```{r Reading spatial layers}
-SC <- st_read(paste(s.dir, "EsPCoast.gpkg", sep = '/')) %>%
-  st_transform(crs = 4283)
-
-# Grid <- st_read(paste(s.dir, "Grid.gpkg", sep = '/')) %>%
-#   st_transform(crs = 4283)
-```
-
- ## Checking habitat grid
+# Habitat Grid
 ```{r checking habitat grids}
-# ggplot() +
-#   theme_void() +
-#   geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat)) +
-#   scale_fill_manual(values=c("coral", "aquamarine", "light blue", "pink"))
-# 
-# ggsave(paste(rumPlots, "HabitatMap.png", sep='/'), width = 8, height = 4)
+ggplot() +
+  theme_void() +
+  geom_sf(data = Grid, lwd = 0.1, aes(fill = Habitat)) +
+  scale_fill_manual(values=c("seagreen", "light blue", "pink", "grey", "khaki", "light green", "purple"))
+
+ggsave(paste(rumPlots, "Esp_HabitatMap.png", sep='/'), width = 8, height = 4)
 ```
 
 ## Extracting Depth
-```{r Extracting Depth, message=FALSE, warning=FALSE}
+```{r Extracting Depth}
 # Adding depth
-# Bathy <- raster(paste(r.dir, "NWSbathy.tif", sep = '/'))
-# crs(Bathy)  # 4362
-# 
-# Grid_wgs84<-st_transform(Grid, 4326)
-# 
-# # Extracting depth
-# Grid_wgs84<-extract_mean_from_raster(Bathy, Grid_wgs84)
-# Grid_wgs84$Depth<-(Grid_wgs84$mean)*-1
-# 
-# # convert back to 4283
-# Grid <- st_transform(Grid_wgs84, 4283)
-# 
-# # save as gpkg
-# st_write(Grid, paste(s.dir, "Grid.gpkg", sep = '/'), append = FALSE)
+Bathy <- raster(paste(r.dir, "espBathy.tif", sep = '/'))
+crs(Bathy)  #4326
+
+Grid_wgs84 <- st_transform(Grid, 4326)
+
+# Extracting depth
+Grid_wgs84 <- extract_mean_from_raster(Bathy, Grid_wgs84)
+Grid_wgs84$Depth<-(Grid_wgs84$mean)*-1
+
+# convert back to 4283
+Grid <- st_transform(Grid_wgs84, 4283)
+
+# save as gpkg
+st_write(Grid, paste(s.dir, "Grid.gpkg", sep = '/'), append = FALSE)
 ```
 
 ## Creating sf from data
@@ -115,27 +48,12 @@ spEsp <- esp %>%
 ## Proximity to artificial infrastructure 
 ```{r Artificial infrastructure and BR}
 # Add artificial infrastructure
-# Pipes <- st_read(paste(s.dir, "Pipes.gpkg", sep = '/')) %>%
-#   st_transform(crs = 4283)
-# 
-# Wells <- st_read(paste(s.dir, "Wells.gpkg", sep = '/')) %>%
-#   st_transform(crs = 4283)
-# 
-# FADs <- st_read(paste(s.dir, "FADs.gpkg", sep = '/')) %>%
-#   st_transform(crs = 4283)
-# 
 # BR <- st_read(paste(s.dir, "NingBR.gpkg", sep = '/')) %>%
 #   st_transform(crs = 4283)
 # 
 # ## note that some distance  that there is no argument to prevent distance from intersecting with land - however as we are just taking the proximity to nearest it doesn't matter
 # 
-# nearest_well <- st_nn(spNing, Wells, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
-# DistNearestWellm <- sapply(nearest_well[[2]], "[", 1) # Name distance
-# DistNearestWellkm <- DistNearestWellm/1000 # Convert to km
-# 
-# nearest_pipe <- st_nn(spNing, Pipes, returnDist = TRUE, sparse = FALSE) # Calculate distance to nearest well
-# DistNearestPipem <- sapply(nearest_pipe[[2]], "[", 1) # Name distance
-# DistNearestPipekm <- DistNearestPipem/1000 # Convert to km
+
 # 
 # DistFADm <- st_distance(spNing, FADs)
 # DistFADkm <- DistFADm/1000
