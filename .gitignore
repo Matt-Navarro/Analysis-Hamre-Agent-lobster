@@ -28,7 +28,7 @@ vignettes/*.pdf
 .Renviron
 Analysis-Hamre-Agent-lobster.Rproj
 
-##Add thing to the gitignore folder to make them hiding, if you are ignoring something else remember its a slash not a dot
-/Ch2-RUM/rumIgnore
+## Add thing to the gitignore folder to make them hiding, if you are ignoring something else remember its a slash not a dot
+/Esperance_RUM/rumIgnore
 
 /spIgnore
